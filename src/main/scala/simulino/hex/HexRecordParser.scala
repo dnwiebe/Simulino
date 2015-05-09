@@ -7,6 +7,15 @@ class HexRecordParser {
 
   private trait RecordType {
     def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span]
+
+    protected def ensureDataLength (record: HexRecord, requiredLength: Int, recordType: String): Unit = {
+      if (record.data.length == requiredLength) {return}
+      throw new IllegalArgumentException (s".hex ${recordType} record must have data length of ${requiredLength}, not ${record.data.length}")
+    }
+
+    protected def numberFromData (record: HexRecord): Long = {
+      record.data.foldLeft (0L) {(soFar, elem) => (soFar * 0x100L) + (elem & 0xFFL)}
+    }
   }
 
   private class EOF extends RecordType {
@@ -22,10 +31,16 @@ class HexRecordParser {
 
   private class ESA extends RecordType {
     override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
-      if (record.data.length != 2) {
-        throw new IllegalArgumentException (s".hex ESA record must have data length of 2, not ${record.data.length}")
-      }
-      parser.baseAddress = (((record.data(0) & 0xFF) * 0x100) + (record.data(1) & 0xFF)) * 0x10
+      ensureDataLength (record, 2, "ESA")
+      parser.baseAddress = (numberFromData (record) * 0x10).toInt
+      None
+    }
+  }
+
+  private class SSA extends RecordType {
+    override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
+      ensureDataLength (record, 4, "SSA")
+      parser.startAddress = Some (numberFromData (record))
       None
     }
   }
@@ -37,10 +52,12 @@ class HexRecordParser {
       case 0 => new Data ()
       case 1 => new EOF ()
       case 2 => new ESA ()
+      case 3 => new SSA ()
     }
   }
 
   private var baseAddress = 0
+  private var startAddress: Option[Long] = None
 
   def parse (line: String): Option[Span] = {
     validateLine (line)
@@ -48,6 +65,8 @@ class HexRecordParser {
     validateRecord (record)
     record.recordType.toSpanOpt (this, record)
   }
+
+  def getStartAddress: Option[Long] = startAddress
 
   private val REGEX = ":[0-9A-Fa-f]*".r
   private def validateLine (line: String): Unit = {

@@ -89,6 +89,14 @@ class HexRecordParserTest extends path.FunSpec {
       }
     }
 
+    describe ("that is given an ESA record with the wrong number of data bytes") {
+      val result = Try (subject.parse (":0100000201FC"))
+
+      it ("complains") {
+        fails (result, new IllegalArgumentException (".hex ESA record must have data length of 2, not 1"))
+      }
+    }
+
     describe ("that is given an ESA record") {
       val none = subject.parse (":020000021000EC")
 
@@ -110,11 +118,23 @@ class HexRecordParserTest extends path.FunSpec {
       }
     }
 
-    describe ("that is given an ESA record with the wrong number of data bytes") {
-      val result = Try (subject.parse (":0100000201FC"))
+    describe ("that is given an SSA record with the wrong number of data bytes") {
+      val result = Try (subject.parse (":0100000301FB"))
 
       it ("complains") {
-        fails (result, new IllegalArgumentException (".hex ESA record must have data length of 2, not 1"))
+        fails (result, new IllegalArgumentException (".hex SSA record must have data length of 4, not 1"))
+      }
+    }
+
+    describe ("that is given an SSA record") {
+      val result = subject.parse (":0400000312345678E5")
+
+      it ("returns None") {
+        assert (result === None)
+      }
+
+      it ("sets the start address properly") {
+        assert (subject.getStartAddress === Some (0x12345678))
       }
     }
   }
