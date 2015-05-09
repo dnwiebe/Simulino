@@ -2,6 +2,7 @@ package simulino.memory
 
 import simulino.utils.Utils
 
+//noinspection LanguageFeature
 object UnsignedByte {
   def apply (input: Int): UnsignedByte = new UnsignedByte (input)
 
@@ -28,6 +29,7 @@ class UnsignedByte (proposedValue: Int, val halfCarry: Boolean,
   
   val value = validateProposedValue (proposedValue)
   val negative = isNegative (value)
+  //noinspection ScalaUnnecessaryParentheses
   val zero = (value == 0)
   
   def this (proposedValue: Int) = this (proposedValue, false, false, false)

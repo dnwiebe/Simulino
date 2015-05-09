@@ -2,7 +2,7 @@ package simulino.utils
 
 object Utils {
   def toHex(number: Int, requestedLength: Int): String = {
-    val hex = Integer.toHexString (number).toUpperCase()
+    val hex = Integer.toHexString (number).toUpperCase
     val prefix = if (number < 0) "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" else "00000000000000000000000000000000"
     val composed = prefix + hex
     val realNumberOfDigits = numberOfHexDigits (number)
@@ -10,7 +10,7 @@ object Utils {
   }
 
   def valueIsTooWide(value: Int, bitCount: Int): Boolean = {
-    return (value >> bitCount) > 0
+    (value >> bitCount) > 0
   }
 
   def bitRange(startBit: Int, bitCount: Int): String = {
@@ -24,9 +24,9 @@ object Utils {
   
   def join[T] (list: List[T], delimiter: String): String = {
     list match {
-      case e if (e.isEmpty) => ""
-      case e if (e.length == 1) => e(0).toString
-      case e => e.head.toString () + delimiter + join (e.tail, delimiter)
+      case e if e.isEmpty => ""
+      case e if e.length == 1 => e.head.toString
+      case e => e.head.toString + delimiter + join (e.tail, delimiter)
     }
   }
   
@@ -42,7 +42,7 @@ object Utils {
   
   def textToInt (text: String): Int = {
     text match {
-      case s if (s.startsWith ("0x")) => Integer.parseInt (s.substring (2), 16)
+      case s if s.startsWith ("0x") => Integer.parseInt (s.substring (2), 16)
       case s => Integer.parseInt (s)
     }
   }
@@ -55,6 +55,6 @@ object Utils {
       digitCount += 1
       toShift = toShift >> 4
     }
-    return if (digitCount == 0) 1 else digitCount
+    if (digitCount == 0) 1 else digitCount
   }
 }

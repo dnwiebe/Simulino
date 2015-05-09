@@ -2,6 +2,7 @@ package simulino.memory
 
 import simulino.utils.Utils
 
+//noinspection LanguageFeature
 object UnsignedShort {
 	implicit def IntToUnsignedShort (input: Int): UnsignedShort = {
 	  new UnsignedShort (input)
@@ -29,7 +30,7 @@ class UnsignedShort (proposedValue: Int) {
     new UnsignedShort (sum & 0xFFFF)
   }
   
-  override def toString (): String = {
+  override def toString: String = {
     Utils.toHex (value, 4)
   }
   

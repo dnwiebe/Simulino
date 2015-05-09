@@ -2,6 +2,7 @@ package simulino.memory
 
 import org.scalatest.path
 
+//noinspection ComparingUnrelatedTypes
 class UnsignedShortTest extends path.FunSpec {
   describe ("An UnsignedShort") {
     it ("should be automatically converted to an Int when necessary") {
@@ -39,7 +40,7 @@ class UnsignedShortTest extends path.FunSpec {
           fail ()
         }
         catch {
-          case e: IllegalArgumentException => { assert (e.getMessage () === "UnsignedShort is restricted to values between 0x0000 and 0xFFFF, not 0x10000") }
+          case e: IllegalArgumentException => { assert (e.getMessage === "UnsignedShort is restricted to values between 0x0000 and 0xFFFF, not 0x10000") }
         }
       }
     }

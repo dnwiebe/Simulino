@@ -5,6 +5,7 @@ import org.scalatest.path
 /**
  * Created by dnwiebe on 5/8/15.
  */
+//noinspection ZeroIndexToHead
 class SparseMemoryTest extends path.FunSpec {
 
   class AccessibleSparseMemory extends SparseMemory {

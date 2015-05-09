@@ -2,6 +2,7 @@ package simulino.memory
 
 import org.scalatest.path
 
+//noinspection ComparingUnrelatedTypes
 class UnsignedByteTest extends path.FunSpec {
   describe ("An UnsignedByte") {
     describe ("when created with a value") {
@@ -29,7 +30,7 @@ class UnsignedByteTest extends path.FunSpec {
           fail ()
         }
         catch {
-          case e: IllegalArgumentException => { assert (e.getMessage () === "UnsignedByte is restricted to values between 0 and 255, not 256") }
+          case e: IllegalArgumentException => { assert (e.getMessage === "UnsignedByte is restricted to values between 0 and 255, not 256") }
         }
       }
     }
@@ -110,9 +111,9 @@ class UnsignedByteTest extends path.FunSpec {
             assert (diff.value === 0xDE)
           }
           it ("should set half-carry and carry but not overflow") {
-            assert (diff.halfCarry == true)
-            assert (diff.carry == true)
-            assert (diff.overflow == false)
+            assert (diff.halfCarry)
+            assert (diff.carry)
+            assert (!diff.overflow)
           }
         }
         describe ("when figuring 0x56 - 0x65") {
@@ -121,9 +122,9 @@ class UnsignedByteTest extends path.FunSpec {
             assert (diff.value === 0xF1)
           }
           it ("should set carry and overflow but not half-carry") {
-            assert (diff.carry == true)
-            assert (diff.overflow == true)
-            assert (diff.halfCarry == false)
+            assert (diff.carry)
+            assert (diff.overflow)
+            assert (!diff.halfCarry)
           }
         }
         describe ("when figuring 0x42 - 0x42") {
@@ -132,9 +133,9 @@ class UnsignedByteTest extends path.FunSpec {
             assert (diff.value === 0x00)
           }
           it ("should clear half-carry, carry, and overflow") {
-            assert (diff.halfCarry == false)
-            assert (diff.carry == false)
-            assert (diff.overflow == false)
+            assert (!diff.halfCarry)
+            assert (!diff.carry)
+            assert (!diff.overflow)
           }
         }
       }

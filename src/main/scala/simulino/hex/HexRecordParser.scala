@@ -123,6 +123,7 @@ class HexRecordParser {
     }
   }
 
+  //noinspection SimplifiableFoldOrReduce
   private def computeChecksum (record: HexRecord): Int = {
     var checksum = 0
     checksum += record.byteCount
