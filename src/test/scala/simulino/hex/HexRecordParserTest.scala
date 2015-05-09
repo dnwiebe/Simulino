@@ -88,6 +88,35 @@ class HexRecordParserTest extends path.FunSpec {
         assert (result === None)
       }
     }
+
+    describe ("that is given an ESA record") {
+      val none = subject.parse (":020000021000EC")
+
+      it ("produces None") {
+        assert (none === None)
+      }
+
+      describe ("followed by a data record") {
+        val result = subject.parse (":04123400AABBCC87FE")
+
+        it ("returns the correct Span with the correct offset") {
+          val expected = Array (0xAA.toByte, 0xBB.toByte, 0xCC.toByte, 0x87.toByte)
+          (0 until expected.length).foreach { i =>
+            assert (result.get.data (i) == expected (i))
+          }
+          assert (result.get.data.length === 4)
+          assert (result.get.offset === 0x11234)
+        }
+      }
+    }
+
+    describe ("that is given an ESA record with the wrong number of data bytes") {
+      val result = Try (subject.parse (":0100000201FC"))
+
+      it ("complains") {
+        fails (result, new IllegalArgumentException (".hex ESA record must have data length of 2, not 1"))
+      }
+    }
   }
 
   private def fails (result: Try[_], exception: Exception): Unit = {

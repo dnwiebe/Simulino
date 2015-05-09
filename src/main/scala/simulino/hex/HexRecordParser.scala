@@ -16,7 +16,17 @@ class HexRecordParser {
   }
   private class Data extends RecordType {
     override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
-      Some (Span (record.address, record.data))
+      Some (Span (parser.baseAddress + record.address, record.data))
+    }
+  }
+
+  private class ESA extends RecordType {
+    override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
+      if (record.data.length != 2) {
+        throw new IllegalArgumentException (s".hex ESA record must have data length of 2, not ${record.data.length}")
+      }
+      parser.baseAddress = (((record.data(0) & 0xFF) * 0x100) + (record.data(1) & 0xFF)) * 0x10
+      None
     }
   }
 
@@ -26,8 +36,11 @@ class HexRecordParser {
     private def indexToRecordType: PartialFunction[Int, RecordType] = {
       case 0 => new Data ()
       case 1 => new EOF ()
+      case 2 => new ESA ()
     }
   }
+
+  private var baseAddress = 0
 
   def parse (line: String): Option[Span] = {
     validateLine (line)
@@ -51,7 +64,7 @@ class HexRecordParser {
       case REGEX (_*) =>
       case _ => throw new IllegalArgumentException (".hex record must not contain non-hexadecimal symbols")
     }
-    if ((line.length & 2) == 0) {
+    if ((line.length & 1) == 0) {
       throw new IllegalArgumentException (s".hex record must contain an even number of digits, not ${line.length - 1}")
     }
   }
@@ -76,7 +89,7 @@ class HexRecordParser {
   }
 
   private def computeChecksum (record: HexRecord): Int = {
-    var checksum = 0;
+    var checksum = 0
     checksum += record.byteCount
     checksum += record.address >> 8
     checksum += record.address & 0xFF
