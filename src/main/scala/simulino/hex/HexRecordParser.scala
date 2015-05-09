@@ -1,5 +1,7 @@
 package simulino.hex
 
+import simulino.memory.{UnsignedByte, Span}
+
 /**
  * Created by dnwiebe on 5/8/15.
  */
@@ -14,7 +16,7 @@ class HexRecordParser {
     }
 
     protected def numberFromData (record: HexRecord): Long = {
-      record.data.foldLeft (0L) {(soFar, elem) => (soFar * 0x100L) + (elem & 0xFFL)}
+      record.data.foldLeft (0L) {(soFar, elem) => (soFar * 0x100L) + elem}
     }
   }
 
@@ -32,20 +34,32 @@ class HexRecordParser {
   private class ESA extends RecordType {
     override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
       ensureDataLength (record, 2, "ESA")
-      parser.baseAddress = (numberFromData (record) * 0x10).toInt
+      parser.baseAddress = (numberFromData (record) << 4).toInt
       None
     }
   }
 
-  private class SSA extends RecordType {
+  private class SA (recordType: String) extends RecordType {
     override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
-      ensureDataLength (record, 4, "SSA")
+      ensureDataLength (record, 4, recordType)
       parser.startAddress = Some (numberFromData (record))
       None
     }
   }
 
-  private case class HexRecord (byteCount: Int, address: Int, recordTypeIndex: Int, data: Array[Byte], checksum: Int) {
+  private class SSA extends SA ("SSA")
+
+  private class SLA extends SA ("SLA")
+
+  private class ELA extends RecordType {
+    override def toSpanOpt (parser: HexRecordParser, record: HexRecord): Option[Span] = {
+      ensureDataLength (record, 2, "ELA")
+      parser.baseAddress = (numberFromData (record) << 16).toInt
+      None
+    }
+  }
+
+  private case class HexRecord (byteCount: Int, address: Int, recordTypeIndex: Int, data: Array[UnsignedByte], checksum: Int) {
     def recordType: RecordType = indexToRecordType (recordTypeIndex)
 
     private def indexToRecordType: PartialFunction[Int, RecordType] = {
@@ -53,6 +67,8 @@ class HexRecordParser {
       case 1 => new EOF ()
       case 2 => new ESA ()
       case 3 => new SSA ()
+      case 4 => new ELA ()
+      case 5 => new SLA ()
     }
   }
 
@@ -89,11 +105,11 @@ class HexRecordParser {
   }
 
   private def separate (line: String): HexRecord = {
-    val byteCount = pair2Int (line.substring (1, 3))
-    val address = (pair2Int (line.substring (3, 5)) * 256) + pair2Int (line.substring (5, 7))
-    val recordTypeIndex = pair2Int (line.substring (7, 9))
+    val byteCount = pairToUnsignedByte (line.substring (1, 3))
+    val address = extractAddress (line)
+    val recordTypeIndex = pairToUnsignedByte (line.substring (7, 9))
     val data = extractData (line)
-    val checksum = pair2Int (line.substring (line.length - 2))
+    val checksum = pairToUnsignedByte (line.substring (line.length - 2))
     new HexRecord (byteCount, address, recordTypeIndex, data, checksum)
   }
 
@@ -113,21 +129,27 @@ class HexRecordParser {
     checksum += record.address >> 8
     checksum += record.address & 0xFF
     checksum += record.recordTypeIndex
-    checksum += record.data.foldLeft (0) {(soFar, elem) => soFar + (elem & 0xFF)}
+    checksum += record.data.foldLeft (0) {(soFar, elem) => soFar + elem}
     checksum += record.checksum
     checksum & 0xFF
   }
 
-  private def extractData (line: String): Array[Byte] = {
+  private def extractAddress (line: String): Int = {
+    val highByte = pairToUnsignedByte (line.substring (3, 5))
+    val lowByte = pairToUnsignedByte (line.substring (5, 7))
+    (highByte.value * 0x100) + lowByte
+  }
+
+  private def extractData (line: String): Array[UnsignedByte] = {
     val start = 9
     val byteCount = (line.length - start - 2) / 2
     (0 until byteCount).map {i =>
       val offset = start + (i * 2)
-      pair2Int (line.substring (offset, offset + 2)).toByte
+      pairToUnsignedByte (line.substring (offset, offset + 2))
     }.toArray
   }
 
-  private def pair2Int (pair: String): Int = {
+  private def pairToUnsignedByte (pair: String): UnsignedByte = {
     val result = (digit2Int (pair (0)) * 16) + digit2Int (pair (1))
     result
   }

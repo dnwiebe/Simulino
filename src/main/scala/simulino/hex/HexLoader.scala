@@ -2,6 +2,8 @@ package simulino.hex
 
 import java.io.{BufferedReader, Reader}
 
+import simulino.memory.Span
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -36,19 +38,10 @@ class HexLoader {
     array
   }
 
-  def lowestAddressSet = lowest
-  def highestAddressSet = highest
-
   private def applySpan (span: Span): Unit = {
     (0 until span.data.length).foreach {i =>
       val address = span.offset + i
-      data(address) = span.data(i)
-      registerAddress (address)
+      data(address.toInt) = span.data(i)
     }
-  }
-
-  private def registerAddress (address: Int): Unit = {
-    if (address < lowest) {lowest = address}
-    if (address > highest) {highest = address}
   }
 }

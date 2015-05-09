@@ -1,6 +1,7 @@
 package simulino.hex
 
 import org.scalatest.path
+import simulino.memory.UnsignedByte
 
 import scala.util.{Success, Failure, Try}
 
@@ -72,9 +73,9 @@ class HexRecordParserTest extends path.FunSpec {
       val result = subject.parse (":04123400AABBCC87FE")
 
       it ("creates the correct Span") {
-        val expected = Array(0xAA.toByte, 0xBB.toByte, 0xCC.toByte, 0x87.toByte)
+        val expected = Array(UnsignedByte (0xAA), UnsignedByte (0xBB), UnsignedByte (0xCC), UnsignedByte (0x87))
         (0 until expected.length).foreach {i =>
-          assert (result.get.data(i) == expected(i))
+          assert (result.get.data(i) === expected(i))
         }
         assert (result.get.data.length === 4)
         assert (result.get.offset === 0x1234)
@@ -108,7 +109,7 @@ class HexRecordParserTest extends path.FunSpec {
         val result = subject.parse (":04123400AABBCC87FE")
 
         it ("returns the correct Span with the correct offset") {
-          val expected = Array (0xAA.toByte, 0xBB.toByte, 0xCC.toByte, 0x87.toByte)
+          val expected = Array (UnsignedByte (0xAA), UnsignedByte (0xBB), UnsignedByte (0xCC), UnsignedByte (0x87))
           (0 until expected.length).foreach { i =>
             assert (result.get.data (i) == expected (i))
           }
@@ -135,6 +136,43 @@ class HexRecordParserTest extends path.FunSpec {
 
       it ("sets the start address properly") {
         assert (subject.getStartAddress === Some (0x12345678))
+      }
+    }
+
+    describe ("that is given an ELA record with the wrong number of data bytes") {
+      val result = Try (subject.parse (":0100000401FA"))
+
+      it ("complains") {
+        fails (result, new IllegalArgumentException (".hex ELA record must have data length of 2, not 1"))
+      }
+    }
+
+    describe ("that is given an ELA record") {
+      val none = subject.parse (":02000004432196")
+
+      it ("produces None") {
+        assert (none === None)
+      }
+
+      describe ("followed by a data record") {
+        val result = subject.parse (":04123400AABBCC87FE")
+
+        it ("returns the correct Span with the correct offset") {
+          val expected = Array (UnsignedByte (0xAA), UnsignedByte (0xBB), UnsignedByte (0xCC), UnsignedByte (0x87))
+          (0 until expected.length).foreach { i =>
+            assert (result.get.data (i) == expected (i))
+          }
+          assert (result.get.data.length === 4)
+          assert (result.get.offset === 0x43211234)
+        }
+      }
+    }
+
+    describe ("that is given an SLA record with the wrong number of data bytes") {
+      val result = Try (subject.parse (":0100000501F9"))
+
+      it ("complains") {
+        fails (result, new IllegalArgumentException (".hex SLA record must have data length of 4, not 1"))
       }
     }
   }

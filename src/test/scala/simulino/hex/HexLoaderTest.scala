@@ -3,6 +3,7 @@ package simulino.hex
 import java.io.StringReader
 import org.scalatest.path
 import org.mockito.Mockito._
+import simulino.memory.Span
 
 /**
  * Created by dnwiebe on 5/8/15.
@@ -47,14 +48,6 @@ class HexLoaderTest extends path.FunSpec {
         assert (subject.getData (127, 6) === Array (
           0.toByte, 126.toByte, 127.toByte, -128.toByte, -127.toByte, 0.toByte
         ))
-      }
-
-      it ("knows the lowest address seen") {
-        assert (subject.lowestAddressSet === 12)
-      }
-
-      it ("knows the highest address seen") {
-        assert (subject.highestAddressSet === 131)
       }
     }
   }
