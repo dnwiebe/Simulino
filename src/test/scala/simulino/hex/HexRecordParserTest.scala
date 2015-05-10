@@ -2,6 +2,7 @@ package simulino.hex
 
 import org.scalatest.path
 import simulino.memory.UnsignedByte
+import simulino.utils.TestUtils._
 
 import scala.util.{Success, Failure, Try}
 
@@ -173,16 +174,6 @@ class HexRecordParserTest extends path.FunSpec {
 
       it ("complains") {
         fails (result, new IllegalArgumentException (".hex SLA record must have data length of 4, not 1"))
-      }
-    }
-  }
-
-  private def fails (result: Try[_], exception: Exception): Unit = {
-    result match {
-      case Success(_) => fail (s"Should have thrown ${exception.getClass.getName} (${exception.getMessage}})")
-      case Failure (e) => {
-        assert (e.getClass === exception.getClass)
-        assert (e.getMessage === exception.getMessage)
       }
     }
   }

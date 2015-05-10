@@ -47,6 +47,8 @@ object Utils {
     }
   }
 
+  def TEST_DRIVE_ME = throw new UnsupportedOperationException ("Test-drive me!")
+
   private def numberOfHexDigits(number: Int): Int = {
     var toShift = number
     var digitCount = 0
