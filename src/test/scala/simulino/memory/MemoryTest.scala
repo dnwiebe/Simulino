@@ -105,8 +105,4 @@ class MemoryTest extends path.FunSpec {
       }
     }
   }
-
-  private def unsignedBytes (values: Int*): Array[UnsignedByte] = {
-    values.map {v => UnsignedByte (v)}.toArray
-  }
 }

@@ -2,7 +2,7 @@ package simulino.hex
 
 import java.io.{BufferedReader, Reader}
 
-import simulino.memory.Span
+import simulino.memory.{Memory, Span}
 
 import scala.collection.mutable.ListBuffer
 
@@ -15,7 +15,7 @@ class HexLoader {
   var lowest = Int.MaxValue
   var highest = Int.MinValue
 
-  def load (rdr: Reader): Unit = {
+  def load (rdr: Reader, memory: Memory): Unit = {
     val bufrdr = new BufferedReader (rdr)
     var continue = true
     while (continue) {
@@ -26,22 +26,9 @@ class HexLoader {
       else {
         parser.parse (line) match {
           case None =>
-          case Some (span) => applySpan (span)
+          case Some (span) => memory.addSpan (span)
         }
       }
-    }
-  }
-
-  def getData (offset: Int, length: Int): Array[Byte] = {
-    val array = new Array[Byte] (length)
-    (0 until length).foreach {i => array(i) = data(offset + i)}
-    array
-  }
-
-  private def applySpan (span: Span): Unit = {
-    (0 until span.data.length).foreach {i =>
-      val address = span.offset + i
-      data(address.toInt) = span.data(i)
     }
   }
 }

@@ -1,5 +1,7 @@
 package simulino.utils
 
+import simulino.memory.UnsignedByte
+
 import scala.util.{Failure, Success, Try}
 import org.scalatest.Assertions._
 
@@ -15,5 +17,9 @@ object TestUtils {
         assert (e.getMessage === exception.getMessage)
       }
     }
+  }
+
+  def unsignedBytes (values: Int*): Array[UnsignedByte] = {
+    values.map {v => UnsignedByte (v)}.toArray
   }
 }
