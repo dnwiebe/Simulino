@@ -1,6 +1,6 @@
 package simulino.hex
 
-import java.io.{BufferedReader, Reader}
+import java.io.{InputStreamReader, InputStream, BufferedReader, Reader}
 
 import simulino.memory.{Memory, Span}
 
@@ -12,23 +12,27 @@ import scala.collection.mutable.ListBuffer
 class HexLoader {
   var parser = new HexRecordParser ()
   val data = new Array[Byte](1024)
-  var lowest = Int.MaxValue
-  var highest = Int.MinValue
 
   def load (rdr: Reader, memory: Memory): Unit = {
     val bufrdr = new BufferedReader (rdr)
     var continue = true
+    var lineNo = 1
     while (continue) {
       val line = bufrdr.readLine ()
       if (line == null) {
         continue = false
       }
       else {
-        parser.parse (line) match {
+        parser.parse (line, lineNo) match {
           case None =>
           case Some (span) => memory.addSpan (span)
         }
       }
+      lineNo += 1
     }
+  }
+
+  def load (istr: InputStream, memory: Memory): Unit = {
+    load (new InputStreamReader (istr), memory)
   }
 }

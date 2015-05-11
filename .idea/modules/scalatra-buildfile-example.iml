@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module external.linked.project.id="simulino" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
+<module external.linked.project.id="scalatra-buildfile-example" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../target/scala-2.11/classes" />
     <output-test url="file://$MODULE_DIR$/../../target/scala-2.11/test-classes" />
@@ -22,10 +22,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.6:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang:scala-reflect:2.11.2:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.4:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.mockito:mockito-all:1.10.19:jar" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="SBT: ch.qos.logback:logback-classic:1.1.3:jar" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="SBT: ch.qos.logback:logback-core:1.1.3:jar" level="project" />
     <orderEntry type="library" name="SBT: com.googlecode.juniversalchardet:juniversalchardet:1.0.3:jar" level="project" />
@@ -42,14 +38,15 @@
     <orderEntry type="library" name="SBT: org.eclipse.jetty:jetty-webapp:9.2.10.v20150310:jar" level="project" />
     <orderEntry type="library" name="SBT: org.eclipse.jetty:jetty-xml:9.2.10.v20150310:jar" level="project" />
     <orderEntry type="library" name="SBT: org.joda:joda-convert:1.7:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.mockito:mockito-all:1.10.19:jar" level="project" />
+    <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.6:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scala-lang:scala-reflect:2.11.2:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.3:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scala-lang.modules:scala-xml_2.11:1.0.3:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.scalatest:scalatest_2.11:2.2.4:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalatra:scalatra-common_2.11:2.4.0.RC1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalatra:scalatra_2.11:2.4.0.RC1:jar" level="project" />
     <orderEntry type="library" name="SBT: org.scalatra.rl:rl_2.11:0.4.10:jar" level="project" />
     <orderEntry type="library" name="SBT: org.slf4j:slf4j-api:1.7.10:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-core:2.5.3:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-annotations:2.5.0:jar" level="project" />
-    <orderEntry type="library" name="SBT: com.fasterxml.jackson.core:jackson-databind:2.5.3:jar" level="project" />
   </component>
 </module>

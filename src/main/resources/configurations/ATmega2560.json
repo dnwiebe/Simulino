@@ -1,0 +1,10 @@
+{
+  "memory": {
+    "program": 262144,
+    "dynamic": 8192,
+    "persistent": 4096
+  },
+  "cpu": {
+    "clockSpeed": 16000000
+  }
+}

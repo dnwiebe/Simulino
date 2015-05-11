@@ -75,32 +75,32 @@ class HexRecordParser {
   private var baseAddress = 0
   private var startAddress: Option[Long] = None
 
-  def parse (line: String): Option[Span] = {
-    validateLine (line)
+  def parse (line: String, lineNo: Int): Option[Span] = {
+    validateLine (line, lineNo)
     val record = separate (line)
-    validateRecord (record)
+    validateRecord (record, lineNo)
     record.recordType.toSpanOpt (this, record)
   }
 
   def getStartAddress: Option[Long] = startAddress
 
   private val REGEX = ":[0-9A-Fa-f]*".r
-  private def validateLine (line: String): Unit = {
+  private def validateLine (line: String, lineNo: Int): Unit = {
     if (line == null) {
       throw new NullPointerException ("Line must be provided")
     }
     if (line.length < 11) {
-      throw new IllegalArgumentException (s".hex record must be at least 11 characters long, not ${line.length}")
+      throw new IllegalArgumentException (s"Line ${lineNo}: .hex record must be at least 11 characters long, not ${line.length}")
     }
     if (line(0) != ':') {
-      throw new IllegalArgumentException (s".hex record must begin with a colon, not '${line (0)}'")
+      throw new IllegalArgumentException (s"Line ${lineNo}: .hex record must begin with a colon, not '${line (0)}'")
     }
     line match {
       case REGEX (_*) =>
-      case _ => throw new IllegalArgumentException (".hex record must not contain non-hexadecimal symbols")
+      case _ => throw new IllegalArgumentException (s"Line ${lineNo}: .hex record must not contain non-hexadecimal symbols")
     }
     if ((line.length & 1) == 0) {
-      throw new IllegalArgumentException (s".hex record must contain an even number of digits, not ${line.length - 1}")
+      throw new IllegalArgumentException (s"Line ${lineNo}: .hex record must contain an even number of digits, not ${line.length - 1}")
     }
   }
 
@@ -113,13 +113,13 @@ class HexRecordParser {
     new HexRecord (byteCount, address, recordTypeIndex, data, checksum)
   }
 
-  private def validateRecord (record: HexRecord): Unit = {
+  private def validateRecord (record: HexRecord, lineNo: Int): Unit = {
     if (record.byteCount != record.data.length) {
-      throw new IllegalArgumentException (s".hex record contains ${record.data.length} data bytes, not ${record.byteCount} as claimed")
+      throw new IllegalArgumentException (s"Line ${lineNo}: .hex record contains ${record.data.length} data bytes, not ${record.byteCount} as claimed")
     }
     val checksum = computeChecksum (record)
     if (checksum != 0) {
-      throw new IllegalArgumentException (s".hex record produces a checksum of ${checksum} instead of 0")
+      throw new IllegalArgumentException (s"Line ${lineNo}: .hex record produces a checksum of ${checksum} instead of 0")
     }
   }
 
@@ -138,7 +138,7 @@ class HexRecordParser {
   private def extractAddress (line: String): Int = {
     val highByte = pairToUnsignedByte (line.substring (3, 5))
     val lowByte = pairToUnsignedByte (line.substring (5, 7))
-    (highByte.value * 0x100) + lowByte
+    ((highByte.value << 8) | lowByte.value) & 0xFFFF
   }
 
   private def extractData (line: String): Array[UnsignedByte] = {
@@ -151,7 +151,9 @@ class HexRecordParser {
   }
 
   private def pairToUnsignedByte (pair: String): UnsignedByte = {
-    val result = (digit2Int (pair (0)) * 16) + digit2Int (pair (1))
+    val hiNybble = digit2Int (pair (0))
+    val loNybble = digit2Int (pair (1))
+    val result = ((hiNybble << 4) | loNybble) & 0xFF
     result
   }
 
