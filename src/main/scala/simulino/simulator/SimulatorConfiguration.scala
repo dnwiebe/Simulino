@@ -50,6 +50,6 @@ case object SimulatorConfiguration {
 }
 
 case class SimulatorConfiguration (
-  memory: MemoryConfiguration,
-  cpu: CpuConfiguration
+  memory: MemoryConfiguration = null,
+  cpu: CpuConfiguration = null
 )
