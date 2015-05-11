@@ -6,57 +6,8 @@
     </option>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75b7deec-4f5e-4572-830a-fbbfd22d588d" name="Default" comment="More progress made, including temporarily-disabled story test">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/resources/configurations/ATmega2560.json" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/resources/static/hex/Blink.cpp.hex" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/scala/storytests/BlinkTest.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/simulino/simulator/peripheral/PinSampler.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__ch_qos_logback_logback_classic_1_1_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__ch_qos_logback_logback_core_1_1_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__com_fasterxml_jackson_core_jackson_annotations_2_5_0_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__com_fasterxml_jackson_core_jackson_core_2_5_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__com_fasterxml_jackson_core_jackson_databind_2_5_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__com_googlecode_juniversalchardet_juniversalchardet_1_0_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__eu_medsea_mimeutil_mime_util_2_1_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__javax_servlet_javax_servlet_api_3_1_0_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__joda_time_joda_time_2_7_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_clapper_grizzled_slf4j_2_11_1_0_2_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_http_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_io_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_security_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_server_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_servlet_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_util_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_webapp_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_eclipse_jetty_jetty_xml_9_2_10_v20150310_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_joda_joda_convert_1_7_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_scala_lang_modules_scala_parser_combinators_2_11_1_0_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_scala_lang_modules_scala_xml_2_11_1_0_3_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_scalatra_rl_rl_2_11_0_4_10_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_scalatra_scalatra_2_11_2_4_0_RC1_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_scalatra_scalatra_common_2_11_2_4_0_RC1_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/SBT__org_slf4j_slf4j_api_1_7_10_jar.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/ScalaBootstrap.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/simulino/simulator/Simulator.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/simulino/simulator/SimulatorConfiguration.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/scala/simulino/simulator/SimulatorConfigurationTest.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/scala/simulino/simulator/SimulatorTest.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/simulino/servlet/SimulinoServlet.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/project/assembly.sbt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/project/build.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules/scalatra-buildfile-example-build.iml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/modules/scalatra-buildfile-example.iml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/simulino/hex/HexLoader.scala" afterPath="$PROJECT_DIR$/src/main/scala/simulino/hex/HexLoader.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/simulino/hex/HexLoaderTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/simulino/hex/HexLoaderTest.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/simulino/hex/HexRecordParser.scala" afterPath="$PROJECT_DIR$/src/main/scala/simulino/hex/HexRecordParser.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/simulino/hex/HexRecordParserTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/simulino/hex/HexRecordParserTest.scala" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project/build.properties" afterPath="$PROJECT_DIR$/project/build.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build.sbt" afterPath="$PROJECT_DIR$/build.sbt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/sbt.xml" afterPath="$PROJECT_DIR$/.idea/sbt.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules/simulino-build.iml" afterPath="$PROJECT_DIR$/.idea/modules/simulino-build.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules/simulino.iml" afterPath="$PROJECT_DIR$/.idea/modules/simulino.iml" />
+    <list default="true" id="75b7deec-4f5e-4572-830a-fbbfd22d588d" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/resources/static/hex/Blink.cpp.hex" afterPath="$PROJECT_DIR$/src/test/resources/static/hex/Blink.cpp.hex" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Simulino.iws" />
@@ -1392,7 +1343,7 @@
       <updated>1431097359985</updated>
       <workItem from="1431138309208" duration="14915000" />
       <workItem from="1431221137172" duration="24896000" />
-      <workItem from="1431297659638" duration="16040000" />
+      <workItem from="1431297659638" duration="16079000" />
     </task>
     <task id="LOCAL-00001" summary="Added Extended Segment Address (0x03) .hex record type">
       <created>1431141228253</created>
@@ -1430,11 +1381,17 @@
       <option name="project" value="LOCAL" />
       <updated>1431265226334</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="More progress made, including temporarily-disabled story test">
+      <created>1431342815716</created>
+      <option name="number" value="00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1431342815716</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="55851000" />
+    <option name="totallyTimeSpent" value="55890000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1345" y="24" width="1855" height="1056" extended-state="6" />
