@@ -9,7 +9,6 @@ import simulino.simulator.{SimulatorConfiguration, Simulator}
  */
 class BlinkTest extends path.FunSpec {
   describe ("A Simulator, configured as an ATmega2560") {
-//    pending
     val jsonStream = getClass.getClassLoader.getResourceAsStream ("configurations/ATmega2560.json")
     val configuration = SimulatorConfiguration (jsonStream)
     val subject = new Simulator (configuration)
