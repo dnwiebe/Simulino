@@ -1,8 +1,6 @@
 package simulino.cpu
 
-import simulino.engine.{Event, Engine, Subscriber}
-import simulino.memory.Memory
-import simulino.pinout.Pinout
+import simulino.engine.{Engine, Subscriber}
 import simulino.simulator.CpuConfiguration
 
 /**
@@ -11,13 +9,25 @@ import simulino.simulator.CpuConfiguration
 trait Cpu extends Subscriber {
   val engine: Engine
   val config: CpuConfiguration
-  val programMemory: Memory
-  val dynamicMemory: Memory
-  val pinout: Pinout
+  private var _ip = 0
+  private var _sp = 0
+
+  def ip = _ip
+
+  def sp = _sp
 
   def receive = {
-    case c: CpuChange => c.execute (this).foreach (engine.schedule)
+    case c: CpuChange => handle (c)
     case i: Instruction => i.execute (this).foreach (engine.schedule)
     case _ =>
+  }
+
+  private def handle (change: CpuChange): Unit = {
+    change match {
+      case c: IncrementIp => _ip += c.increment
+      case c: SetIp => _ip = c.newIp
+      case c: IncrementSp => _sp += c.increment
+      case c: SetSp => _sp = c.newSp
+    }
   }
 }
