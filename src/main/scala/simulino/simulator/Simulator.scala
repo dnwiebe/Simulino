@@ -2,7 +2,7 @@ package simulino.simulator
 
 import java.io.{InputStreamReader, InputStream, Reader}
 
-import simulino.engine.{Event, Engine, Subscriber}
+import simulino.engine.{ScheduledEvent, Event, Engine, Subscriber}
 import simulino.hex.HexLoader
 import simulino.memory.{Memory, UnsignedByte}
 import simulino.utils.Utils._
@@ -29,7 +29,7 @@ class Simulator (configuration: SimulatorConfiguration) {
     engine.addSubscriber (subscriber)
   }
 
-  def schedule (event: Event): Unit = {
+  def schedule (event: ScheduledEvent): Unit = {
     engine.schedule (event)
   }
 

@@ -4,7 +4,7 @@ import java.io.StringReader
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.engine.{Event, Subscriber, Engine}
+import simulino.engine.{ScheduledEvent, Event, Subscriber, Engine}
 import simulino.memory.UnsignedByte
 import simulino.utils.TestUtils._
 
@@ -85,7 +85,7 @@ class SimulatorTest extends path.FunSpec {
         }
 
         describe ("and directed to schedule an event") {
-          val event = mock (classOf[Event])
+          val event = mock (classOf[ScheduledEvent])
           subject.schedule (event)
 
           it ("passes the schedule on to the Engine") {

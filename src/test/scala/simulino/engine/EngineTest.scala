@@ -10,7 +10,7 @@ class EngineTest extends path.FunSpec {
       assert (subject.nextTick === 0L)
     }
 
-    class EmptyEvent (val tick: Long) extends Event
+    class EmptyEvent () extends Event
 
     describe ("ticked over five times") {
       (1 to 5).foreach {i => subject.tick ()}
@@ -21,7 +21,7 @@ class EngineTest extends path.FunSpec {
 
       it ("and asked to schedule an event for tick 4, complains") {
         try {
-          subject.schedule (new EmptyEvent (4))
+          subject.schedule (new EmptyEvent (), 4)
           fail ()
         }
         catch {
@@ -31,8 +31,8 @@ class EngineTest extends path.FunSpec {
     }
 
     describe ("given an Event for tick 10") {
-      val event = new EmptyEvent (10L)
-      subject.schedule (event)
+      val event = new EmptyEvent ()
+      subject.schedule (event, 10L)
 
       describe ("and a Subscriber to listen for it") {
         val subscriber = new Subscriber {
@@ -67,10 +67,10 @@ class EngineTest extends path.FunSpec {
         }
 
         describe ("and also events at ticks 5 and 7") {
-          val firstEvent = new EmptyEvent (5L)
-          subject.schedule (firstEvent)
-          val secondEvent = new EmptyEvent (7L)
-          subject.schedule (secondEvent)
+          val firstEvent = new EmptyEvent ()
+          subject.schedule (firstEvent, 5L)
+          val secondEvent = new EmptyEvent ()
+          subject.schedule (secondEvent, 7L)
 
           describe ("and ticked five times") {
             (1 to 5).foreach {i => subject.tick ()}
@@ -120,12 +120,12 @@ class EngineTest extends path.FunSpec {
     }
 
     describe ("given two Events for tick 3 and two subscribers to listen for them") {
-      val oneEvent = new EmptyEvent (3L)
-      subject.schedule (oneEvent)
+      val oneEvent = new EmptyEvent ()
+      subject.schedule (oneEvent, 3L)
       val oneSubscriber = new PickySubscriber (oneEvent)
       subject.addSubscriber(oneSubscriber)
-      val anotherEvent = new EmptyEvent (3L)
-      subject.schedule (anotherEvent)
+      val anotherEvent = new EmptyEvent ()
+      subject.schedule (anotherEvent, 3L)
       val anotherSubscriber = new PickySubscriber (anotherEvent)
       subject.addSubscriber(anotherSubscriber)
 

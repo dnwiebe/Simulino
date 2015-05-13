@@ -13,13 +13,23 @@ trait Cpu extends Subscriber {
   private var _sp = 0
 
   def ip = _ip
+  protected def ip_= (ip: Int): Unit = {
+
+  }
 
   def sp = _sp
 
   def receive = {
     case c: CpuChange => handle (c)
-    case i: Instruction => i.execute (this).foreach (engine.schedule)
+    case i: Instruction => handle (i)
     case _ =>
+  }
+
+  private def handle (instruction: Instruction): Unit = {
+    val tick = engine.nextTick + instruction.latency
+    instruction.execute (this).foreach {event =>
+      engine.schedule (event, tick)
+    }
   }
 
   private def handle (change: CpuChange): Unit = {

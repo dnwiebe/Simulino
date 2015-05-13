@@ -27,12 +27,13 @@ class CpuTest extends path.FunSpec {
       val oneConsequence = mock (classOf[Event])
       val anotherConsequence = mock (classOf[Event])
       val instruction = mock (classOf[Instruction])
+      when (instruction.latency).thenReturn (5)
       when (instruction.execute (subject)).thenReturn (List (oneConsequence, anotherConsequence))
       subject.receive (instruction)
 
       it ("executes the instruction with the Cpu and schedules the consequences") {
-        verify (engine).schedule (oneConsequence)
-        verify (engine).schedule (anotherConsequence)
+        verify (engine).schedule (oneConsequence, 5)
+        verify (engine).schedule (anotherConsequence, 5)
       }
     }
 
