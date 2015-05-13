@@ -26,7 +26,7 @@ class CpuTest extends path.FunSpec {
     describe ("given an Instruction") {
       val oneConsequence = mock (classOf[Event])
       val anotherConsequence = mock (classOf[Event])
-      val instruction = mock (classOf[Instruction])
+      val instruction = mock (classOf[Instruction[TestCpu]])
       when (instruction.latency).thenReturn (5)
       when (instruction.execute (subject)).thenReturn (List (oneConsequence, anotherConsequence))
       subject.receive (instruction)

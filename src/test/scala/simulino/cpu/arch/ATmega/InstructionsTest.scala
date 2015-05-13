@@ -1,7 +1,6 @@
 package simulino.cpu.arch.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.ATmega.{NOP, RJMP}
 import simulino.cpu.arch.AvrCpu
 import simulino.cpu.{IncrementIp, Cpu}
 import simulino.utils.TestUtils._

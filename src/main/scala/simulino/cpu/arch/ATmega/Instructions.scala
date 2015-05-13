@@ -3,6 +3,8 @@ package simulino.cpu.arch.ATmega
 import simulino.cpu.arch.AvrCpu
 import simulino.cpu.{IncrementIp, Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
+import simulino.cpu.Implicits.RegisterBit
+import simulino.cpu.Implicits.RegisterInt
 
 /**
   * Created by dnwiebe on 5/12/15.

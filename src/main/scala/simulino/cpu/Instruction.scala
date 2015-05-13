@@ -22,7 +22,7 @@ trait InstructionObject[T <: Instruction[_]] {
 
   private def matchPattern (buffer: Array[UnsignedByte], mask: Int, pattern: Int): Boolean = {
     val value = (0 until 4).foldLeft (0) {(soFar, i) => i < buffer.length match {
-      case true => (soFar << 8) | buffer(i)
+      case true => (soFar << 8) | buffer(i).value
       case false => soFar << 8
     }}
     (value & mask) == pattern
@@ -33,19 +33,19 @@ trait Instruction[C <: Cpu] extends Event {
   def length: Int
   def latency: Long
   def execute (cpu: C): Seq[Event]
+}
 
-  implicit protected class RegisterInt (val value: Int) extends AnyVal {
+object Implicits {
+
+  implicit class RegisterInt (val value: Int) extends AnyVal {
     def bit (parm: Int): Boolean = TEST_DRIVE_ME
   }
 
-  implicit protected class RegisterBit (val value: Boolean) extends AnyVal {
+  implicit class RegisterBit (val value: Boolean) extends AnyVal {
     def dot (parm: Boolean): Boolean = TEST_DRIVE_ME
 
     def + (parm: Boolean): Boolean = TEST_DRIVE_ME
 
     def xor (parm: Boolean): Boolean = TEST_DRIVE_ME
   }
-}
-
-object Implicits {
 }

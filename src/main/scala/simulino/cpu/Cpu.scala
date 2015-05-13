@@ -1,6 +1,6 @@
 package simulino.cpu
 
-import simulino.engine.{Engine, Subscriber}
+import simulino.engine.{Event, Engine, Subscriber}
 import simulino.simulator.CpuConfiguration
 
 /**
@@ -19,20 +19,30 @@ trait Cpu extends Subscriber {
 
   def sp = _sp
 
-  def receive = {
-    case c: CpuChange => handle (c)
-    case i: Instruction => handle (i)
-    case _ =>
+  override def receive: PartialFunction[Event, Unit] = {
+    class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
+      override def isDefinedAt (event: Event): Boolean = {
+        (event.getClass == classOf[CpuChange]) || (event.getClass == classOf[Instruction[_]])
+      }
+      override def apply (event: Event): Unit = {
+        event match {
+          case c: CpuChange => handleCpuChange (c)
+          case i: Instruction[C] => handleInstruction (i.asInstanceOf[Instruction[Cpu]])
+          case _ =>
+        }
+      }
+    }
+    new PFC ()
   }
 
-  private def handle (instruction: Instruction): Unit = {
+  private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
     val tick = engine.nextTick + instruction.latency
-    instruction.execute (this).foreach {event =>
+    instruction.execute (this.asInstanceOf[C]).foreach {event =>
       engine.schedule (event, tick)
     }
   }
 
-  private def handle (change: CpuChange): Unit = {
+  private def handleCpuChange (change: CpuChange): Unit = {
     change match {
       case c: IncrementIp => _ip += c.increment
       case c: SetIp => _ip = c.newIp
