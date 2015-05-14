@@ -5,6 +5,8 @@
     "persistent": 4096
   },
   "cpu": {
-    "clockSpeed": 16000000
+    "clockSpeed": 16000000,
+    "class": "simulino.cpu.arch.AvrCpu",
+    "classSpecific": {}
   }
 }

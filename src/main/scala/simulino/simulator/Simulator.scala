@@ -2,6 +2,7 @@ package simulino.simulator
 
 import java.io.{InputStreamReader, InputStream, Reader}
 
+import simulino.cpu.Cpu
 import simulino.engine.{ScheduledEvent, Event, Engine, Subscriber}
 import simulino.hex.HexLoader
 import simulino.memory.{Memory, UnsignedByte}
@@ -13,6 +14,7 @@ import simulino.utils.Utils._
 class Simulator (configuration: SimulatorConfiguration) {
   var engine = new Engine ()
   val programMemory = new Memory (configuration.memory.programSize)
+  val cpu = makeCpu (configuration.cpu)
 
   def id = System.identityHashCode(this)
 
@@ -51,5 +53,10 @@ class Simulator (configuration: SimulatorConfiguration) {
 
   def dumpPersistentMemory (offset: Int, length: Int): Array[UnsignedByte] = {
     (0 until length).map {i => UnsignedByte (0)}.toArray
+  }
+
+  private def makeCpu (config: CpuConfiguration): Cpu = {
+    val ctor = config.cls.getConstructor (classOf[Engine], classOf[CpuConfiguration])
+    ctor.newInstance (engine, config)
   }
 }

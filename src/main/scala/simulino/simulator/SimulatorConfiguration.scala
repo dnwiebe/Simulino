@@ -1,6 +1,7 @@
 package simulino.simulator
 
 import java.io.InputStream
+import simulino.cpu.Cpu
 import simulino.utils.Utils._
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
@@ -26,12 +27,19 @@ case class MemoryConfiguration (
 case object CpuConfiguration {
   def apply (node: JsonNode): CpuConfiguration = {
     val clockSpeed = node.get ("clockSpeed").asInt
-    new CpuConfiguration (clockSpeed)
+    val className = node.get ("class").asText
+    val cls = Class.forName (className).asInstanceOf[Class[Cpu]]
+    val classSpecific = node.get ("classSpecific")
+    new CpuConfiguration (clockSpeed, cls, classSpecific)
   }
+
+  private def debugHere () {}
 }
 
 case class CpuConfiguration (
-  clockSpeed: Int
+  clockSpeed: Int,
+  cls: Class[_ <: Cpu],
+  classSpecific: JsonNode
 )
 
 case object SimulatorConfiguration {

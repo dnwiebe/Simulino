@@ -2,6 +2,7 @@ package simulino.cpu
 
 import simulino.engine.{Event, Engine, Subscriber}
 import simulino.simulator.CpuConfiguration
+import simulino.utils.Utils._
 
 /**
  * Created by dnwiebe on 5/11/15.
@@ -14,10 +15,13 @@ trait Cpu extends Subscriber {
 
   def ip = _ip
   protected def ip_= (ip: Int): Unit = {
-
+    TEST_DRIVE_ME
   }
 
   def sp = _sp
+  protected def sp_= (sp: Int): Unit = {
+    TEST_DRIVE_ME
+  }
 
   override def receive: PartialFunction[Event, Unit] = {
     class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
