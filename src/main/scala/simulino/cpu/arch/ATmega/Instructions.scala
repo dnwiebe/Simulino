@@ -38,7 +38,6 @@ class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = List (IncrementIp (k * 2))
 }
 
-
 object SBC extends InstructionObject[SBC] {
   override val mask = 0xFC000000
   override val pattern = 0x08000000
@@ -53,7 +52,7 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.register (d)
     val Rr = cpu.register (r)
-    val R = Rd - Rr - (if (cpu.flag ('C)) 1 else 0)
+    val R = (Rd - Rr - (if (cpu.flag ('C)) 1 else 0)) & 0xFF
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
@@ -62,5 +61,31 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
     List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
+  }
+}
+
+object ADD extends InstructionObject[ADD] {
+  override val mask = 0xFC000000
+  override val pattern = 0x0C000000
+  override protected def parse (buffer: Array[UnsignedByte]): ADD = {
+    new ADD (parseParameter (buffer, 0x01F00000), parseParameter (buffer, 0x020F0000))
+  }
+}
+
+class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = (Rd + Rr) & 0xFF
+    val Hf = ((Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && !(R bit 3)) || (!(R bit 3) && (Rd bit 3))
+    val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R == 0
+    val Cf = ((Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && !(R bit 7)) || (!(R bit 7) && (Rd bit 7))
+    List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
+      S = Some (Sf), Z = Some(Zf), C = Some (Cf)))
   }
 }
