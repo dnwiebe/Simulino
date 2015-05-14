@@ -3,8 +3,8 @@ package simulino.cpu.arch.ATmega
 import simulino.cpu.arch.AvrCpu
 import simulino.cpu.{IncrementIp, Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
-import simulino.cpu.Implicits.RegisterBit
 import simulino.cpu.Implicits.RegisterInt
+import simulino.cpu.Implicits.RegisterBit
 
 /**
   * Created by dnwiebe on 5/12/15.
@@ -55,14 +55,14 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.register (d)
     val Rr = cpu.register (r)
-    val R = d - r
-    val Hf = (!(Rd bit 3) dot (Rr bit 3)) + ((Rr bit 3) dot (R bit 3)) + ((R bit 3) dot !(Rd bit 3))
-    val Vf = ((Rd bit 7) dot !(Rr bit 7) dot !(R bit 7)) + (!(Rd bit 7) dot (Rr bit 7) dot (R bit 7))
+    val R = Rd - Rr - (if (cpu.flag ('C)) 1 else 0)
+    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
-    val Sf = Nf xor Vf
+    val Sf = Nf ^^ Vf
     val Zfopt = if (R == 0) None else Some (false)
-    val Cf = (!(Rd bit 7) dot (Rr bit 7)) + ((Rr bit 7) dot (R bit 7)) dot !(Rd bit 7)
-    List (IncrementIp (2), SetRegister (Rd, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
+    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
   }
 }

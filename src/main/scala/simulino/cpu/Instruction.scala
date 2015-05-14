@@ -38,14 +38,12 @@ trait Instruction[C <: Cpu] extends Event {
 object Implicits {
 
   implicit class RegisterInt (val value: Int) extends AnyVal {
-    def bit (parm: Int): Boolean = TEST_DRIVE_ME
+    def bit (parm: Int): Boolean = {
+      ((value >> parm) & 0x1) == 1
+    }
   }
 
   implicit class RegisterBit (val value: Boolean) extends AnyVal {
-    def dot (parm: Boolean): Boolean = TEST_DRIVE_ME
-
-    def + (parm: Boolean): Boolean = TEST_DRIVE_ME
-
-    def xor (parm: Boolean): Boolean = TEST_DRIVE_ME
+    def ^^ (parm: Boolean): Boolean = (value != parm)
   }
 }
