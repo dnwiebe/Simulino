@@ -28,7 +28,7 @@ object RJMP extends InstructionObject[RJMP] {
   override val mask = 0xF0000000
   override val pattern = 0xC0000000
   override protected def parse (buffer: Array[UnsignedByte]): RJMP = {
-    new RJMP (((buffer(0).value & 0x0F) << 8) + buffer(1).value)
+    new RJMP (parseParameter (buffer, 0x0FFF0000))
   }
 }
 
@@ -43,9 +43,7 @@ object SBC extends InstructionObject[SBC] {
   override val mask = 0xFC000000
   override val pattern = 0x08000000
   override protected def parse (buffer: Array[UnsignedByte]): SBC = {
-    val r = ((buffer(0).value & 0x02) << 3) | (buffer(1).value & 0x0F)
-    val d = ((buffer(0).value & 0x01) << 4) | (buffer(1).value >> 4)
-    new SBC (d, r)
+    new SBC (parseParameter (buffer, 0x01F00000), parseParameter (buffer, 0x020F0000))
   }
 }
 

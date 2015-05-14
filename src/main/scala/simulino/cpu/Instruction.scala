@@ -12,7 +12,7 @@ trait InstructionObject[T <: Instruction[_]] {
   val pattern: Int
 
   def apply (buffer: Array[UnsignedByte]): Option[T] = {
-    matchPattern (buffer, mask, pattern) match {
+    matchOpcodePattern (buffer, mask, pattern) match {
       case true => Some (parse (buffer))
       case false => None
     }
@@ -20,12 +20,30 @@ trait InstructionObject[T <: Instruction[_]] {
 
   protected def parse (buffer: Array[UnsignedByte]): T
 
-  private def matchPattern (buffer: Array[UnsignedByte], mask: Int, pattern: Int): Boolean = {
-    val value = (0 until 4).foldLeft (0) {(soFar, i) => i < buffer.length match {
+  protected def parseParameter (buffer: Array[UnsignedByte], mask: Int): Int = {
+    var mutableMask = mask
+    var value = bufferToInt (buffer)
+    var parameter = 0
+    while (mutableMask != 0) {
+      if ((mutableMask & 0x80000000) != 0) {
+        parameter = parameter << 1
+        parameter = parameter | (if ((value & 0x80000000) != 0) 1 else 0)
+      }
+      mutableMask = mutableMask << 1
+      value = value << 1
+    }
+    parameter
+  }
+
+  private def matchOpcodePattern (buffer: Array[UnsignedByte], mask: Int, pattern: Int): Boolean = {
+    (bufferToInt (buffer) & mask) == pattern
+  }
+
+  private def bufferToInt (buffer: Array[UnsignedByte]): Int = {
+    (0 until 4).foldLeft (0) {(soFar, i) => i < buffer.length match {
       case true => (soFar << 8) | buffer(i).value
       case false => soFar << 8
     }}
-    (value & mask) == pattern
   }
 }
 
