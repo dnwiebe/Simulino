@@ -16,14 +16,14 @@ case class SetFlags (
   C: Option[Boolean] = None
 ) extends Event {
 
-  override def toString (): String = {
-    val names = Array ('I', 'T', 'H', 'S', 'V', 'N', 'Z', 'C')
+  override def toString: String = {
+    val names = Flag.values ()
     val values = Array (I, T, H, S, V, N, Z, C)
     "SetFlags(" + (0 until names.length).map {i =>
       values(i) match {
         case None => "_"
-        case Some (true) => names(i)
-        case Some (false) => names(i).toLower
+        case Some (true) => names(i).name
+        case Some (false) => names(i).name.toLowerCase
       }
     }.mkString ("") + ")"
   }
