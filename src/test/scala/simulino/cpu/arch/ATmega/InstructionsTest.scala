@@ -2,7 +2,8 @@ package simulino.cpu.arch.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.AvrCpu
-import simulino.cpu.{IncrementIp, Cpu}
+import simulino.cpu.IncrementIp
+import simulino.cpu.arch.ATmega.Flag._
 import simulino.utils.TestUtils._
 import org.mockito.Mockito._
 
@@ -92,7 +93,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed without a previous carry and producing no carry") {
-          when (cpu.flag ('C)).thenReturn (false)
+          when (cpu.flag (C)).thenReturn (false)
           when (cpu.register (0x0A)).thenReturn (123)
           when (cpu.register (0x15)).thenReturn (23)
           val result = instruction.execute (cpu)
@@ -105,7 +106,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with a previous carry and producing no carry") {
-          when (cpu.flag ('C)).thenReturn (true)
+          when (cpu.flag (C)).thenReturn (true)
           when (cpu.register (0x0A)).thenReturn (123)
           when (cpu.register (0x15)).thenReturn (23)
           val result = instruction.execute (cpu)
@@ -118,7 +119,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed without a previous carry and producing a carry") {
-          when (cpu.flag ('C)).thenReturn (false)
+          when (cpu.flag (C)).thenReturn (false)
           when (cpu.register (0x0A)).thenReturn (23)
           when (cpu.register (0x15)).thenReturn (123)
           val result = instruction.execute (cpu)
@@ -131,7 +132,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with a previous carry and producing a carry") {
-          when (cpu.flag ('C)).thenReturn (true)
+          when (cpu.flag (C)).thenReturn (true)
           when (cpu.register (0x0A)).thenReturn (23)
           when (cpu.register (0x15)).thenReturn (123)
           val result = instruction.execute (cpu)

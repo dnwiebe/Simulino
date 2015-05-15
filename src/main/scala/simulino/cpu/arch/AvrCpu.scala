@@ -1,6 +1,7 @@
 package simulino.cpu.arch
 
 import simulino.cpu.Cpu
+import simulino.cpu.arch.ATmega.Flag
 import simulino.engine.Engine
 import simulino.memory.UnsignedByte
 import simulino.simulator.CpuConfiguration
@@ -12,7 +13,7 @@ import simulino.utils.Utils._
 class AvrCpu (val engine: Engine, val config: CpuConfiguration) extends Cpu {
   private val registerFile = new RegisterFile ()
 
-  def flag (bit: Symbol): Boolean = TEST_DRIVE_ME
+  def flag (bit: Flag): Boolean = TEST_DRIVE_ME
   def register (idx: Int): UnsignedByte = registerFile (idx)
 }
 
