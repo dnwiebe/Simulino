@@ -10,6 +10,8 @@ import simulino.utils.Utils._
 trait Cpu extends Subscriber {
   val engine: Engine
   val config: CpuConfiguration
+  def instructionSet: InstructionSet[_]
+
   private var _ip = 0
   private var _sp = 0
 

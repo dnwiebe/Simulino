@@ -1,5 +1,7 @@
 package simulino.cpu.arch
 
+import simulino.cpu.arch.avr.ATmega.Flag
+
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.engine.Engine
@@ -21,6 +23,12 @@ class AvrCpuTest extends path.FunSpec {
 
     describe ("initially has zeros in all registers") {
       (0 until 32).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}
+    }
+
+    describe ("initially has zeros in all flags") {
+      Flag.values ().foreach {f =>
+        assert (subject.flag (f) === false, s"Flag ${f}")
+      }
     }
   }
 }

@@ -1,4 +1,4 @@
-package simulino.cpu.arch.ATmega
+package simulino.cpu.arch.avr.ATmega
 
 import simulino.engine.Event
 

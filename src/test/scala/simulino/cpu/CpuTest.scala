@@ -11,6 +11,7 @@ class CpuTest extends path.FunSpec {
   describe ("A Cpu") {
     class TestCpu (val engine: Engine) extends Cpu {
       val config = null
+      def instructionSet = null
     }
     val engine = mock (classOf[Engine])
     val subject = new TestCpu (engine)

@@ -1,11 +1,10 @@
-package simulino.cpu.arch.ATmega
+package simulino.cpu.arch.avr.ATmega
 
 import simulino.cpu.arch.AvrCpu
 import simulino.cpu.{IncrementIp, Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
-import simulino.cpu.Implicits.RegisterInt
 import simulino.cpu.Implicits.RegisterBit
-import simulino.cpu.arch.ATmega.Flag._
+import simulino.cpu.arch.avr.ATmega.Flag._
 
 /**
   * Created by dnwiebe on 5/12/15.
@@ -58,7 +57,7 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
-    val Zfopt = if (R == 0) None else Some (false)
+    val Zfopt = if (R == UnsignedByte (0)) None else Some (false)
     val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
     List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
@@ -84,7 +83,7 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
-    val Zf = R == 0
+    val Zf = R == UnsignedByte (0)
     val Cf = ((Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && !(R bit 7)) || (!(R bit 7) && (Rd bit 7))
     List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Some(Zf), C = Some (Cf)))

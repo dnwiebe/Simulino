@@ -14,7 +14,9 @@ import simulino.utils.TestUtils._
 /**
  * Created by dnwiebe on 5/10/15.
  */
-class TestCpu (val engine: Engine, val config: CpuConfiguration) extends Cpu
+class TestCpu (val engine: Engine, val config: CpuConfiguration) extends Cpu {
+  def instructionSet = null
+}
 
 class SimulatorTest extends path.FunSpec {
 

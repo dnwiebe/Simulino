@@ -11,7 +11,9 @@ import simulino.engine.Engine
  */
 class SimulatorConfigurationTest extends path.FunSpec {
 
-  class TestCpu (val clockSpeed: Int, val config: CpuConfiguration, val engine: Engine) extends Cpu
+  class TestCpu (val clockSpeed: Int, val config: CpuConfiguration, val engine: Engine) extends Cpu {
+    def instructionSet = null
+  }
 
   describe ("A SimulatorConfiguration produced from JSON") {
     val json =

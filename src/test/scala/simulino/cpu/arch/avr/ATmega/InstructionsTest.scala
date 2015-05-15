@@ -1,9 +1,9 @@
-package simulino.cpu.arch.ATmega
+package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.AvrCpu
 import simulino.cpu.IncrementIp
-import simulino.cpu.arch.ATmega.Flag._
+import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.utils.TestUtils._
 import org.mockito.Mockito._
 
