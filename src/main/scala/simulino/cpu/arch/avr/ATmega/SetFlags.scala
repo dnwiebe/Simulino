@@ -1,5 +1,6 @@
 package simulino.cpu.arch.avr.ATmega
 
+import simulino.cpu.CpuChange
 import simulino.engine.Event
 
 /**
@@ -14,7 +15,7 @@ case class SetFlags (
   N: Option[Boolean] = None,
   Z: Option[Boolean] = None,
   C: Option[Boolean] = None
-) extends Event {
+) extends CpuChange {
 
   override def toString: String = {
     val names = Flag.values ()

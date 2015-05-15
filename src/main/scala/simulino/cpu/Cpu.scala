@@ -34,7 +34,7 @@ trait Cpu extends Subscriber {
         event match {
           case c: CpuChange => handleCpuChange (c)
           case i: Instruction[C] => handleInstruction (i.asInstanceOf[Instruction[Cpu]])
-          case _ =>
+          case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
         }
       }
     }
@@ -48,12 +48,13 @@ trait Cpu extends Subscriber {
     }
   }
 
-  private def handleCpuChange (change: CpuChange): Unit = {
+  protected def handleCpuChange (change: CpuChange): Unit = {
     change match {
       case c: IncrementIp => _ip += c.increment
       case c: SetIp => _ip = c.newIp
       case c: IncrementSp => _sp += c.increment
       case c: SetSp => _sp = c.newSp
+      case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
     }
   }
 }
