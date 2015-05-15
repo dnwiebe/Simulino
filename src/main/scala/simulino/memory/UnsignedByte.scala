@@ -69,6 +69,13 @@ class UnsignedByte (proposedValue: Int, val halfCarry: Boolean,
     val result = this.value ^ that.value
     new UnsignedByte (result & 0xFF, false, false, false)
   }
+
+  def bit (idx: Integer): Boolean = {
+    (value >> idx) & 1 match {
+      case 0 => false
+      case _ => true
+    }
+  }
   
   override def toString: String = {
     Utils.toHex (value, 2)

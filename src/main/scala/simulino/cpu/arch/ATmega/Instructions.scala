@@ -52,7 +52,7 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.register (d)
     val Rr = cpu.register (r)
-    val R = (Rd - Rr - (if (cpu.flag ('C)) 1 else 0)) & 0xFF
+    val R: UnsignedByte = Rd - Rr - (if (cpu.flag ('C)) 1 else 0)
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
@@ -78,7 +78,7 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.register (d)
     val Rr = cpu.register (r)
-    val R = (Rd + Rr) & 0xFF
+    val R = Rd + Rr
     val Hf = ((Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && !(R bit 3)) || (!(R bit 3) && (Rd bit 3))
     val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
     val Nf = R bit 7
