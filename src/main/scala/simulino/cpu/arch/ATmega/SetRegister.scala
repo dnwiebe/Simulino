@@ -1,9 +1,10 @@
 package simulino.cpu.arch.ATmega
 
-import simulino.engine.Event
+import simulino.cpu.CpuChange
 import simulino.memory.UnsignedByte
 
 /**
  * Created by dnwiebe on 5/13/15.
  */
-case class SetRegister (register: Int, value: UnsignedByte) extends Event
+case class SetRegister (register: Int, value: UnsignedByte) extends CpuChange
+
