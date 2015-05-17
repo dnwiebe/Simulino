@@ -14,7 +14,6 @@ class BlinkTest extends path.FunSpec {
     val subject = new Simulator (configuration)
 
     describe ("and handed the Blink .hex file") {
-      pending
       subject.loadHex (getClass.getClassLoader.getResourceAsStream ("static/hex/Blink.cpp.hex"))
 
       describe ("and hooked to a PinSampler on pin 13") {
@@ -22,6 +21,7 @@ class BlinkTest extends path.FunSpec {
         subject.addSubscriber (sampler)
 
         describe ("and run for three seconds") {
+          pending
           subject.runForSeconds (3.0)
 
           it ("shows pin 13 going on and off appropriately") {

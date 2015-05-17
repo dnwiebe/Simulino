@@ -62,6 +62,40 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("CPC") {
+      it ("is properly unrecognized") {
+        assert (CPC (unsignedBytes (0x0C, 0x01)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = CPC (unsignedBytes (0x06, 0xA5)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          when (cpu.register (0x0A)).thenReturn (112)
+          when (cpu.register (0x15)).thenReturn (34)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (false), Some (false),
+              Some (false), Some (false), Some (false))))
+          }
+        }
+      }
+    }
+
     describe ("NOP") {
       it ("is properly unrecognized") {
         assert (NOP (unsignedBytes (0x00, 0x01)) === None)

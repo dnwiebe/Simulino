@@ -3,6 +3,7 @@ package simulino.cpu
 import simulino.engine.{Event, Engine, Subscriber}
 import simulino.memory.Memory
 import simulino.simulator.CpuConfiguration
+import simulino.utils.Utils._
 
 /**
  * Created by dnwiebe on 5/11/15.
@@ -44,7 +45,7 @@ trait Cpu extends Subscriber {
   def nextInstruction (): Instruction[_] = {
     val data = programMemory.getData (ip, 4)
     instructionSet (data) match {
-      case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction from ${data}")
+      case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction from ${data.map {toHex (_, 2)}.mkString (" ")}")
       case Some (i) => i
     }
   }

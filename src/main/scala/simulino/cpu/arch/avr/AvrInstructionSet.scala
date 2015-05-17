@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr
 
 import simulino.cpu.arch.AvrCpu
-import simulino.cpu.arch.avr.ATmega.{RJMP, ADD, SBC, NOP}
+import simulino.cpu.arch.avr.ATmega._
 import simulino.cpu.{InstructionObject, Instruction, InstructionSet}
 import simulino.memory.UnsignedByte
 
@@ -15,7 +15,7 @@ object AvrInstructionSet {
   
   private def initializeSesquideciles: Unit = {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
-    add (0x0, NOP, SBC, ADD)
+    add (0x0, ADD, CPC, NOP, SBC)
     add (0xC, RJMP)
   }
   
