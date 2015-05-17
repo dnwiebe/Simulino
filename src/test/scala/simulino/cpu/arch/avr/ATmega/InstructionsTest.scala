@@ -83,7 +83,7 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
-        describe ("and executed") {
+        describe ("and executed with positive d greater than positive r") {
           when (cpu.register (0x0A)).thenReturn (112)
           when (cpu.register (0x15)).thenReturn (34)
           val result = instruction.execute (cpu)
@@ -91,6 +91,39 @@ class InstructionsTest extends path.FunSpec {
           it ("produces the correct events") {
             assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (false), Some (false),
               Some (false), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with positive d less than positive r") {
+          when (cpu.register (0x0A)).thenReturn (12)
+          when (cpu.register (0x15)).thenReturn (34)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (true))))
+          }
+        }
+
+        describe ("and executed with negative d and positive r") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (34)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with negative d equal to r") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (250)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (false), Some (false),
+              Some (false), None, Some (false))))
           }
         }
       }
