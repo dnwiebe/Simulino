@@ -15,6 +15,53 @@ class InstructionsTest extends path.FunSpec {
   describe ("Given a mock CPU") {
     val cpu = mock (classOf[AvrCpu])
 
+    describe ("ADD") {
+      it ("is properly unrecognized") {
+        assert (ADD (unsignedBytes (0x08, 0x40)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = ADD (unsignedBytes (0x0E, 0xA5)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed to produce no carry") {
+          when (cpu.register (0x0A)).thenReturn (100)
+          when (cpu.register (0x15)).thenReturn (23)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x0A, 123),
+              SetFlags (H = Some (false), S = Some (false), V = Some (false), N = Some (false),
+                Z = Some (false), C = Some (false))))
+          }
+        }
+
+        describe ("when executed to produce a carry") {
+          when (cpu.register (0x0A)).thenReturn (200)
+          when (cpu.register (0x15)).thenReturn (56)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x0A, 0),
+              SetFlags (H = Some (true), S = Some (false), V = Some (false), N = Some (false),
+                Z = Some (true), C = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("NOP") {
       it ("is properly unrecognized") {
         assert (NOP (unsignedBytes (0x00, 0x01)) === None)
@@ -46,7 +93,7 @@ class InstructionsTest extends path.FunSpec {
         assert (RJMP (unsignedBytes (0xD0)) === None)
       }
 
-      describe ("when properly parsed") {
+      describe ("when properly parsed with a positive increment") {
         val instruction = RJMP (unsignedBytes (0xC1, 0x23)).get
 
         it ("has the right parameters" ) {
@@ -65,7 +112,23 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("produces an IP increment") {
-            assert (result === List(IncrementIp (0x246)))
+            assert (result === List(IncrementIp (0x248)))
+          }
+        }
+      }
+
+      describe ("when properly parsed with a negative increment") {
+        val instruction = RJMP (unsignedBytes (0xCE, 0xDD)).get
+
+        it ("has the right parameters" ) {
+          assert (instruction.k === -291)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces an IP increment") {
+            assert (result === List(IncrementIp (-580)))
           }
         }
       }
@@ -141,53 +204,6 @@ class InstructionsTest extends path.FunSpec {
             assert (result === List(IncrementIp (2), SetRegister (0x0A, 155),
               SetFlags (H = Some(true), S = Some (true), V = Some (false), N = Some (true),
                 Z = Some (false), C = Some (true))))
-          }
-        }
-      }
-    }
-
-    describe ("ADD") {
-      it ("is properly unrecognized") {
-        assert (ADD (unsignedBytes (0x08, 0x40)) === None)
-      }
-
-      describe ("when properly parsed") {
-        val instruction = ADD (unsignedBytes (0x0E, 0xA5)).get
-
-        it ("has the right parameters") {
-          assert (instruction.d === 0x0A)
-          assert (instruction.r === 0x15)
-        }
-
-        it ("is two bytes long") {
-          assert (instruction.length === 2)
-        }
-
-        it ("takes one clock cycle") {
-          assert (instruction.latency === 1)
-        }
-
-        describe ("when executed to produce no carry") {
-          when (cpu.register (0x0A)).thenReturn (100)
-          when (cpu.register (0x15)).thenReturn (23)
-          val result = instruction.execute (cpu)
-
-          it ("produces the correct events") {
-            assert (result === List (IncrementIp (2), SetRegister (0x0A, 123),
-              SetFlags (H = Some (false), S = Some (false), V = Some (false), N = Some (false),
-                Z = Some (false), C = Some (false))))
-          }
-        }
-
-        describe ("when executed to produce a carry") {
-          when (cpu.register (0x0A)).thenReturn (200)
-          when (cpu.register (0x15)).thenReturn (56)
-          val result = instruction.execute (cpu)
-
-          it ("produces the correct events") {
-            assert (result === List (IncrementIp (2), SetRegister (0x0A, 0),
-              SetFlags (H = Some (true), S = Some (false), V = Some (false), N = Some (false),
-                Z = Some (true), C = Some (true))))
           }
         }
       }

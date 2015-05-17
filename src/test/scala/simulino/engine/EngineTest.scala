@@ -1,13 +1,17 @@
 package simulino.engine
 
 import org.scalatest.path
+import simulino.utils.TestUtils._
+
+import scala.util.Try
 
 class EngineTest extends path.FunSpec {
   describe ("An Engine") {
     val subject = new Engine ()
 
     it ("begins at tick 0") {
-      assert (subject.nextTick === 0L)
+      assert (subject.currentTick === 0L)
+      assert (subject.nextTick === 1L)
     }
 
     class EmptyEvent () extends Event
@@ -15,18 +19,25 @@ class EngineTest extends path.FunSpec {
     describe ("ticked over five times") {
       (1 to 5).foreach {i => subject.tick ()}
 
-      it ("will next tick at 5") {
-        assert (subject.nextTick === 5L)
+      it ("is on tick 5") {
+        assert (subject.currentTick === 5L)
       }
 
-      it ("and asked to schedule an event for tick 4, complains") {
-        try {
-          subject.schedule (new EmptyEvent (), 4)
-          fail ()
+      it ("will next tick at 6") {
+        assert (subject.nextTick === 6L)
+      }
+
+      describe ("and asked to schedule an event for tick 4") {
+        val result = Try {subject.schedule (new EmptyEvent (), 4)}
+
+        it ("complains") {
+          fails (result, new IllegalArgumentException ("Can't schedule an event for tick 4 at tick 5"))
         }
-        catch {
-          case e: IllegalArgumentException => assert (e.getMessage == "Can't schedule an event for tick 4 at tick 5")
-        }
+      }
+
+      it ("and asked to schedule an event for tick 5, is happy") {
+        subject.schedule (new EmptyEvent (), 5)
+        // no exception thrown
       }
     }
 

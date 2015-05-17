@@ -6,18 +6,19 @@ import scala.collection.mutable.ListBuffer
  * Created by dnwiebe on 5/8/15.
  */
 class Engine {
-  private var currentTick = 0L
+  private var _currentTick = 0L
   private val events = new ListBuffer[ScheduledEvent] ()
   private var subscribers: List[Subscriber] = Nil
 
   def tick (): Unit = {
-    val currentEvents = events.takeWhile {event => event.tick == nextTick}
+    val currentEvents = events.takeWhile {event => event.tick == currentTick}
     events.remove (0, currentEvents.size)
     currentEvents.foreach (handle)
-    currentTick += 1
+    _currentTick += 1
   }
 
-  def nextTick = currentTick
+  def currentTick = _currentTick
+  def nextTick = currentTick + 1
 
   def schedule (event: Event, tick: Long): Unit = {
     schedule (ScheduledEvent (tick, event))
@@ -40,8 +41,8 @@ class Engine {
   }
 
   private def validateSchedule (event: ScheduledEvent): Unit = {
-    if (event.tick < nextTick) {
-      throw new IllegalArgumentException (s"Can't schedule an event for tick ${event.tick} at tick ${nextTick}")
+    if (event.tick < currentTick) {
+      throw new IllegalArgumentException (s"Can't schedule an event for tick ${event.tick} at tick ${currentTick}")
     }
   }
 }

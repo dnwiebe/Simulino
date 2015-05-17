@@ -8,13 +8,13 @@ class Memory (size: Int) {
   private val data = new Array[Byte] (size)
 
   def addSpan (span: Span): Unit = {
-    hiValidate (span.end, s"Span must end at or before ${size}")
+    hiValidate (span.end - 1, s"Span must end at or before ${size - 1}")
     (span.offset until span.end).foreach {i => data(i) = span(i).value.toByte}
   }
 
   def getData (address: Int, length: Int): Array[UnsignedByte] = {
     loValidate (address, "Data buffer must begin at or after 0")
-    hiValidate (address + length, s"Data buffer must end at or before ${size}")
+    hiValidate (address + length - 1, s"Data buffer must end at or before ${size - 1}")
     val ubs = new Array[UnsignedByte] (length)
     (0 until length).foreach {i => ubs(i) = UnsignedByte (data (address + i))}
     ubs

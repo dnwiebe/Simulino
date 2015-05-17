@@ -18,7 +18,7 @@ class MemoryTest extends path.FunSpec {
       val result = Try (subject.addSpan (Span (1000, new Array[UnsignedByte] (1001))))
 
       it ("complains") {
-        fails (result, new IllegalArgumentException ("Span must end at or before 2000, not 2001"))
+        fails (result, new IllegalArgumentException ("Span must end at or before 1999, not 2000"))
       }
     }
 
@@ -34,7 +34,7 @@ class MemoryTest extends path.FunSpec {
       val result = Try (subject.getData (1991, 10))
 
       it ("complains") {
-        fails (result, new IllegalArgumentException ("Data buffer must end at or before 2000, not 2001"))
+        fails (result, new IllegalArgumentException ("Data buffer must end at or before 1999, not 2000"))
       }
     }
 
@@ -101,6 +101,28 @@ class MemoryTest extends path.FunSpec {
 
         it ("getData shows the overlap with the later data winning") {
           assert (subject.getData (999, 8) === unsignedBytes (0, 1, 2, 4, 3, 2, 1, 0))
+        }
+      }
+    }
+  }
+
+  describe ("A four-byte Memory") {
+    val subject = new Memory (4)
+
+    describe ("when loaded with a four-byte span") {
+      subject.addSpan (Span (0, unsignedBytes (100, 101, 102, 103)))
+
+      it ("contains those four bytes") {
+        assert (subject.getData (0, 4) === unsignedBytes (100, 101, 102, 103))
+      }
+
+      describe ("and overwritten with three two-byte spans") {
+        subject.addSpan (Span (0, unsignedBytes (103, 40)))
+        subject.addSpan (Span (2, unsignedBytes (40, 100)))
+        subject.addSpan (Span (1, unsignedBytes (102, 101)))
+
+        it ("contains four new bytes") {
+          assert (subject.getData (0, 4) === unsignedBytes (103, 102, 101, 100))
         }
       }
     }

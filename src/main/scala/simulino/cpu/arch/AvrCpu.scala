@@ -7,18 +7,17 @@ import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.AvrInstructionSet
 import simulino.cpu.{CpuChange, Cpu}
 import simulino.engine.Engine
-import simulino.memory.UnsignedByte
+import simulino.memory.{Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
 
 /**
  * Created by dnwiebe on 5/13/15.
  */
-class AvrCpu (val engine: Engine, val config: CpuConfiguration) extends Cpu {
+class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   private val flagRegister = new FlagRegister ()
   private val registerFile = new RegisterFile ()
-  private val _instructionSet = new AvrInstructionSet ()
+  val instructionSet = new AvrInstructionSet ()
 
-  def instructionSet = _instructionSet
   def flag (name: Flag): Boolean = {flagRegister (name)}
   def setFlag (name: Flag, value: Boolean): Unit = {flagRegister (name) = value}
   def register (idx: Int): UnsignedByte = registerFile (idx)

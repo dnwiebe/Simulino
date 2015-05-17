@@ -13,14 +13,14 @@ import simulino.utils.Utils._
  */
 class Simulator (configuration: SimulatorConfiguration) {
   var engine = new Engine ()
-  val programMemory = new Memory (configuration.memory.programSize)
-  val cpu = makeCpu (configuration.cpu)
+  val cpu = prepareCpu (configuration.cpu)
 
   def id = System.identityHashCode(this)
 
   def loadHex (hex: Reader): Unit = {
     val loader = new HexLoader ()
-    loader.load (hex, programMemory)
+    loader.load (hex, cpu.programMemory)
+    engine.schedule (cpu.nextInstruction(), engine.currentTick)
   }
 
   def loadHex (hex: InputStream): Unit = {
@@ -35,16 +35,21 @@ class Simulator (configuration: SimulatorConfiguration) {
     engine.schedule (event)
   }
 
-  def runForSeconds (seconds: Double): Unit = {
-    var ticks = (configuration.cpu.clockSpeed * seconds).toLong
-    while (ticks > 0) {
+  def runForTicks (ticks: Long): Unit = {
+    var mutableTicks = ticks;
+    while (mutableTicks > 0) {
       engine.tick ()
-      ticks -= 1
+      mutableTicks -= 1L
     }
   }
 
+  def runForSeconds (seconds: Double): Unit = {
+    val ticks = (configuration.cpu.clockSpeed * seconds).toLong
+    runForTicks (ticks)
+  }
+
   def dumpProgramMemory (offset: Int, length: Int): Array[UnsignedByte] = {
-    programMemory.getData (offset, length)
+    cpu.programMemory.getData (offset, length)
   }
 
   def dumpDynamicMemory (offset: Int, length: Int): Array[UnsignedByte] = {
@@ -55,8 +60,11 @@ class Simulator (configuration: SimulatorConfiguration) {
     (0 until length).map {i => UnsignedByte (0)}.toArray
   }
 
-  private def makeCpu (config: CpuConfiguration): Cpu = {
-    val ctor = config.cls.getConstructor (classOf[Engine], classOf[CpuConfiguration])
-    ctor.newInstance (engine, config)
+  private def prepareCpu (config: CpuConfiguration): Cpu = {
+    val programMemory = new Memory (configuration.memory.programSize)
+    val ctor = config.cls.getConstructor (classOf[Engine], classOf[Memory], classOf[CpuConfiguration])
+    val cpu = ctor.newInstance (engine, programMemory, config)
+    engine.addSubscriber (cpu)
+    cpu
   }
 }

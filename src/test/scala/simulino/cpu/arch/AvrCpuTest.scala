@@ -15,14 +15,13 @@ import simulino.utils.TestUtils._
  * Created by dnwiebe on 5/14/15.
  */
 class AvrCpuTest extends path.FunSpec {
-  describe ("An AvrCpu") {
-    val memory = new Memory (16)
-    memory.addSpan (Span (0, unsignedBytes (0x0C, 0x01, 0xCF, 0xFC)))
+  describe ("An AvrCpu with a mock Engine and Memory") {
     val engine = mock (classOf[Engine])
-    when (engine.nextTick).thenReturn (1000)
+    when (engine.currentTick).thenReturn (1000)
+    val memory = mock (classOf[Memory])
     val config = mock (classOf[CpuConfiguration])
 
-    val subject = new AvrCpu (engine, config)
+    val subject = new AvrCpu (engine, memory, config)
 
     it ("initially has zeros in all registers") {
       (0 until 32).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}

@@ -3,8 +3,9 @@ package simulino.simulator
 import java.io.{ByteArrayInputStream, StringReader}
 
 import org.scalatest.path
-import simulino.cpu.Cpu
+import simulino.cpu.{InstructionSet, Cpu}
 import simulino.engine.Engine
+import simulino.memory.Memory
 
 /**
  * Created by dnwiebe on 5/10/15.
@@ -12,7 +13,8 @@ import simulino.engine.Engine
 class SimulatorConfigurationTest extends path.FunSpec {
 
   class TestCpu (val clockSpeed: Int, val config: CpuConfiguration, val engine: Engine) extends Cpu {
-    def instructionSet = null
+    override val programMemory: Memory = null
+    override val instructionSet: InstructionSet[TestCpu] = null
   }
 
   describe ("A SimulatorConfiguration produced from JSON") {

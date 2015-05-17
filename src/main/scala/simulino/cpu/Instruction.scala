@@ -20,14 +20,20 @@ trait InstructionObject[T <: Instruction[_]] {
 
   protected def parse (buffer: Array[UnsignedByte]): T
 
-  protected def parseParameter (buffer: Array[UnsignedByte], mask: Int): Int = {
-    var mutableMask = mask
+  protected def parseUnsignedParameter (buffer: Array[UnsignedByte], mask: Int): Int = {
+    parseParameter (buffer, mask)
+  }
+
+  private def parseParameter (buffer: Array[UnsignedByte], mask: Int): Int = {
     var value = bufferToInt (buffer)
+    var mutableMask = mask
     var parameter = 0
     while (mutableMask != 0) {
       if ((mutableMask & 0x80000000) != 0) {
         parameter = parameter << 1
-        parameter = parameter | (if ((value & 0x80000000) != 0) 1 else 0)
+        if ((value & 0x80000000) != 0) {
+          parameter = parameter | 1
+        }
       }
       mutableMask = mutableMask << 1
       value = value << 1

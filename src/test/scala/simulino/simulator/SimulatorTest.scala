@@ -2,20 +2,24 @@ package simulino.simulator
 
 import java.io.StringReader
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.Cpu
-import simulino.engine.{ScheduledEvent, Event, Subscriber, Engine}
-import simulino.memory.UnsignedByte
+import org.mockito.Matchers._
+import simulino.cpu.{Instruction, InstructionSet, Cpu}
+import simulino.cpu.arch.AvrCpu
+import simulino.engine.{ScheduledEvent, Subscriber, Engine}
+import simulino.memory.{Memory, Span, UnsignedByte}
 import simulino.utils.TestUtils._
 
 /**
  * Created by dnwiebe on 5/10/15.
  */
-class TestCpu (val engine: Engine, val config: CpuConfiguration) extends Cpu {
-  def instructionSet = null
+class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
+  val instructionSet = mock (classOf[InstructionSet[TestCpu]])
+  val instruction = mock (classOf[Instruction[TestCpu]])
+  when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
+  when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))
 }
 
 class SimulatorTest extends path.FunSpec {
@@ -123,6 +127,31 @@ class SimulatorTest extends path.FunSpec {
 
         it ("ticks the Engine over") {
           verify (engine, times (10)).tick ()
+        }
+      }
+    }
+  }
+
+  describe ("A Simulator with a real AvrCpu") {
+    val memConfig = new MemoryConfiguration (10, 0, 0)
+    val cpuConfig = new CpuConfiguration (1000, classOf[AvrCpu], null)
+    val config = new SimulatorConfiguration (memConfig, cpuConfig)
+    val subject = new Simulator (config)
+
+    describe ("with a real four-byte program in memory") {
+      val rdr = new StringReader (":040000000C01CFFE22\n:00000001FF")
+      subject.loadHex (rdr)
+
+      describe ("and ones in the first two registers") {
+        subject.cpu.asInstanceOf[AvrCpu].setRegister (0, 1)
+        subject.cpu.asInstanceOf[AvrCpu].setRegister (1, 1)
+
+        describe ("when run for four iterations through the loop") {
+          subject.runForTicks (12)
+
+          it ("register 0 has been incremented to 4") {
+            assert (subject.cpu.asInstanceOf[AvrCpu].register (0) === UnsignedByte (4))
+          }
         }
       }
     }

@@ -2,7 +2,9 @@ package simulino.cpu
 
 import org.scalatest.path
 import org.mockito.Mockito._
+import org.mockito.Matchers._
 import simulino.engine.{Event, Engine}
+import simulino.memory.{UnsignedByte, Memory}
 
 /**
  * Created by dnwiebe on 5/11/15.
@@ -10,8 +12,13 @@ import simulino.engine.{Event, Engine}
 class CpuTest extends path.FunSpec {
   describe ("A Cpu") {
     class TestCpu (val engine: Engine) extends Cpu {
+      val programMemory = new Memory (2000)
       val config = null
-      def instructionSet = null
+      val instruction = mock (classOf[Instruction[TestCpu]])
+      when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
+      val instructionSet = new InstructionSet[TestCpu] () {
+        override def apply (data: Array[UnsignedByte]) = Some (instruction)
+      }
     }
     val engine = mock (classOf[Engine])
     val subject = new TestCpu (engine)
