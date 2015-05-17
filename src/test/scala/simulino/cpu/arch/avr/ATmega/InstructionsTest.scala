@@ -62,13 +62,13 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
-    describe ("CPC") {
+    describe ("CP") {
       it ("is properly unrecognized") {
-        assert (CPC (unsignedBytes (0x0C, 0x01)) === None)
+        assert (CP (unsignedBytes (0x1C, 0x01)) === None)
       }
 
       describe ("when properly parsed") {
-        val instruction = CPC (unsignedBytes (0x06, 0xA5)).get
+        val instruction = CP (unsignedBytes (0x16, 0xA5)).get
 
         it ("has the proper parameters") {
           assert (instruction.d === 0x0A)
@@ -123,7 +123,126 @@ class InstructionsTest extends path.FunSpec {
 
           it ("produces the correct events") {
             assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (false), Some (false),
+              Some (false), Some (true), Some (false))))
+          }
+        }
+      }
+    }
+
+    describe ("CPC") {
+      it ("is properly unrecognized") {
+        assert (CPC (unsignedBytes (0x0C, 0x01)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = CPC (unsignedBytes (0x06, 0xA5)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed with positive d greater than positive r and no carry") {
+          when (cpu.register (0x0A)).thenReturn (112)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (false)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (false), Some (false),
+              Some (false), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with positive d less than positive r and no carry") {
+          when (cpu.register (0x0A)).thenReturn (12)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (false)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (true))))
+          }
+        }
+
+        describe ("and executed with negative d and positive r and no carry") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (false)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with negative d equal to r and no carry") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (250)
+          when (cpu.flag (C)).thenReturn (false)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (false), Some (false),
               Some (false), None, Some (false))))
+          }
+        }
+
+        describe ("and executed with positive d greater than positive r and carry") {
+          when (cpu.register (0x0A)).thenReturn (112)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (true)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (false), Some (false),
+              Some (false), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with positive d less than positive r and carry") {
+          when (cpu.register (0x0A)).thenReturn (12)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (true)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (true))))
+          }
+        }
+
+        describe ("and executed with negative d and positive r and carry") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.flag (C)).thenReturn (true)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (false), Some (true), Some (false),
+              Some (true), Some (false), Some (false))))
+          }
+        }
+
+        describe ("and executed with negative d equal to r and carry") {
+          when (cpu.register (0x0A)).thenReturn (250)
+          when (cpu.register (0x15)).thenReturn (250)
+          when (cpu.flag (C)).thenReturn (true)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (true), Some (false),
+              Some (true), Some (false), Some (true))))
           }
         }
       }

@@ -37,6 +37,34 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   }
 }
 
+object CP extends InstructionObject[CP] {
+  override val mask = 0xFC000000
+  override val pattern = 0x14000000
+  override protected def parse (buffer: Array[UnsignedByte]): CP = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new CP (d, r)
+  }
+}
+
+class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = Rd - Rr
+    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = (R == 0)
+    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
+      Z = Some (Zf), C = Some (Cf)))
+  }
+}
+
 object CPC extends InstructionObject[CPC] {
   override val mask = 0xFC000000
   override val pattern = 0x04000000
