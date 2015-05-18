@@ -2,8 +2,9 @@ package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.AvrCpu
-import simulino.cpu.IncrementIp
+import simulino.cpu.{SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
+import simulino.memory.Memory
 import simulino.utils.TestUtils._
 import org.mockito.Mockito._
 
@@ -243,6 +244,107 @@ class InstructionsTest extends path.FunSpec {
           it ("produces the correct events") {
             assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (true), Some (false),
               Some (true), Some (false), Some (true))))
+          }
+        }
+      }
+    }
+
+    describe ("CPSE") {
+      val programMemory = mock (classOf[Memory])
+      when (cpu.ip).thenReturn (1000)
+      when (cpu.programMemory).thenReturn (programMemory)
+
+      it ("is properly unrecognized") {
+        assert (CPSE (unsignedBytes (0x14, 0x01)) === None)
+      }
+
+      describe ("when properly parsed when registers are unequal") {
+        when (cpu.register (0x0A)).thenReturn (64)
+        when (cpu.register (0x15)).thenReturn (63)
+        val instruction = CPSE (unsignedBytes (0x12, 0xA5)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct event") {
+            assert (result === List (IncrementIp (2)))
+          }
+
+          it ("takes one cycle") {
+            assert (instruction.latency === 1)
+          }
+        }
+      }
+
+      describe ("when properly parsed when registers are equal and followed by a two-byte instruction") {
+        when (cpu.register (0x0A)).thenReturn (64)
+        when (cpu.register (0x15)).thenReturn (64)
+        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x06, 0xA5))
+        val instruction = CPSE (unsignedBytes (0x11, 0xA5)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct event") {
+            assert (result === List (IncrementIp (4)))
+          }
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+        }
+      }
+
+      describe ("when properly parsed when registers are equal and followed by a four-byte instruction") {
+        when (cpu.register (0x0A)).thenReturn (64)
+        when (cpu.register (0x15)).thenReturn (64)
+        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x94, 0xFD))
+        val instruction = CPSE (unsignedBytes (0x11, 0xA5)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct event") {
+            assert (result === List (IncrementIp (6)))
+          }
+
+          it ("takes three cycles") {
+            assert (instruction.latency === 3)
+          }
+        }
+      }
+    }
+
+    describe ("JMP -- note, this instruction is not available in all AVR cores") {
+      it ("is properly unrecognized") {
+        assert (JMP (unsignedBytes (0x84, 0xFD, 0xFF, 0xFF)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = JMP (unsignedBytes (0x95, 0x5C, 0xAA, 0xAA)).get
+
+        it ("is four bytes long") {
+          assert (instruction.length === 4)
+        }
+
+        it ("takes three clock cycles") {
+          assert (instruction.latency === 3)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates an event to set the IP") {
+            assert (result === List (SetIp (0x555554)))
           }
         }
       }

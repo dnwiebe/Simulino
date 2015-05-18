@@ -44,7 +44,8 @@ trait Cpu extends Subscriber {
 
   def nextInstruction (): Instruction[_] = {
     val data = programMemory.getData (ip, 4)
-    instructionSet (data) match {
+    val instructionOpt = instructionSet (data)
+    instructionOpt match {
       case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction from ${data.map {toHex (_, 2)}.mkString (" ")}")
       case Some (i) => i
     }

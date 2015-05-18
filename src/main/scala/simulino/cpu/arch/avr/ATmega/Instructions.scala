@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import simulino.cpu.arch.AvrCpu
-import simulino.cpu.{IncrementIp, Instruction, InstructionObject}
+import simulino.cpu.{SetIp, IncrementIp, Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
 import simulino.cpu.arch.avr.ATmega.Flag._
@@ -92,6 +92,86 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
       Z = Zfopt, C = Some (Cf)))
   }
+}
+
+object CPSE extends InstructionObject[CPSE] {
+  override val mask = 0xFC000000
+  override val pattern = 0x10000000
+  override protected def parse (buffer: Array[UnsignedByte]): CPSE = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new CPSE (d, r)
+  }
+}
+
+class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  private var latencyOpt: Option[Int] = None
+  override def length = 2
+  override def latency = latencyOpt.get
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    if (Rd != Rr) {
+      List (IncrementIp (handleEquality ()))
+    }
+    else {
+      List (IncrementIp (handleInequality (cpu)))
+    }
+  }
+
+  private def handleInequality (cpu: AvrCpu): Int = {
+    val nextLength = getNextInstructionLength (cpu)
+    if (nextLength == 2) {
+      handleTwoByteNextInstruction()
+    }
+    else {
+      handleFourByteNextInstruction()
+    }
+  }
+
+  private def handleEquality (): Int = {
+    latencyOpt = Some (1)
+    2
+  }
+
+  private def handleTwoByteNextInstruction (): Int = {
+    latencyOpt = Some (2)
+    4
+  }
+
+  private def handleFourByteNextInstruction (): Int = {
+    latencyOpt = Some (3)
+    6
+  }
+
+  private def getNextInstructionLength (cpu: AvrCpu): Int = {
+    val buffer = cpu.programMemory.getData (cpu.ip + length, 2)
+    val flags = List (
+      ((buffer (0).value & 0xFE) == 0x94) && ((buffer (1).value & 0x0E) == 0x0C), // JMP
+      ((buffer (0).value & 0xFE) == 0x90) && ((buffer (1).value & 0x0F) == 0x00), // LDS
+      ((buffer (0).value & 0xFE) == 0x92) && ((buffer (1).value & 0x0F) == 0x00)  // STS
+    )
+    flags.find (f => f) match {
+      case Some (_) => 4
+      case None => 2
+    }
+  }
+}
+
+// Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
+object JMP extends InstructionObject[JMP] {
+  override val mask = 0xFE0E0000
+  override val pattern = 0x940C0000
+  override protected def parse (buffer: Array[UnsignedByte]): JMP = {
+    val k = parseUnsignedParameter (buffer, 0x01F1FFFF)
+    new JMP (k)
+  }
+}
+
+class JMP (k: Int) extends Instruction[AvrCpu] {
+  override def length = 4
+  override def latency = 3
+  override def execute (cpu: AvrCpu) = List (SetIp (k << 1))
 }
 
 object NOP extends InstructionObject[NOP] {
