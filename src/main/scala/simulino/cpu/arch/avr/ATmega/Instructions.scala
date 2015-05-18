@@ -174,6 +174,30 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = List (SetIp (k << 1))
 }
 
+object MULS extends InstructionObject[MULS] {
+  override val mask = 0xFF000000
+  override val pattern = 0x02000000
+  override protected def parse (buffer: Array[UnsignedByte]): MULS = {
+    val d = parseUnsignedParameter (buffer, 0x00F00000)
+    val r = parseUnsignedParameter (buffer, 0x000F0000)
+    new MULS (d, r)
+  }
+}
+
+class MULS (d: Int, r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val Rd: Int = cpu.register (d)
+    val Rr: Int = cpu.register (r)
+    val R = Rd * Rr
+    val Cf = ((R & 0x8000) != 0)
+    val Zf = (R == 0)
+    List (IncrementIp (2), SetRegister (1, ((R >> 8) & 0xFF)), SetRegister (0, (R & 0xFF)),
+      SetFlags (C = Some (Cf), Z = Some (Zf)))
+  }
+}
+
 object NOP extends InstructionObject[NOP] {
   override val mask = 0xFFFF0000
   override val pattern = 0x00000000

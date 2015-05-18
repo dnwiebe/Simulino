@@ -350,6 +350,65 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("MULS") {
+      it ("is properly unrecognized") {
+        assert (MULS (unsignedBytes (0x12, 0x00)) == None)
+      }
+
+      describe ("when properly parsed with two positives") {
+        when (cpu.register (2)).thenReturn (78)
+        when (cpu.register (3)).thenReturn (87)
+        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes two clock cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (1, 0x1A), SetRegister (0, 0x82),
+              SetFlags (C = Some (false), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when properly parsed with negative and positive") {
+        when (cpu.register (2)).thenReturn (-78)
+        when (cpu.register (3)).thenReturn (87)
+        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (1, 0xE5), SetRegister (0, 0x7E),
+              SetFlags (C = Some (true), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when properly parsed with a zero") {
+        when (cpu.register (2)).thenReturn (0)
+        when (cpu.register (3)).thenReturn (87)
+        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (1, 0x00), SetRegister (0, 0x00),
+              SetFlags (C = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("NOP") {
       it ("is properly unrecognized") {
         assert (NOP (unsignedBytes (0x00, 0x01)) === None)
