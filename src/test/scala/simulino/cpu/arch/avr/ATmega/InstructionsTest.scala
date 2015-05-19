@@ -22,7 +22,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        val instruction = ADD (unsignedBytes (0x0E, 0xA5)).get
+        val instruction = ADD (unsignedBytes (0xA5, 0x0E)).get
 
         it ("has the right parameters") {
           assert (instruction.d === 0x0A)
@@ -69,7 +69,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        val instruction = CP (unsignedBytes (0x16, 0xA5)).get
+        val instruction = CP (unsignedBytes (0xA5, 0x16)).get
 
         it ("has the proper parameters") {
           assert (instruction.d === 0x0A)
@@ -136,7 +136,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        val instruction = CPC (unsignedBytes (0x06, 0xA5)).get
+        val instruction = CPC (unsignedBytes (0xA5, 0x06)).get
 
         it ("has the proper parameters") {
           assert (instruction.d === 0x0A)
@@ -261,7 +261,7 @@ class InstructionsTest extends path.FunSpec {
       describe ("when properly parsed when registers are unequal") {
         when (cpu.register (0x0A)).thenReturn (64)
         when (cpu.register (0x15)).thenReturn (63)
-        val instruction = CPSE (unsignedBytes (0x12, 0xA5)).get
+        val instruction = CPSE (unsignedBytes (0xA5, 0x12)).get
 
         it ("has the proper parameters") {
           assert (instruction.d === 0x0A)
@@ -288,8 +288,8 @@ class InstructionsTest extends path.FunSpec {
       describe ("when properly parsed when registers are equal and followed by a two-byte instruction") {
         when (cpu.register (0x0A)).thenReturn (64)
         when (cpu.register (0x15)).thenReturn (64)
-        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x06, 0xA5))
-        val instruction = CPSE (unsignedBytes (0x11, 0xA5)).get
+        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0xA5, 0x06))
+        val instruction = CPSE (unsignedBytes (0xA5, 0x11)).get
 
         describe ("and executed") {
           val result = instruction.execute (cpu)
@@ -307,8 +307,8 @@ class InstructionsTest extends path.FunSpec {
       describe ("when properly parsed when registers are equal and followed by a four-byte instruction") {
         when (cpu.register (0x0A)).thenReturn (64)
         when (cpu.register (0x15)).thenReturn (64)
-        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x94, 0xFD))
-        val instruction = CPSE (unsignedBytes (0x11, 0xA5)).get
+        when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x0C, 0x94))
+        val instruction = CPSE (unsignedBytes (0xA5, 0x11)).get
 
         describe ("and executed") {
           val result = instruction.execute (cpu)
@@ -326,11 +326,11 @@ class InstructionsTest extends path.FunSpec {
 
     describe ("JMP -- note, this instruction is not available in all AVR cores") {
       it ("is properly unrecognized") {
-        assert (JMP (unsignedBytes (0x84, 0xFD, 0xFF, 0xFF)) === None)
+        assert (JMP (unsignedBytes (0xFD, 0x84, 0xFF, 0xFF)) === None)
       }
 
       describe ("when properly parsed") {
-        val instruction = JMP (unsignedBytes (0x95, 0x5C, 0xAA, 0xAA)).get
+        val instruction = JMP (unsignedBytes (0x5C, 0x95, 0xAA, 0xAA)).get
 
         it ("is four bytes long") {
           assert (instruction.length === 4)
@@ -352,13 +352,13 @@ class InstructionsTest extends path.FunSpec {
 
     describe ("MULS") {
       it ("is properly unrecognized") {
-        assert (MULS (unsignedBytes (0x12, 0x00)) == None)
+        assert (MULS (unsignedBytes (0x00, 0x12)) == None)
       }
 
       describe ("when properly parsed with two positives") {
         when (cpu.register (2)).thenReturn (78)
         when (cpu.register (3)).thenReturn (87)
-        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+        val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         it ("is two bytes long") {
           assert (instruction.length === 2)
@@ -381,7 +381,7 @@ class InstructionsTest extends path.FunSpec {
       describe ("when properly parsed with negative and positive") {
         when (cpu.register (2)).thenReturn (-78)
         when (cpu.register (3)).thenReturn (87)
-        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+        val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         describe ("and executed") {
           val result = instruction.execute (cpu)
@@ -396,7 +396,7 @@ class InstructionsTest extends path.FunSpec {
       describe ("when properly parsed with a zero") {
         when (cpu.register (2)).thenReturn (0)
         when (cpu.register (3)).thenReturn (87)
-        val instruction = MULS (unsignedBytes (0x02, 0x23)).get
+        val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         describe ("and executed") {
           val result = instruction.execute (cpu)
@@ -411,7 +411,7 @@ class InstructionsTest extends path.FunSpec {
 
     describe ("NOP") {
       it ("is properly unrecognized") {
-        assert (NOP (unsignedBytes (0x00, 0x01)) === None)
+        assert (NOP (unsignedBytes (0x01, 0x00)) === None)
       }
 
       describe ("when properly parsed") {
@@ -435,13 +435,62 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("EOR") {
+      it ("is properly unrecognized") {
+        assert (EOR (unsignedBytes (0x28)) === None)
+      }
+
+      describe ("when properly parsed with different operands") {
+        when (cpu.register (0x0A)).thenReturn (0xAA)
+        when (cpu.register (0x15)).thenReturn (0x55)
+        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (10, 0xFF),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when properly parsed with equal operands") {
+        when (cpu.register (0x0A)).thenReturn (0xAA)
+        when (cpu.register (0x15)).thenReturn (0xAA)
+        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (10, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("RJMP") {
       it ("is properly unrecognized") {
         assert (RJMP (unsignedBytes (0xD0)) === None)
       }
 
       describe ("when properly parsed with a positive increment") {
-        val instruction = RJMP (unsignedBytes (0xC1, 0x23)).get
+        val instruction = RJMP (unsignedBytes (0x23, 0xC1)).get
 
         it ("has the right parameters" ) {
           assert (instruction.k === 0x123)
@@ -465,7 +514,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with a negative increment") {
-        val instruction = RJMP (unsignedBytes (0xCE, 0xDD)).get
+        val instruction = RJMP (unsignedBytes (0xDD, 0xCE)).get
 
         it ("has the right parameters" ) {
           assert (instruction.k === -291)
@@ -483,11 +532,11 @@ class InstructionsTest extends path.FunSpec {
 
     describe ("SBC") {
       it ("is properly unrecognized") {
-        assert (SBC (unsignedBytes (0x00, 0xC0)) === None)
+        assert (SBC (unsignedBytes (0xC0, 0x00)) === None)
       }
 
       describe ("when properly parsed") {
-        val instruction = SBC (unsignedBytes (0x0A, 0xA5)).get
+        val instruction = SBC (unsignedBytes (0xA5, 0x0A)).get
 
         it ("has the right parameters") {
           assert (instruction.d === 0x0A)

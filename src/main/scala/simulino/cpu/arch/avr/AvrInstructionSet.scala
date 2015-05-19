@@ -17,6 +17,7 @@ object AvrInstructionSet {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
     add (0x0, ADD, CPC, MULS, NOP, SBC)
     add (0x1, CP, CPSE)
+    add (0x2, EOR)
     add (0x9, JMP /* Not in all AVR instruction sets */)
     add (0xC, RJMP)
   }
@@ -30,7 +31,7 @@ class AvrInstructionSet extends InstructionSet[AvrCpu] {
   import AvrInstructionSet._
   
   override def apply (buffer: Array[UnsignedByte]): Option[Instruction[AvrCpu]] = {
-    val sesquidecile = buffer(0).value >> 4
+    val sesquidecile = buffer(1).value >> 4
     val instructions: Seq[Instruction[AvrCpu]] = sesquideciles(sesquidecile).flatMap {instObj =>
       instObj(buffer).asInstanceOf[Option[Instruction[AvrCpu]]]
     }

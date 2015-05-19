@@ -46,13 +46,14 @@ trait Cpu extends Subscriber {
     val data = programMemory.getData (ip, 4)
     val instructionOpt = instructionSet (data)
     instructionOpt match {
-      case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction from ${data.map {toHex (_, 2)}.mkString (" ")}")
+      case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
       case Some (i) => i
     }
   }
 
   private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
     val events = instruction.execute (this.asInstanceOf[C])
+System.out.println (s"${toHex (ip, 6)} ${instruction}")
     val tick = engine.currentTick + instruction.latency
     events.foreach {event =>
       engine.schedule (event, tick)

@@ -35,6 +35,7 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Some(Zf), C = Some (Cf)))
   }
+  override def toString = s"ADD R${d}, R${r}"
 }
 
 object CP extends InstructionObject[CP] {
@@ -63,6 +64,7 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
       Z = Some (Zf), C = Some (Cf)))
   }
+  override def toString = s"CP R${d}, R${r}"
 }
 
 object CPC extends InstructionObject[CPC] {
@@ -92,6 +94,7 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
       Z = Zfopt, C = Some (Cf)))
   }
+  override def toString = s"CPC R${d}, R${r}"
 }
 
 object CPSE extends InstructionObject[CPSE] {
@@ -118,6 +121,7 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
       List (IncrementIp (handleInequality (cpu)))
     }
   }
+  override def toString = s"CPSE R${d}, R${r}"
 
   private def handleInequality (cpu: AvrCpu): Int = {
     val nextLength = getNextInstructionLength (cpu)
@@ -147,15 +151,39 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   private def getNextInstructionLength (cpu: AvrCpu): Int = {
     val buffer = cpu.programMemory.getData (cpu.ip + length, 2)
     val flags = List (
-      ((buffer (0).value & 0xFE) == 0x94) && ((buffer (1).value & 0x0E) == 0x0C), // JMP
-      ((buffer (0).value & 0xFE) == 0x90) && ((buffer (1).value & 0x0F) == 0x00), // LDS
-      ((buffer (0).value & 0xFE) == 0x92) && ((buffer (1).value & 0x0F) == 0x00)  // STS
+      ((buffer (0).value & 0x0E) == 0x0C) && ((buffer (1).value & 0xFE) == 0x94), // JMP
+      ((buffer (0).value & 0x0F) == 0x00) && ((buffer (1).value & 0xFE) == 0x90), // LDS
+      ((buffer (0).value & 0x0F) == 0x00) && ((buffer (1).value & 0xFE) == 0x92)  // STS
     )
     flags.find (f => f) match {
       case Some (_) => 4
       case None => 2
     }
   }
+}
+
+object EOR extends InstructionObject[EOR] {
+  override val mask = 0xFC000000
+  override val pattern = 0x24000000
+  override protected def parse (buffer: Array[UnsignedByte]): EOR = {
+    new EOR (parseUnsignedParameter (buffer, 0x01F00000), parseUnsignedParameter (buffer, 0x020F0000))
+  }
+}
+
+class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = Rd ^ Rr
+    val Vf = false
+    val Nf = (R bit 7)
+    val Sf = Vf ^^ Nf
+    val Zf = (R == 0)
+    List (IncrementIp (2), SetRegister (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"EOR R${d}, R${r}"
 }
 
 // Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
@@ -172,6 +200,7 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def length = 4
   override def latency = 3
   override def execute (cpu: AvrCpu) = List (SetIp (k << 1))
+  override def toString = s"JMP ${k}"
 }
 
 object MULS extends InstructionObject[MULS] {
@@ -196,6 +225,7 @@ class MULS (d: Int, r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetRegister (1, ((R >> 8) & 0xFF)), SetRegister (0, (R & 0xFF)),
       SetFlags (C = Some (Cf), Z = Some (Zf)))
   }
+  override def toString = s"MULS R${d}, R${r}"
 }
 
 object NOP extends InstructionObject[NOP] {
@@ -210,6 +240,7 @@ class NOP () extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2))
+  override def toString = s"NOP"
 }
 
 object RJMP extends InstructionObject[RJMP] {
@@ -226,6 +257,7 @@ class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = List (IncrementIp ((k + 1) * 2))
+  override def toString = s"RJMP ${k}"
 }
 
 object SBC extends InstructionObject[SBC] {
@@ -252,4 +284,5 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetRegister (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
   }
+  override def toString = s"SBC R${d}, R${r}"
 }

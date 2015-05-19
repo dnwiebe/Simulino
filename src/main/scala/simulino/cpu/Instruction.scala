@@ -46,7 +46,7 @@ trait InstructionObject[T <: Instruction[_]] {
   }
 
   private def bufferToInt (buffer: Array[UnsignedByte]): Int = {
-    (0 until 4).foldLeft (0) {(soFar, i) => i < buffer.length match {
+    List (1, 0, 3, 2).foldLeft (0) {(soFar, i) => i < buffer.length match {
       case true => (soFar << 8) | buffer(i).value
       case false => soFar << 8
     }}

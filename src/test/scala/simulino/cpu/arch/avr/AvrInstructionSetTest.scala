@@ -20,7 +20,7 @@ class AvrInstructionSetTest extends path.FunSpec {
 
     describe ("In sesquidecile C") {
       it ("RJMP is recognized") {
-        val instruction = subject (unsignedBytes (0xC1, 0x23)).get
+        val instruction = subject (unsignedBytes (0x23, 0xC1)).get
         assert (instruction.getClass === classOf[RJMP])
         assert (instruction.asInstanceOf[RJMP].k === 0x123)
       }

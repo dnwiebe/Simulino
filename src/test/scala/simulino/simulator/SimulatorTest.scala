@@ -139,7 +139,7 @@ class SimulatorTest extends path.FunSpec {
     val subject = new Simulator (config)
 
     describe ("with a real four-byte program in memory") {
-      val rdr = new StringReader (":040000000C01CFFE22\n:00000001FF")
+      val rdr = new StringReader (":04000000010CFECF22\n:00000001FF")
       subject.loadHex (rdr)
 
       describe ("and ones in the first two registers") {
