@@ -1,6 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import simulino.cpu.arch.AvrCpu
+import simulino.cpu.arch.avr.WriteIOSpace
 import simulino.cpu.{SetIp, IncrementIp, Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
@@ -203,6 +204,14 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def toString = s"JMP ${k}"
 }
 
+object LDI extends AvrInstructionObject[LDI] {
+
+}
+
+class LDI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
+  
+}
+
 object MULS extends AvrInstructionObject[MULS] {
   override val mask = 0xFF000000
   override val pattern = 0x02000000
@@ -241,6 +250,26 @@ class NOP () extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2))
   override def toString = s"NOP"
+}
+
+object OUT extends AvrInstructionObject[OUT] {
+  override val mask = 0xF8000000
+  override val pattern = 0xB8000000
+  override protected def parse (buffer: Array[UnsignedByte]): OUT = {
+    val A = parseUnsignedParameter (buffer, 0x060F0000)
+    val r = parseUnsignedParameter (buffer, 0x01F00000)
+    new OUT (A, r)
+  }
+}
+
+class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rr = cpu.register (r)
+    List (IncrementIp (2), WriteIOSpace (A, Rr.value))
+  }
+  override def toString = s"OUT ${A}, R${r}"
 }
 
 object RJMP extends AvrInstructionObject[RJMP] {

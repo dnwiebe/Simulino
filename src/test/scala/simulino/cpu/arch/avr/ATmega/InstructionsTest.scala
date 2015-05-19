@@ -2,6 +2,7 @@ package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.AvrCpu
+import simulino.cpu.arch.avr.WriteIOSpace
 import simulino.cpu.{SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.memory.Memory
@@ -324,6 +325,55 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("EOR") {
+      it ("is properly unrecognized") {
+        assert (EOR (unsignedBytes (0x28)) === None)
+      }
+
+      describe ("when properly parsed with different operands") {
+        when (cpu.register (0x0A)).thenReturn (0xAA)
+        when (cpu.register (0x15)).thenReturn (0x55)
+        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (10, 0xFF),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when properly parsed with equal operands") {
+        when (cpu.register (0x0A)).thenReturn (0xAA)
+        when (cpu.register (0x15)).thenReturn (0xAA)
+        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (10, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("JMP -- note, this instruction is not available in all AVR cores") {
       it ("is properly unrecognized") {
         assert (JMP (unsignedBytes (0xFD, 0x84, 0xFF, 0xFF)) === None)
@@ -435,18 +485,17 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
-    describe ("EOR") {
+    describe ("OUT") {
       it ("is properly unrecognized") {
-        assert (EOR (unsignedBytes (0x28)) === None)
+        assert (OUT (unsignedBytes (0x1F, 0xAE)) === None)
       }
 
-      describe ("when properly parsed with different operands") {
-        when (cpu.register (0x0A)).thenReturn (0xAA)
-        when (cpu.register (0x15)).thenReturn (0x55)
-        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
+      describe ("when properly parsed") {
+        when (cpu.register (0x15)).thenReturn (0xA5)
+        val instruction = OUT (unsignedBytes (0x5A, 0xBB)).get
 
         it ("has the right parameters") {
-          assert (instruction.d === 0x0A)
+          assert (instruction.A === 0x1A)
           assert (instruction.r === 0x15)
         }
 
@@ -454,31 +503,15 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.length === 2)
         }
 
-        it ("takes one clock cycle") {
+        it ("takes one cycle") {
           assert (instruction.latency === 1)
         }
 
-        describe ("and executed") {
+        describe ("when executed") {
           val result = instruction.execute (cpu)
 
-          it ("produces the proper events") {
-            assert (result === List (IncrementIp (2), SetRegister (10, 0xFF),
-              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
-          }
-        }
-      }
-
-      describe ("when properly parsed with equal operands") {
-        when (cpu.register (0x0A)).thenReturn (0xAA)
-        when (cpu.register (0x15)).thenReturn (0xAA)
-        val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
-
-        describe ("and executed") {
-          val result = instruction.execute (cpu)
-
-          it ("produces the proper events") {
-            assert (result === List (IncrementIp (2), SetRegister (10, 0x00),
-              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          it ("generates the proper events") {
+            assert (result === List (IncrementIp (2), WriteIOSpace (0x1A, 0xA5)))
           }
         }
       }
