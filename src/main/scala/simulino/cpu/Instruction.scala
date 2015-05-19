@@ -20,6 +20,8 @@ trait InstructionObject[T <: Instruction[_]] {
 
   protected def parse (buffer: Array[UnsignedByte]): T
 
+  protected def bufferToInt (buffer: Array[UnsignedByte]): Int
+
   protected def parseUnsignedParameter (buffer: Array[UnsignedByte], mask: Int): Int = {
     parseParameter (buffer, mask)
   }
@@ -43,13 +45,6 @@ trait InstructionObject[T <: Instruction[_]] {
 
   private def matchOpcodePattern (buffer: Array[UnsignedByte], mask: Int, pattern: Int): Boolean = {
     (bufferToInt (buffer) & mask) == pattern
-  }
-
-  private def bufferToInt (buffer: Array[UnsignedByte]): Int = {
-    List (1, 0, 3, 2).foldLeft (0) {(soFar, i) => i < buffer.length match {
-      case true => (soFar << 8) | buffer(i).value
-      case false => soFar << 8
-    }}
   }
 }
 

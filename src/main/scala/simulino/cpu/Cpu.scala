@@ -35,7 +35,7 @@ trait Cpu extends Subscriber {
         event match {
           case c: CpuChange => handleCpuChange (c)
           case i: Instruction[C] => handleInstruction (i.asInstanceOf[Instruction[Cpu]])
-          case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
+          case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
         }
       }
     }
@@ -46,7 +46,7 @@ trait Cpu extends Subscriber {
     val data = programMemory.getData (ip, 4)
     val instructionOpt = instructionSet (data)
     instructionOpt match {
-      case None => throw new UnsupportedOperationException (s"${getClass} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
+      case None => throw new UnsupportedOperationException (s"${getClass.getSimpleName} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
       case Some (i) => i
     }
   }

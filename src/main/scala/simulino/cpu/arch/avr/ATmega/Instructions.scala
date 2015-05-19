@@ -11,7 +11,7 @@ import simulino.utils.Utils._
   * Created by dnwiebe on 5/12/15.
   */
 
-object ADD extends InstructionObject[ADD] {
+object ADD extends AvrInstructionObject[ADD] {
   override val mask = 0xFC000000
   override val pattern = 0x0C000000
   override protected def parse (buffer: Array[UnsignedByte]): ADD = {
@@ -38,7 +38,7 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"ADD R${d}, R${r}"
 }
 
-object CP extends InstructionObject[CP] {
+object CP extends AvrInstructionObject[CP] {
   override val mask = 0xFC000000
   override val pattern = 0x14000000
   override protected def parse (buffer: Array[UnsignedByte]): CP = {
@@ -67,7 +67,7 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"CP R${d}, R${r}"
 }
 
-object CPC extends InstructionObject[CPC] {
+object CPC extends AvrInstructionObject[CPC] {
   override val mask = 0xFC000000
   override val pattern = 0x04000000
   override protected def parse (buffer: Array[UnsignedByte]): CPC = {
@@ -97,7 +97,7 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"CPC R${d}, R${r}"
 }
 
-object CPSE extends InstructionObject[CPSE] {
+object CPSE extends AvrInstructionObject[CPSE] {
   override val mask = 0xFC000000
   override val pattern = 0x10000000
   override protected def parse (buffer: Array[UnsignedByte]): CPSE = {
@@ -162,7 +162,7 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   }
 }
 
-object EOR extends InstructionObject[EOR] {
+object EOR extends AvrInstructionObject[EOR] {
   override val mask = 0xFC000000
   override val pattern = 0x24000000
   override protected def parse (buffer: Array[UnsignedByte]): EOR = {
@@ -187,7 +187,7 @@ class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
 }
 
 // Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
-object JMP extends InstructionObject[JMP] {
+object JMP extends AvrInstructionObject[JMP] {
   override val mask = 0xFE0E0000
   override val pattern = 0x940C0000
   override protected def parse (buffer: Array[UnsignedByte]): JMP = {
@@ -203,7 +203,7 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def toString = s"JMP ${k}"
 }
 
-object MULS extends InstructionObject[MULS] {
+object MULS extends AvrInstructionObject[MULS] {
   override val mask = 0xFF000000
   override val pattern = 0x02000000
   override protected def parse (buffer: Array[UnsignedByte]): MULS = {
@@ -228,7 +228,7 @@ class MULS (d: Int, r: Int) extends Instruction[AvrCpu] {
   override def toString = s"MULS R${d}, R${r}"
 }
 
-object NOP extends InstructionObject[NOP] {
+object NOP extends AvrInstructionObject[NOP] {
   override val mask = 0xFFFF0000
   override val pattern = 0x00000000
   override protected def parse (buffer: Array[UnsignedByte]): NOP = {
@@ -243,7 +243,7 @@ class NOP () extends Instruction[AvrCpu] {
   override def toString = s"NOP"
 }
 
-object RJMP extends InstructionObject[RJMP] {
+object RJMP extends AvrInstructionObject[RJMP] {
   override val mask = 0xF0000000
   override val pattern = 0xC0000000
   override protected def parse (buffer: Array[UnsignedByte]): RJMP = {
@@ -260,7 +260,7 @@ class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def toString = s"RJMP ${k}"
 }
 
-object SBC extends InstructionObject[SBC] {
+object SBC extends AvrInstructionObject[SBC] {
   override val mask = 0xFC000000
   override val pattern = 0x08000000
   override protected def parse (buffer: Array[UnsignedByte]): SBC = {
