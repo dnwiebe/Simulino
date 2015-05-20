@@ -1,7 +1,6 @@
 package simulino.cpu.arch.avr
 
 import simulino.cpu.arch.avr.ATmega._
-import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.{InstructionObject, Instruction, InstructionSet}
 import simulino.memory.UnsignedByte
 
@@ -18,10 +17,12 @@ object AvrInstructionSet {
     add (0x0, ADD, CPC, MULS, NOP, SBC)
     add (0x1, CP, CPSE)
     add (0x2, EOR)
+    add (0x3, CPI)
     add (0x9, JMP /* Not in all AVR instruction sets */)
     add (0xB, OUT)
     add (0xC, RJMP)
     add (0xE, LDI)
+    add (0xF, BRBC)
   }
   
   private def add (sesquidecile: Int, instructions: InstructionObject[_]*): Unit = {
