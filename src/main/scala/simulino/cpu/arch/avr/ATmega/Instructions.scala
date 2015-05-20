@@ -205,11 +205,18 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
 }
 
 object LDI extends AvrInstructionObject[LDI] {
-
+  override val mask = 0x00000000
+  override val pattern = 0x00000000
+  override protected def parse (buffer: Array[UnsignedByte]): LDI = {
+    new LDI (0, 0)
+  }
 }
 
 class LDI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
-  
+  override def length = 0
+  override def latency = 0
+  override def execute (cpu: AvrCpu) = TEST_DRIVE_ME
+  override def toString = s"LDI R${d}, ${K}"
 }
 
 object MULS extends AvrInstructionObject[MULS] {
