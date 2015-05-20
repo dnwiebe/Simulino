@@ -38,6 +38,34 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"ADD R${d}, R${r}"
 }
 
+object BRBC extends AvrInstructionObject[BRBC] {
+  override val mask = 0xFC000000
+  override val pattern = 0xF4000000
+  override protected def parse (buffer: Array[UnsignedByte]): BRBC = {
+    val s = parseUnsignedParameter (buffer, 0x00070000)
+    val unsignedK = parseUnsignedParameter (buffer, 0x03F80000)
+    val k = if ((unsignedK & 0x40) == 0) unsignedK else (unsignedK | 0xFFFFFF80)
+    new BRBC (s, k)
+  }
+}
+
+class BRBC (val s: Int, val k: Int) extends Instruction[AvrCpu] {
+  private var latencyOpt: Option[Int] = None
+  override def length = 2
+  override def latency = latencyOpt.get
+  override def execute (cpu: AvrCpu) = {
+    val sreg = cpu.register (0x5F).value
+    if ((sreg & (1 << s)) == 0) {
+      latencyOpt = Some (2)
+      List (IncrementIp ((k + 1) * 2))
+    }
+    else {
+      latencyOpt = Some (1)
+      List (IncrementIp (2))
+    }
+  }
+}
+
 object CP extends AvrInstructionObject[CP] {
   override val mask = 0xFC000000
   override val pattern = 0x14000000
