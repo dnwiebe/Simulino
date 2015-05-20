@@ -63,6 +63,86 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("BRBC") {
+      it ("is properly unrecognized") {
+        assert (BRBC (unsignedBytes (0x77, 0xE4)) === None)
+      }
+
+      describe ("when set to branch on bit Z") {
+        val instruction = BRBC (unsignedBytes (0x59, 0xF7)).get
+
+        it ("has the right parameters") {
+          assert (instruction.s === 1)
+          assert (instruction.k === -21)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        describe ("when executed with bit Z clear") {
+          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x00))
+          val result = instruction.execute (cpu)
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+
+          it ("creates the proper events") {
+            assert (result === List (IncrementIp (-40)))
+          }
+        }
+
+        describe ("when executed with bit Z set") {
+          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x02))
+          val result = instruction.execute (cpu)
+
+          it ("takes one cycle") {
+            assert (instruction.latency === 1)
+          }
+
+          it ("creates the proper events") {
+            assert (result === List (IncrementIp (2)))
+          }
+        }
+      }
+
+      describe ("when set to branch on bit V") {
+        val instruction = BRBC (unsignedBytes (0xAB, 0xF4)).get
+
+        it ("has the right parameters") {
+          assert (instruction.s === 3)
+          assert (instruction.k === 21)
+        }
+
+        describe ("when executed with bit V clear") {
+          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x00))
+          val result = instruction.execute (cpu)
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+
+          it ("creates the proper events") {
+            assert (result === List (IncrementIp (44)))
+          }
+        }
+
+        describe ("when executed with bit V set") {
+          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x08))
+          val result = instruction.execute (cpu)
+
+          it ("takes one cycle") {
+            assert (instruction.latency === 1)
+          }
+
+          it ("creates the proper events") {
+            assert (result === List (IncrementIp (2)))
+          }
+        }
+      }
+    }
+
     describe ("CP") {
       it ("is properly unrecognized") {
         assert (CP (unsignedBytes (0x1C, 0x01)) === None)
