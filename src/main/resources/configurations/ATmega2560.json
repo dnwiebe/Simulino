@@ -6,7 +6,7 @@
   },
   "cpu": {
     "clockSpeed": 16000000,
-    "class": "simulino.cpu.arch.AvrCpu",
+    "class": "simulino.cpu.arch.avr.AvrCpu",
     "classSpecific": {}
   }
 }

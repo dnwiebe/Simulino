@@ -18,10 +18,10 @@ class BlinkTest extends path.FunSpec {
 
       describe ("and hooked to a PinSampler on pin 13") {
         val sampler = new PinSampler (13, configuration)
-        subject.addSubscriber (sampler)
+        subject.addPinSampler (sampler)
 
         describe ("and run for three seconds") {
-//          pending
+          pending
           subject.runForSeconds (3.0)
 
           it ("shows pin 13 going on and off appropriately") {

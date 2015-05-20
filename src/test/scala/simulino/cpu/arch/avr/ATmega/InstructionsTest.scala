@@ -1,8 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.AvrCpu
-import simulino.cpu.arch.avr.WriteIOSpace
+import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
 import simulino.cpu.{SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.memory.Memory
@@ -395,6 +394,37 @@ class InstructionsTest extends path.FunSpec {
 
           it ("generates an event to set the IP") {
             assert (result === List (SetIp (0x555554)))
+          }
+        }
+      }
+    }
+
+    describe ("LDI") {
+      it ("is properly unrecognized") {
+        assert (LDI (unsignedBytes (0xF0, 0x00)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = LDI (unsignedBytes (0x5A, 0xEA)).get
+
+        it ("produces the correct parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.K === 0xAA)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0xAA)))
           }
         }
       }

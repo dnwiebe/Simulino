@@ -1,6 +1,6 @@
 package simulino.cpu.arch.avr.ATmega
 
-import simulino.cpu.arch.AvrCpu
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.{Instruction, InstructionObject}
 import simulino.memory.UnsignedByte
 

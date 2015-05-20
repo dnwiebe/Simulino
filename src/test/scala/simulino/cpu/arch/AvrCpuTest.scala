@@ -6,16 +6,18 @@ import simulino.cpu.arch.avr.ATmega.Flag._
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.cpu.IncrementIp
+import simulino.cpu.arch.avr.{RegisterFile, AvrCpu}
 import simulino.engine.Engine
 import simulino.memory.{UnsignedByte, Span, Memory}
 import simulino.simulator.CpuConfiguration
+import simulino.simulator.peripheral.PinSampler
 import simulino.utils.TestUtils._
 
 /**
  * Created by dnwiebe on 5/14/15.
  */
 class AvrCpuTest extends path.FunSpec {
-  describe ("An AvrCpu with a mock Engine and Memory") {
+  describe ("An AvrCpu with a mock Engine, Memory, and RegisterFile") {
     val engine = mock (classOf[Engine])
     when (engine.currentTick).thenReturn (1000)
     val memory = mock (classOf[Memory])
@@ -24,7 +26,7 @@ class AvrCpuTest extends path.FunSpec {
     val subject = new AvrCpu (engine, memory, config)
 
     it ("initially has zeros in all registers") {
-      (0 until 32).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}
+      (0x00 until 0x200).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}
     }
 
     it ("initially has zeros in all flags") {
@@ -102,6 +104,15 @@ class AvrCpuTest extends path.FunSpec {
           verify (engine).schedule (SetFlags (None, None, Some (false), Some (false), Some (false), Some (false),
             Some (false), Some (false)), 1001)
         }
+      }
+    }
+
+    describe ("when the stack register is set to 0x1234") {
+      subject.setRegister (0x5E, 0x12)
+      subject.setRegister (0x5D, 0x34)
+
+      it ("shows the value as sp") {
+        assert (subject.sp === 0x1234)
       }
     }
   }

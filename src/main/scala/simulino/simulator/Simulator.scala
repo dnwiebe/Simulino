@@ -6,6 +6,7 @@ import simulino.cpu.Cpu
 import simulino.engine.{ScheduledEvent, Event, Engine, Subscriber}
 import simulino.hex.HexLoader
 import simulino.memory.{Memory, UnsignedByte}
+import simulino.simulator.peripheral.PinSampler
 import simulino.utils.Utils._
 
 /**
@@ -29,6 +30,10 @@ class Simulator (configuration: SimulatorConfiguration) {
 
   def addSubscriber (subscriber: Subscriber): Unit = {
     engine.addSubscriber (subscriber)
+  }
+
+  def addPinSampler (sampler: PinSampler): Unit = {
+    cpu.addPinSampler (sampler)
   }
 
   def schedule (event: ScheduledEvent): Unit = {

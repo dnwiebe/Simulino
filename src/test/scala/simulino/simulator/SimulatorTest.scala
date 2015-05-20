@@ -6,10 +6,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import org.scalatest.path
 import org.mockito.Mockito._
 import org.mockito.Matchers._
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.{Instruction, InstructionSet, Cpu}
-import simulino.cpu.arch.AvrCpu
 import simulino.engine.{ScheduledEvent, Subscriber, Engine}
 import simulino.memory.{Memory, Span, UnsignedByte}
+import simulino.simulator.peripheral.PinSampler
 import simulino.utils.TestUtils._
 
 /**
@@ -18,8 +19,10 @@ import simulino.utils.TestUtils._
 class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   val instructionSet = mock (classOf[InstructionSet[TestCpu]])
   val instruction = mock (classOf[Instruction[TestCpu]])
+  var pinSamplerAdded: Option[PinSampler] = None
   when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
   when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))
+  override def addPinSampler (sampler: PinSampler): Unit = {pinSamplerAdded = Some (sampler)}
 }
 
 class SimulatorTest extends path.FunSpec {
@@ -38,6 +41,15 @@ class SimulatorTest extends path.FunSpec {
 
       it ("has a different ID") {
         assert (subject.id != another.id)
+      }
+    }
+
+    describe ("when a pin sampler is added") {
+      val sampler = mock (classOf[PinSampler])
+      subject.addPinSampler(sampler)
+
+      it ("delegates to the cpu") {
+        assert (subject.cpu.asInstanceOf[TestCpu].pinSamplerAdded.get === sampler)
       }
     }
 

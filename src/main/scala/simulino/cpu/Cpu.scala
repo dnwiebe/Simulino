@@ -3,6 +3,7 @@ package simulino.cpu
 import simulino.engine.{Event, Engine, Subscriber}
 import simulino.memory.Memory
 import simulino.simulator.CpuConfiguration
+import simulino.simulator.peripheral.PinSampler
 import simulino.utils.Utils._
 
 /**
@@ -17,14 +18,16 @@ trait Cpu extends Subscriber {
   private var _ip = 0
   private var _sp = 0
 
-  def ip = _ip
+  def ip: Int = _ip
   protected def ip_= (ip: Int): Unit = {
     _ip = ip
     engine.schedule (nextInstruction (), engine.nextTick)
   }
 
-  def sp = _sp
+  def sp: Int = _sp
   protected def sp_= (sp: Int): Unit = {_sp = sp}
+
+  def addPinSampler (sampler: PinSampler): Unit = {}
 
   override def receive: PartialFunction[Event, Unit] = {
     class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
