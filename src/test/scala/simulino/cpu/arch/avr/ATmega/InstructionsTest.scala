@@ -4,7 +4,7 @@ import org.scalatest.path
 import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
 import simulino.cpu.{SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
-import simulino.memory.Memory
+import simulino.memory.{UnsignedByte, Memory}
 import simulino.utils.TestUtils._
 import org.mockito.Mockito._
 
@@ -244,6 +244,67 @@ class InstructionsTest extends path.FunSpec {
           it ("produces the correct events") {
             assert (result === List (IncrementIp (2), SetFlags (None, None, Some (true), Some (true), Some (false),
               Some (true), Some (false), Some (true))))
+          }
+        }
+      }
+    }
+
+    describe ("CPI") {
+      it ("is properly unrecognized") {
+        assert (CPI (unsignedBytes (0x67, 0x74)) === None)
+      }
+
+      describe ("when comparing equals") {
+        when (cpu.register (0x15)).thenReturn (0x93)
+        val instruction = CPI (unsignedBytes (0x53, 0x39)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.K === UnsignedByte (0x93))
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2),
+              SetFlags (H = Some (false), S = Some (false), V = Some (false), N = Some (false), Z = Some (true), C = Some (false))))
+          }
+        }
+      }
+
+      describe ("when comparing large to small") {
+        when (cpu.register (0x15)).thenReturn (0x73)
+        val instruction = CPI (unsignedBytes (0x53, 0x39)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2),
+              SetFlags (H = Some (false), S = Some (false), V = Some (true), N = Some (true), Z = Some (false), C = Some (true))))
+          }
+        }
+      }
+
+      describe ("when comparing small to large") {
+        when (cpu.register (0x15)).thenReturn (0x93)
+        val instruction = CPI (unsignedBytes (0x53, 0x37)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2),
+              SetFlags (H = Some (false), S = Some (true), V = Some (true), N = Some (false), Z = Some (false), C = Some (false))))
           }
         }
       }
