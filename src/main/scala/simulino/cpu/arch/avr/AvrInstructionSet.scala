@@ -21,6 +21,7 @@ object AvrInstructionSet {
     add (0x9, JMP /* Not in all AVR instruction sets */, ST)
     add (0xB, OUT)
     add (0xC, RJMP)
+    add (0xD, RCALL)
     add (0xE, LDI)
     add (0xF, BRBC)
   }

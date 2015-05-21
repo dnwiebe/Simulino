@@ -2,7 +2,7 @@ package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
-import simulino.cpu.{SetMemory, SetIp, IncrementIp}
+import simulino.cpu.{PushIp, SetMemory, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.ATmega.IndirectionType._
 import simulino.cpu.arch.avr.RegisterNames._
@@ -685,6 +685,36 @@ class InstructionsTest extends path.FunSpec {
 
           it ("generates the proper events") {
             assert (result === List (IncrementIp (2), WriteIOSpace (0x1A, 0xA5)))
+          }
+        }
+      }
+    }
+
+    describe ("RCALL") {
+      it ("is properly unrecognized") {
+        assert (RCALL (unsignedBytes (0x00, 0xC0)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = RCALL (unsignedBytes (0xED, 0xDF)).get
+
+        it ("has the proper parameter") {
+          assert (instruction.k === -19)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes four cycles") {
+          assert (instruction.latency === 4)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct results") {
+            assert (result === List (PushIp (), IncrementIp (-36)))
           }
         }
       }

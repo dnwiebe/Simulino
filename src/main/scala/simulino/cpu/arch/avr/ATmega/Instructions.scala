@@ -337,6 +337,25 @@ class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"OUT $$${toHex (A, 2)}, R${r}"
 }
 
+object RCALL extends AvrInstructionObject[RCALL] {
+  override val mask = 0xF0000000
+  override val pattern = 0xD0000000
+  override protected def parse (buffer: Array[UnsignedByte]): RCALL = {
+    val unsignedK = parseUnsignedParameter (buffer, 0x0FFF0000)
+    val k = if ((unsignedK & 0x800) == 0) unsignedK else (unsignedK | 0xFFFFF000)
+    new RCALL (k)
+  }
+}
+
+class RCALL (val k: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 4
+  override def execute (cpu: AvrCpu) = {
+    List (PushIp (), IncrementIp ((k + 1) * 2))
+  }
+  override def toString = s"RCALL ${k}"
+}
+
 object RJMP extends AvrInstructionObject[RJMP] {
   override val mask = 0xF0000000
   override val pattern = 0xC0000000
