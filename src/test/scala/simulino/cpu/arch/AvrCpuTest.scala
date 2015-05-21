@@ -5,7 +5,7 @@ import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.IncrementIp
+import simulino.cpu.{SetMemory, IncrementIp}
 import simulino.cpu.arch.avr.{RegisterFile, AvrCpu}
 import simulino.engine.Engine
 import simulino.memory.{UnsignedByte, Span, Memory}
@@ -88,6 +88,14 @@ class AvrCpuTest extends path.FunSpec {
             assert (!subject.flag (C))
           }
         }
+      }
+    }
+
+    describe ("directed to set a memory location") {
+      subject.receive (SetMemory (0x123456, 0xA5))
+
+      it ("does so") {
+        verify (memory).update (0x123456, UnsignedByte (0xA5))
       }
     }
 

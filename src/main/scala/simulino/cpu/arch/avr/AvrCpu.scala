@@ -67,6 +67,6 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   private def handleSetMemory (change: SetMemory): Unit = {
-    TEST_DRIVE_ME
+    programMemory.update (change.address, change.value)
   }
 }
