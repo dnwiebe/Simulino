@@ -2,8 +2,10 @@ package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
 import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
-import simulino.cpu.{SetIp, IncrementIp}
+import simulino.cpu.{SetMemory, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
+import simulino.cpu.arch.avr.ATmega.IndirectionType._
+import simulino.cpu.arch.avr.RegisterNames._
 import simulino.memory.{UnsignedByte, Memory}
 import simulino.utils.TestUtils._
 import org.mockito.Mockito._
@@ -81,7 +83,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z clear") {
-          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x00))
+          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -94,7 +96,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z set") {
-          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x02))
+          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x02))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -116,7 +118,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V clear") {
-          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x00))
+          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -129,7 +131,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V set") {
-          when (cpu.register (0x5F)).thenReturn (UnsignedByte (0x08))
+          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x08))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -804,6 +806,83 @@ class InstructionsTest extends path.FunSpec {
             assert (result === List(IncrementIp (2), SetRegister (0x0A, 155),
               SetFlags (H = Some(true), S = Some (true), V = Some (false), N = Some (true),
                 Z = Some (false), C = Some (true))))
+          }
+        }
+      }
+    }
+
+    describe ("ST") {
+      when (cpu.register (0x0A)).thenReturn (UnsignedByte (0x5A))
+      when (cpu.register (XL)).thenReturn (0x56)
+      when (cpu.register (XH)).thenReturn (0x34)
+      when (cpu.register (RAMPX)).thenReturn (0x12)
+
+      it ("is properly unrecognized") {
+        assert (ST (unsignedBytes (0x0C, 0x96)) === None)
+      }
+
+      it ("won't result from a PUSH") {
+        assert (ST (unsignedBytes (0x0F, 0x92)) === None)
+      }
+
+      describe ("when properly parsed as Unchanged") {
+        val instruction = ST (unsignedBytes (0xAC, 0x92)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.x === Unchanged)
+          assert (instruction.r === 0x0A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("creates the right events") {
+            assert (result === List (IncrementIp (2), SetRegister (RAMPX, 0x12),
+              SetRegister (XH, 0x34), SetRegister (XL, 0x56), SetMemory (0x123456, 0x5A)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as PostIncrement") {
+        val instruction = ST (unsignedBytes (0xAD, 0x92)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.x === PostIncrement)
+          assert (instruction.r === 0x0A)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("creates the right events") {
+            assert (result === List (IncrementIp (2), SetRegister (RAMPX, 0x12),
+              SetRegister (XH, 0x34), SetRegister (XL, 0x57), SetMemory (0x123456, 0x5A)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as PreDecrement") {
+        val instruction = ST (unsignedBytes (0xAE, 0x92)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.x === PreDecrement)
+          assert (instruction.r === 0x0A)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("creates the right events") {
+            assert (result === List (IncrementIp (2), SetRegister (RAMPX, 0x12),
+              SetRegister (XH, 0x34), SetRegister (XL, 0x55), SetMemory (0x123455, 0x5A)))
           }
         }
       }

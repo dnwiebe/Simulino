@@ -1,10 +1,11 @@
 package simulino.cpu.arch.avr.ATmega
 
 import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
-import simulino.cpu.{SetIp, IncrementIp, Instruction, InstructionObject}
+import simulino.cpu._
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
 import simulino.cpu.arch.avr.ATmega.Flag._
+import simulino.cpu.arch.avr.RegisterNames._
 import simulino.utils.Utils._
 
 /**
@@ -54,7 +55,7 @@ class BRBC (val s: Int, val k: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = latencyOpt.get
   override def execute (cpu: AvrCpu) = {
-    val sreg = cpu.register (0x5F).value
+    val sreg = cpu.register (SREG).value
     if ((sreg & (1 << s)) == 0) {
       latencyOpt = Some (2)
       List (IncrementIp ((k + 1) * 2))
@@ -378,4 +379,40 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
   }
   override def toString = s"SBC R${d}, R${r}"
+}
+
+object ST extends AvrInstructionObject[ST] {
+  override val mask = 0xFE080000
+  override val pattern = 0x92080000
+
+  override def apply (buffer: Array[UnsignedByte]): Option[ST] = {
+    super.apply (buffer) match {
+      case None => None
+      case Some (instruction) => if ((buffer(0).value & 0x0F) == 0x0F) None else Some (instruction)
+    }
+  }
+
+  override protected def parse (buffer: Array[UnsignedByte]): ST = {
+    val idx = parseUnsignedParameter (buffer, 0x00030000)
+    val x = IndirectionType.fromIndex (idx)
+    val r = parseUnsignedParameter (buffer, 0x01F00000)
+    new ST (x, r)
+  }
+}
+
+class ST (val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val Rr = cpu.register (r)
+    val address = (cpu.register (RAMPX).value << 16) | (cpu.register (XH).value << 8) | cpu.register (XL).value
+    val preAddress = x.preOperate (address)
+    val setMemory = SetMemory (preAddress, Rr)
+    val postAddress = x.postOperate (preAddress)
+    val setRAMPX = SetRegister (RAMPX, (postAddress >> 16) & 0xFF)
+    val setXH = SetRegister (XH, (postAddress >> 8) & 0xFF)
+    val setXL = SetRegister (XL, postAddress & 0xFF)
+    List (IncrementIp (2), setRAMPX, setXH, setXL, setMemory)
+  }
+  override def toString = s"ST ${x.toString ("X")}, R${r}"
 }
