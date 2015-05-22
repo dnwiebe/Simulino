@@ -337,6 +337,30 @@ class NOP () extends Instruction[AvrCpu] {
   override def toString = s"NOP"
 }
 
+object ORI extends AvrInstructionObject[ORI] {
+  override val mask = 0xF0000000
+  override val pattern = 0x60000000
+  override protected def parse (buffer: Array[UnsignedByte]): ORI = {
+    val d = parseUnsignedParameter (buffer, 0x00F00000)
+    val K = parseUnsignedParameter (buffer, 0x0F0F0000)
+    new ORI (d, K)
+  }
+}
+
+class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val R = Rd | K
+    val Nf = (R bit 7)
+    val Sf = Nf
+    val Zf = R == 0
+    List (IncrementIp (2), SetRegister (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"ORI R${d}, $$${K}"
+}
+
 object OUT extends AvrInstructionObject[OUT] {
   override val mask = 0xF8000000
   override val pattern = 0xB8000000

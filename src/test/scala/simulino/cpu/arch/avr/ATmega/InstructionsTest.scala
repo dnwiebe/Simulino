@@ -690,6 +690,53 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("ORI") {
+      it ("is properly unrecognized") {
+        assert (ORI (unsignedBytes (0x40)) === None)
+      }
+
+      describe ("when properly parsed with nonzero result") {
+        when (cpu.register (0x15)).thenReturn (0xAA)
+        val instruction = ORI (unsignedBytes (0x5A, 0x45)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.K === 0x5A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one clock cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0xFA),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when properly parsed with zero result") {
+        when (cpu.register (0x15)).thenReturn (0x00)
+        val instruction = ORI (unsignedBytes (0x50, 0x40)).get
+
+        describe ("and executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("OUT") {
       it ("is properly unrecognized") {
         assert (OUT (unsignedBytes (0x1F, 0xAE)) === None)
