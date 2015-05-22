@@ -74,18 +74,34 @@ class AvrCpuTest extends path.FunSpec {
           assert (subject.flag (C))
         }
 
-        describe ("and then to clear the rest") {
-          subject.receive (SetFlags (T = Some (false), S = Some (false), N = Some (false), C = Some (false)))
+        describe ("and then to swap all of them") {
+          subject.receive (SetFlags (I = Some (true), T = Some (false), H = Some (true), S = Some (false),
+            V = Some (true), N = Some (false), Z = Some (true), C = Some (false)))
 
           it ("does so") {
-            assert (!subject.flag (I))
+            assert (subject.flag (I))
             assert (!subject.flag (T))
-            assert (!subject.flag (H))
+            assert (subject.flag (H))
             assert (!subject.flag (S))
-            assert (!subject.flag (V))
+            assert (subject.flag (V))
             assert (!subject.flag (N))
-            assert (!subject.flag (Z))
+            assert (subject.flag (Z))
             assert (!subject.flag (C))
+          }
+
+          describe ("and then to clear the rest") {
+            subject.receive (SetFlags (I = Some (false), H = Some (false), V = Some (false), Z = Some (false)))
+
+            it ("does so") {
+              assert (!subject.flag (I))
+              assert (!subject.flag (T))
+              assert (!subject.flag (H))
+              assert (!subject.flag (S))
+              assert (!subject.flag (V))
+              assert (!subject.flag (N))
+              assert (!subject.flag (Z))
+              assert (!subject.flag (C))
+            }
           }
         }
       }

@@ -47,26 +47,17 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   def flag (name: Flag): Boolean = {
-    val octet = register (0x5F).value
+    val octet = register (SREG).value
     val idx = 7 - name.ordinal ()
     val shifted = octet >> idx
     (shifted & 0x01) == 1
   }
 
   private def handleSetFlags (c: SetFlags): Unit = {
-    val flags = List (c.I, c.T, c.H, c.S, c.V, c.N, c.Z, c.C)
-    val (andMask, orMask) = flags.foldLeft ((0, 0)) {(soFar, bitValue) =>
-      val (andMask, orMask) = soFar
-      val andShifted = andMask << 1
-      val orShifted = orMask << 1
-      bitValue match {
-        case None => (andShifted | 1, orShifted)
-        case Some (true) => (andShifted | 1, orShifted | 1)
-        case Some (false) => (andShifted, orShifted)
-      }
-    }
-    val octet = register (0x5F).value & andMask | orMask
-    setRegister (0x5F, octet)
+    val original = register (SREG).value
+    val withSets = original | (c.mask & c.pattern)
+    val withSetsAndClears = withSets & (~c.mask | c.pattern)
+    setRegister (SREG, withSetsAndClears)
   }
 
   private def handleWriteIOSpace (change: WriteIOSpace): Unit = {

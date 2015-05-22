@@ -861,7 +861,7 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("produces the right events") {
-            assert (result === List (IncrementIp (2), SetFlags (I = Some (true))))
+            assert (result === List (IncrementIp (2), SetFlags (0x80, 0xFF)))
           }
         }
       }

@@ -412,10 +412,12 @@ object SEx extends AvrInstructionObject[SEx] {
 }
 
 abstract class SEx (flagMask: Int) extends Instruction[AvrCpu] {
-  override def length = {TEST_DRIVE_ME; 0}
-  override def latency = {TEST_DRIVE_ME; 0}
-  override def execute (cpu: AvrCpu) = {TEST_DRIVE_ME; Nil}
-  override def toString = {TEST_DRIVE_ME; ""}
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    List (IncrementIp (2), SetFlags (1 << flagMask, 0xFF))
+  }
+  override def toString = s"SE${flagName}"
   private def flagName = getClass.getSimpleName.last
 }
 
