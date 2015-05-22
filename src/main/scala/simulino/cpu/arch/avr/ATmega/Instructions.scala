@@ -1,6 +1,6 @@
 package simulino.cpu.arch.avr.ATmega
 
-import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
+import simulino.cpu.arch.avr.{ReadIOSpace, AvrCpu, WriteIOSpace}
 import simulino.cpu._
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
@@ -241,6 +241,26 @@ class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetRegister (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"EOR R${d}, R${r}"
+}
+
+object IN extends AvrInstructionObject[IN] {
+  override val mask = 0xF8000000
+  override val pattern = 0xB0000000
+  override protected def parse (buffer: Array[UnsignedByte]): IN = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val A = parseUnsignedParameter (buffer, 0x060F0000)
+    new IN (d, A)
+  }
+}
+
+class IN (val d: Int, val A: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    List (IncrementIp (2), ReadIOSpace (A, Rd.value))
+  }
+  override def toString = s"IN R${d}, ${toHex (A, 2)}"
 }
 
 // Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
