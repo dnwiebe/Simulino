@@ -1,5 +1,5 @@
 # Simulino
-Another attempt at a simulator for the Arduino family of microcontroller boards
+Another attempt at a simulator for the Arduino family of microcontroller boards, with a specific eye toward TDD.
 
 ### Rationale
 Test-driven development has always been difficult on an Arduino, because the system on which the tests are running
