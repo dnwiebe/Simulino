@@ -18,7 +18,7 @@ object AvrInstructionSet {
     add (0x1, CP, CPSE)
     add (0x2, EOR)
     add (0x3, CPI)
-    add (0x9, JMP /* Not in all AVR instruction sets */, ST)
+    add (0x9, JMP /* Not in all AVR instruction sets */, ST, SEx)
     add (0xB, OUT)
     add (0xC, RJMP)
     add (0xD, RCALL)

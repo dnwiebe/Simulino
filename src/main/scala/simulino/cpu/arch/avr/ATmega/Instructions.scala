@@ -400,6 +400,27 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"SBC R${d}, R${r}"
 }
 
+object SEx extends AvrInstructionObject[SEx] {
+  override val mask = 0xFF8F0000
+  override val pattern = 0x94080000
+  override protected def parse (buffer: Array[UnsignedByte]): SEx = {
+    parseUnsignedParameter (buffer, 0x00700000) match {
+      case 7 => new SEI ()
+      case _ => TEST_DRIVE_ME
+    }
+  }
+}
+
+abstract class SEx (flagMask: Int) extends Instruction[AvrCpu] {
+  override def length = {TEST_DRIVE_ME; 0}
+  override def latency = {TEST_DRIVE_ME; 0}
+  override def execute (cpu: AvrCpu) = {TEST_DRIVE_ME; Nil}
+  override def toString = {TEST_DRIVE_ME; ""}
+  private def flagName = getClass.getSimpleName.last
+}
+
+class SEI extends SEx (7)
+
 object ST extends AvrInstructionObject[ST] {
   override val mask = 0xFE080000
   override val pattern = 0x92080000

@@ -841,6 +841,32 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("SEx") {
+      it ("is properly unrecognized") {
+        assert (SEx (unsignedBytes (0x78, 0x84)) === None)
+      }
+
+      describe ("SEI") {
+        val instruction = SEx (unsignedBytes (0x78, 0x94)).get
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the right events") {
+            assert (result === List (IncrementIp (2), SetFlags (I = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("ST") {
       when (cpu.register (0x0A)).thenReturn (UnsignedByte (0x5A))
       when (cpu.register (XL)).thenReturn (0x56)
