@@ -39,7 +39,6 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     change match {
       case c: SetMemory => setMemory (c.register, c.value)
       case c: SetFlags => handleSetFlags (c)
-      case c: WriteIOSpace => handleWriteIOSpace (c)
       case c: PushIp => handlePushIp ()
       case x => super.handleCpuChange (x)
     }
@@ -57,11 +56,6 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val withSets = original | (c.mask & c.pattern)
     val withSetsAndClears = withSets & (~c.mask | c.pattern)
     setMemory (SREG, withSetsAndClears)
-  }
-
-  private def handleWriteIOSpace (change: WriteIOSpace): Unit = {
-    val address = change.address + 0x20
-    setMemory (address, UnsignedByte (change.value))
   }
 
   private def handlePushIp (): Unit = {

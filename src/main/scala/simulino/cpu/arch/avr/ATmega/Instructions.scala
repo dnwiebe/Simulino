@@ -1,6 +1,6 @@
 package simulino.cpu.arch.avr.ATmega
 
-import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu._
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
@@ -392,7 +392,7 @@ class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rr = cpu.register (r)
-    List (IncrementIp (2), WriteIOSpace (A, Rr.value))
+    List (IncrementIp (2), SetMemory (A + 0x20, Rr.value))
   }
   override def toString = s"OUT $$${toHex (A, 2)}, R${r}"
 }

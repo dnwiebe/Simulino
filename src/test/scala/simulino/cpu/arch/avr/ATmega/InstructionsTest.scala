@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.{PushIp, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.ATmega.IndirectionType._
@@ -767,7 +767,7 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("generates the proper events") {
-            assert (result === List (IncrementIp (2), WriteIOSpace (0x1A, 0xA5)))
+            assert (result === List (IncrementIp (2), SetMemory (0x3A, 0xA5)))
           }
         }
       }
