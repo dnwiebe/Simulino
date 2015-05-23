@@ -1,23 +1,21 @@
 package simulino.cpu.arch
 
-import simulino.cpu.arch.avr.ATmega.{ADD, SetRegister, SetFlags, Flag}
+import simulino.cpu.arch.avr.ATmega.{ADD, SetMemory, SetFlags, Flag}
 import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.{SetMemory, IncrementIp}
-import simulino.cpu.arch.avr.{RegisterFile, AvrCpu}
+import simulino.cpu.IncrementIp
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.engine.Engine
-import simulino.memory.{UnsignedByte, Span, Memory}
+import simulino.memory.{UnsignedByte, Memory}
 import simulino.simulator.CpuConfiguration
-import simulino.simulator.peripheral.PinSampler
-import simulino.utils.TestUtils._
 
 /**
  * Created by dnwiebe on 5/14/15.
  */
 class AvrCpuTest extends path.FunSpec {
-  describe ("An AvrCpu with a mock Engine, Memory, and RegisterFile") {
+  describe ("An AvrCpu with a mock Engine and Memory") {
     val engine = mock (classOf[Engine])
     when (engine.currentTick).thenReturn (1000)
     val memory = mock (classOf[Memory])
@@ -36,7 +34,7 @@ class AvrCpuTest extends path.FunSpec {
     }
 
     describe ("directed to set R28 to 47") {
-      subject.receive (SetRegister (28, 47))
+      subject.receive (SetMemory (28, 47))
 
       it ("does so") {
         (0 until 32).foreach {i =>
@@ -107,24 +105,16 @@ class AvrCpuTest extends path.FunSpec {
       }
     }
 
-    describe ("directed to set a memory location") {
-      subject.receive (SetMemory (0x123456, 0xA5))
-
-      it ("does so") {
-        verify (memory).update (0x123456, UnsignedByte (0xA5))
-      }
-    }
-
     describe ("when set up with ones in Registers 0 and 1") {
-      subject.setRegister(0, UnsignedByte (1))
-      subject.setRegister(1, UnsignedByte (1))
+      subject.setMemory(0, UnsignedByte (1))
+      subject.setMemory(1, UnsignedByte (1))
 
       describe ("and instructed to add the contents of R1 to the contents of R0") {
         subject.receive (new ADD (0, 1))
 
         describe ("schedules the correct events for the correct clock tick") {
           verify (engine).schedule (IncrementIp (2), 1001)
-          verify (engine).schedule (SetRegister (0, 2), 1001)
+          verify (engine).schedule (SetMemory (0, 2), 1001)
           verify (engine).schedule (SetFlags (None, None, Some (false), Some (false), Some (false), Some (false),
             Some (false), Some (false)), 1001)
         }
@@ -132,8 +122,8 @@ class AvrCpuTest extends path.FunSpec {
     }
 
     describe ("when the stack register is set to 0x1234") {
-      subject.setRegister (0x5E, 0x12)
-      subject.setRegister (0x5D, 0x34)
+      subject.setMemory (0x5E, 0x12)
+      subject.setMemory (0x5D, 0x34)
 
       it ("shows the value as sp") {
         assert (subject.sp === 0x1234)

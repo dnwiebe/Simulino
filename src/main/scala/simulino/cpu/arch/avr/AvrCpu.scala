@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr
 
-import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetRegister}
-import simulino.cpu.{PushIp, SetMemory, Cpu, CpuChange}
+import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
+import simulino.cpu.{PushIp, Cpu, CpuChange}
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
@@ -23,24 +23,23 @@ object RegisterNames {
 class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   import RegisterNames._
 
-  val registerFile = new RegisterFile ()
+  val dataMemory = new Memory (8192)
   val instructionSet = new AvrInstructionSet ()
 
-  def register (idx: Int): UnsignedByte = registerFile (idx)
-  def setRegister (idx: Int, value: UnsignedByte): Unit = {registerFile (idx) = value}
+  def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
+  def setMemory (address: Int, value: UnsignedByte): Unit = {dataMemory.update (address, value)}
 
   override def sp: Int = ((register (SPH).value << 8) | register (SPL).value) & 0xFFFF
   protected override def sp_= (value: Int): Unit = {
-    setRegister (SPH, (value >> 8) & 0xFF)
-    setRegister (SPL, value & 0xFF)
+    setMemory (SPH, (value >> 8) & 0xFF)
+    setMemory (SPL, value & 0xFF)
   }
 
   override def handleCpuChange (change: CpuChange): Unit = {
     change match {
-      case c: SetRegister => setRegister (c.register, c.value)
+      case c: SetMemory => setMemory (c.register, c.value)
       case c: SetFlags => handleSetFlags (c)
       case c: WriteIOSpace => handleWriteIOSpace (c)
-      case c: SetMemory => handleSetMemory (c)
       case c: PushIp => handlePushIp ()
       case x => super.handleCpuChange (x)
     }
@@ -57,16 +56,12 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val original = register (SREG).value
     val withSets = original | (c.mask & c.pattern)
     val withSetsAndClears = withSets & (~c.mask | c.pattern)
-    setRegister (SREG, withSetsAndClears)
+    setMemory (SREG, withSetsAndClears)
   }
 
   private def handleWriteIOSpace (change: WriteIOSpace): Unit = {
     val address = change.address + 0x20
-    setRegister (address, UnsignedByte (change.value))
-  }
-
-  private def handleSetMemory (change: SetMemory): Unit = {
-    programMemory.update (change.address, change.value)
+    setMemory (address, UnsignedByte (change.value))
   }
 
   private def handlePushIp (): Unit = {

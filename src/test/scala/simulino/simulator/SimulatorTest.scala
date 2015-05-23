@@ -155,8 +155,8 @@ class SimulatorTest extends path.FunSpec {
       subject.loadHex (rdr)
 
       describe ("and ones in the first two registers") {
-        subject.cpu.asInstanceOf[AvrCpu].setRegister (0, 1)
-        subject.cpu.asInstanceOf[AvrCpu].setRegister (1, 1)
+        subject.cpu.asInstanceOf[AvrCpu].setMemory (0, 1)
+        subject.cpu.asInstanceOf[AvrCpu].setMemory (1, 1)
 
         describe ("when run for four iterations through the loop") {
           subject.runForTicks (12)
