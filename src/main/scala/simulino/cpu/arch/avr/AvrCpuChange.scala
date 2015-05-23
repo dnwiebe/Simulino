@@ -7,4 +7,4 @@ import simulino.cpu.CpuChange
  */
 
 case class WriteIOSpace (address: Int, value: Int) extends CpuChange
-case class ReadIOSpace (address: Int, value: Int) extends CpuChange
+

@@ -1,6 +1,6 @@
 package simulino.cpu.arch.avr.ATmega
 
-import simulino.cpu.arch.avr.{ReadIOSpace, AvrCpu, WriteIOSpace}
+import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
 import simulino.cpu._
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
@@ -257,10 +257,10 @@ class IN (val d: Int, val A: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    List (IncrementIp (2), ReadIOSpace (A, Rd.value))
+    val R = cpu.register (A + 0x20)
+    List (IncrementIp (2), SetRegister (d, R))
   }
-  override def toString = s"IN R${d}, ${toHex (A, 2)}"
+  override def toString = s"IN R${d}, $$${toHex (A, 2)}"
 }
 
 // Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
@@ -335,6 +335,30 @@ class NOP () extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2))
   override def toString = s"NOP"
+}
+
+object ORI extends AvrInstructionObject[ORI] {
+  override val mask = 0xF0000000
+  override val pattern = 0x60000000
+  override protected def parse (buffer: Array[UnsignedByte]): ORI = {
+    val d = parseUnsignedParameter (buffer, 0x00F00000)
+    val K = parseUnsignedParameter (buffer, 0x0F0F0000)
+    new ORI (d + 0x10, K)
+  }
+}
+
+class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val R = Rd | K
+    val Nf = (R bit 7)
+    val Sf = Nf
+    val Zf = (R == 0)
+    List (IncrementIp (2), SetRegister (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"ORI R${d}, $$${K}"
 }
 
 object OUT extends AvrInstructionObject[OUT] {

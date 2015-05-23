@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.avr.{ReadIOSpace, AvrCpu, WriteIOSpace}
+import simulino.cpu.arch.avr.{AvrCpu, WriteIOSpace}
 import simulino.cpu.{PushIp, SetMemory, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.ATmega.IndirectionType._
@@ -522,7 +522,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        when (cpu.register (0x15)).thenReturn (0xA5)
+        when (cpu.register (0x3A)).thenReturn (0xA5)
         val instruction = IN (unsignedBytes (0x5A, 0xB3)).get
 
         it ("has the right parameters") {
@@ -542,7 +542,7 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("generates the proper events") {
-            assert (result === List (IncrementIp (2), ReadIOSpace (0x1A, 0xA5)))
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0xA5)))
           }
         }
       }
@@ -685,6 +685,57 @@ class InstructionsTest extends path.FunSpec {
 
           it ("produces an IP increment") {
             assert (result === List (IncrementIp (2)))
+          }
+        }
+      }
+    }
+
+    describe ("ORI") {
+      when (cpu.register (0x15)).thenReturn (0x00)
+      it ("is properly unrecognized") {
+        assert (ORI (unsignedBytes (0x00, 0x07)) === None)
+      }
+
+      describe ("when given a nonzero parameter") {
+        val instruction = ORI (unsignedBytes (0x54, 0x6B)).get
+
+        it ("has the correct parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.K === 0xB4)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0xB4),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+      }
+
+      describe ("when given two zero parameters") {
+        val instruction = ORI (unsignedBytes (0x50, 0x60)).get
+
+        it ("has the correct parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.K === 0x00)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetRegister (0x15, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
           }
         }
       }
