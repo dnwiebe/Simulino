@@ -6,5 +6,5 @@ import simulino.memory.UnsignedByte
 /**
  * Created by dnwiebe on 5/13/15.
  */
-case class SetMemory (register: Int, value: UnsignedByte) extends CpuChange
+case class SetMemory (address: Int, value: UnsignedByte) extends CpuChange
 

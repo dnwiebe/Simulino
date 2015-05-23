@@ -37,7 +37,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
 
   override def handleCpuChange (change: CpuChange): Unit = {
     change match {
-      case c: SetMemory => setMemory (c.register, c.value)
+      case c: SetMemory => handleSetMemory (c.address, c.value)
       case c: SetFlags => handleSetFlags (c)
       case c: PushIp => handlePushIp ()
       case x => super.handleCpuChange (x)
@@ -49,6 +49,10 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val idx = 7 - name.ordinal ()
     val shifted = octet >> idx
     (shifted & 0x01) == 1
+  }
+
+  private def handleSetMemory (address: Int, value: UnsignedByte): Unit = {
+    setMemory (address, value)
   }
 
   private def handleSetFlags (c: SetFlags): Unit = {
