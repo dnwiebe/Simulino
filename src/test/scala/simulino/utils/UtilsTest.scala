@@ -23,6 +23,34 @@ class UtilsTest extends path.FunSpec {
 	    }
 	  }
 	}
+
+	describe ("fromHex") {
+		describe ("when given something that's not hex") {
+			val string = "Mommy"
+			it ("complains") {
+				try {
+					Utils.fromHex (string)
+					fail ()
+				}
+				catch {
+					case e: IllegalArgumentException => assert (e.getMessage === "'Mommy' cannot be converted from hex")
+				}
+			}
+		}
+    describe ("when given a hex number starting with 0x") {
+      val string = "0x45"
+      it ("converts fine") {
+        assert (Utils.fromHex (string) === 69)
+      }
+    }
+    describe ("when given a hex number not starting with 0x") {
+      val string = "CDeF"
+      it ("converts fine") {
+        assert (Utils.fromHex (string) === 52719)
+      }
+    }
+	}
+
 	describe ("valueIsTooWide") {
 	  describe ("when value is not too wide") {
 	    val result = Utils.valueIsTooWide(0x7F, 7)

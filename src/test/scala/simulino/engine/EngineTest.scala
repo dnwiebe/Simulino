@@ -2,6 +2,8 @@ package simulino.engine
 
 import org.scalatest.path
 import simulino.utils.TestUtils._
+import org.mockito.Mockito._
+import org.mockito.Matchers
 
 import scala.util.Try
 
@@ -12,6 +14,21 @@ class EngineTest extends path.FunSpec {
     it ("begins at tick 0") {
       assert (subject.currentTick === 0L)
       assert (subject.nextTick === 1L)
+    }
+
+    describe ("given a TickSink") {
+      val tickSink = mock (classOf[TickSink])
+      subject.addTickSink (tickSink)
+
+      describe ("and ticked over twice") {
+        subject.tick ()
+        subject.tick ()
+
+        it ("calls the TickSink twice") {
+          verify (tickSink).tick (0L)
+          verify (tickSink).tick (1L)
+        }
+      }
     }
 
     class EmptyEvent () extends Event

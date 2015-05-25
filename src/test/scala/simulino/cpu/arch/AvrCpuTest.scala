@@ -9,17 +9,18 @@ import simulino.cpu.IncrementIp
 import simulino.cpu.arch.avr.AvrCpu
 import simulino.engine.Engine
 import simulino.memory.{UnsignedByte, Memory}
-import simulino.simulator.CpuConfiguration
+import simulino.simulator.{SimulatorConfiguration, CpuConfiguration}
 
 /**
  * Created by dnwiebe on 5/14/15.
  */
 class AvrCpuTest extends path.FunSpec {
+  val config = SimulatorConfiguration (getClass.getClassLoader.getResourceAsStream ("configurations/ATmega2560.json")).cpu
+
   describe ("An AvrCpu with a mock Engine and Memory") {
     val engine = mock (classOf[Engine])
     when (engine.currentTick).thenReturn (1000)
     val memory = mock (classOf[Memory])
-    val config = mock (classOf[CpuConfiguration])
 
     val subject = new AvrCpu (engine, memory, config)
 

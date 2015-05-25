@@ -1,5 +1,6 @@
 package simulino.cpu.arch.avr
 
+import com.fasterxml.jackson.databind.JsonNode
 import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
 import simulino.cpu.{PushIp, Cpu, CpuChange}
 import simulino.engine.Engine
@@ -25,6 +26,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
 
   val dataMemory = new Memory (8192)
   val instructionSet = new AvrInstructionSet ()
+  val portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
 
   def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
   def setMemory (address: Int, value: UnsignedByte): Unit = {dataMemory.update (address, value)}
@@ -69,5 +71,11 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val thirdByte = nextIp & 0xFF
     programMemory.addSpan (Span (sp, Array(thirdByte, secondByte, firstByte)))
     sp = sp - 3
+  }
+
+  private def portMapConfigurations (classSpecific: JsonNode): List[PortConfiguration] = {
+    if (classSpecific == null) {return Nil}
+    val configNode = classSpecific.get ("portMap")
+    if (configNode == null) Nil else List (PortConfiguration (configNode))
   }
 }

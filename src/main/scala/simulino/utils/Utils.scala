@@ -9,6 +9,20 @@ object Utils {
     composed.substring (composed.length - scala.math.max (realNumberOfDigits, requestedLength))
   }
 
+  private val hexZeroX = "0x([0-9A-Fa-f]+)".r
+  private val hexNoPrefix = "([0-9A-Fa-f]+)".r
+  def fromHex (hex: String): Int = {
+    val hexString = hex match {
+      case hexZeroX (s) => s
+      case hexNoPrefix (s) => s
+      case _ => throw new IllegalArgumentException (s"'${hex}' cannot be converted from hex")
+    }
+    val digits = "0123456789ABCDEF"
+    hexString.foldLeft (0) {(soFar, c) =>
+      (soFar << 4) | digits.indexOf (c.toUpper)
+    }
+  }
+
   def valueIsTooWide(value: Int, bitCount: Int): Boolean = {
     (value >> bitCount) > 0
   }
@@ -47,7 +61,7 @@ object Utils {
     }
   }
 
-  def TEST_DRIVE_ME = throw new UnsupportedOperationException ("Test-drive me!")
+  def TEST_DRIVE_ME: Nothing = throw new UnsupportedOperationException ("Test-drive me!")
 
   private def numberOfHexDigits(number: Int): Int = {
     var toShift = number

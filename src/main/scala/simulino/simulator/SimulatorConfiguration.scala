@@ -44,8 +44,8 @@ case class CpuConfiguration (
 
 case object SimulatorConfiguration {
   def apply (istr: InputStream): SimulatorConfiguration = {
-    def mapper = new ObjectMapper ()
-    def root = mapper.readTree (istr)
+    val mapper = new ObjectMapper ()
+    val root = mapper.readTree (istr)
     apply (root)
   }
 
