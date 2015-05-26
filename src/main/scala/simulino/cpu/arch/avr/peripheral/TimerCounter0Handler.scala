@@ -9,9 +9,33 @@ import simulino.utils.Utils._
  */
 class TimerCounter0Handler extends PortHandler with TickSink {
   override val name = s"Timer/Counter 0"
-  override val portNames = List ()
+  override val portNames = List ("WGM02", "WGM0", "TCNT0", "TOV0", "OCR0A")
 
   def tick (count: Long): Unit = {
+    val newCounter = WGM match {
+      case 0 => normalMode ()
+      case 2 => clearTimerOnCompareMatchMode ()
+      case _ => TEST_DRIVE_ME
+    }
+    writeToPort ("TCNT0", newCounter)
+  }
 
+  def WGM = (readFromPort ("WGM02") << 2) | readFromPort ("WGM0")
+
+  private def normalMode (): Int = {
+    val newCounter = (readFromPort ("TCNT0") + 1) & 0xFF
+    if (newCounter == 0) {
+      writeToPort ("TOV0", 1)
+    }
+    newCounter
+  }
+
+  private def clearTimerOnCompareMatchMode (): Int = {
+    var newCounter = readFromPort ("TCNT0") + 1
+    if (newCounter == readFromPort ("OCR0A") + 1) {
+      newCounter = 0
+      writeToPort ("TOV0", 1)
+    }
+    newCounter
   }
 }

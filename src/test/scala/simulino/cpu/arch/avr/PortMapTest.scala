@@ -155,6 +155,40 @@ class PortMapTest extends path.FunSpec {
               verify (memory).update (4661, UnsignedByte (0xF0))
             }
           }
+
+          describe ("that is given to a handler that reads from an unrequested port") {
+            val handler = new PortHandler () {
+              override val name = "Bandit"
+              override val portNames = Nil
+              override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {readFromPort ("ER")}
+            }
+            handler.portMap = subject
+
+            describe ("when the handler makes the read") {
+              val result = Try {handler.acceptChange ("blah", 0, 0)}
+
+              it ("complains") {
+                fails (result, new IllegalArgumentException (s"${handler.getClass.getName} attempted read from unrequested port ER"))
+              }
+            }
+          }
+
+          describe ("that is given to a handler that writes to an unrequested port") {
+            val handler = new PortHandler () {
+              override val name = "Bandit"
+              override val portNames = Nil
+              override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {writeToPort ("EL", 0)}
+            }
+            handler.portMap = subject
+
+            describe ("when the handler makes the write") {
+              val result = Try {handler.acceptChange ("blah", 0, 0)}
+
+              it ("complains") {
+                fails (result, new IllegalArgumentException (s"${handler.getClass.getName} attempted write to unrequested port EL"))
+              }
+            }
+          }
         }
       }
     }

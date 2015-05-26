@@ -41,10 +41,16 @@ trait PortHandler {
   def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {}
 
   protected def writeToPort (name: String, value: Int): Unit = {
+    if (!portNames.contains (name)) {
+      throw new IllegalArgumentException (s"${getClass.getName} attempted write to unrequested port ${name}")
+    }
     portMap.writeToPort (name, value)
   }
 
   protected def readFromPort (name: String): Int = {
+    if (!portNames.contains (name)) {
+      throw new IllegalArgumentException (s"${getClass.getName} attempted read from unrequested port ${name}")
+    }
     portMap.readFromPort (name)
   }
 }
@@ -61,7 +67,7 @@ case object PortConfiguration {
           hexOrDec (item.get ("bitLength")),
           PortType.fromChar (item.get ("direction").asText ().charAt (0))
         )
-        )
+      )
     }.toList
     val portHandlerClasses = node.get ("portHandlerClasses").asInstanceOf[ArrayNode].elements.asScala.map {item =>
       Class.forName (item.asText ()).asInstanceOf[Class[PortHandler]]
