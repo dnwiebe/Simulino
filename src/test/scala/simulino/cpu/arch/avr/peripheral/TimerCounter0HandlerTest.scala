@@ -50,7 +50,7 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (portMap).writeToPort ("TCNT0", 0x96)
           }
 
-          it ("does not set the overflow flag") {
+          it ("does not strobe the overflow flag") {
             verify (portMap, never).writeToPort (Matchers.eq ("TOV0"), Matchers.anyInt ())
           }
         }
@@ -66,7 +66,7 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (portMap).writeToPort ("TCNT0", 0x00)
           }
 
-          it ("sets the overflow flag") {
+          it ("strobes the overflow flag") {
             verify (portMap).writeToPort ("TOV0", 1)
           }
         }
@@ -89,7 +89,7 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (portMap).writeToPort ("TCNT0", 0x46)
           }
 
-          it ("does not set the overflow flag") {
+          it ("does not strobe the overflow flag") {
             verify (portMap, never).writeToPort (Matchers.eq ("TOV0"), Matchers.anyInt ())
           }
         }
@@ -106,7 +106,7 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (portMap).writeToPort ("TCNT0", 0x00)
           }
 
-          it ("sets the overflow flag") {
+          it ("strobes the overflow flag") {
             verify (portMap).writeToPort ("TOV0", 1)
           }
         }
@@ -123,8 +123,46 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (portMap).writeToPort ("TCNT0", 0x00)
           }
 
-          it ("sets the overflow flag") {
+          it ("strobes the overflow flag") {
             verify (portMap).writeToPort ("TOV0", 1)
+          }
+        }
+      }
+    }
+
+    describe ("in Fast PWM Mode") {
+      when (portMap.readFromPort ("WGM0")).thenReturn (3)
+      describe ("and OCR0A is 0x80") {
+        when (portMap.readFromPort ("OCR0A")).thenReturn (0x80)
+        describe ("and WGM02 is clear") {
+          when (portMap.readFromPort ("WGM02")).thenReturn (0)
+          describe ("and TCNT0 is 0x80") {
+            when (portMap.readFromPort ("TCNT0")).thenReturn (0x80)
+            describe ("and a tick is received") {
+              subject.tick (1L)
+
+              it ("keeps counting") {
+                verify (portMap).writeToPort ("TCNT0", 0x81)
+              }
+
+              it ("does not strobe the overflow flag") {
+                verify (portMap, never).writeToPort (Matchers.eq ("TOV0"), Matchers.anyInt ())
+              }
+            }
+          }
+          describe ("and TCNT0 is 0xFF") {
+            when (portMap.readFromPort ("TCNT0")).thenReturn (0xFF)
+            describe ("and a tick is received") {
+              subject.tick (1L)
+
+              it ("resets the counter") {
+                verify (portMap).writeToPort ("TCNT0", 0x00)
+              }
+
+              it ("strobes the overflow flag") {
+                verify (portMap).writeToPort ("TOV0", 1)
+              }
+            }
           }
         }
       }

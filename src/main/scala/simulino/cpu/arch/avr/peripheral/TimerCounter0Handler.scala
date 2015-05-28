@@ -9,13 +9,18 @@ import simulino.utils.Utils._
  */
 class TimerCounter0Handler extends PortHandler with TickSink {
   override val name = s"Timer/Counter 0"
-  override val portNames = List ("WGM02", "WGM0", "TCNT0", "TOV0", "OCR0A", "TOIE0")
+  override val portNames = List ("WGM02", "WGM0", "COM0A", "TCNT0", "TOV0", "OCR0A", "TOIE0", "OCIE0A", "OCIE0B")
 
   override def tick (count: Long): Unit = {
+    if (readFromPort ("OCIE0A") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("OCIE0B") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("COM0A") > 0) {TEST_DRIVE_ME}
     val newCounter = WGM match {
       case 0 => normalMode ()
       case 2 => clearTimerOnCompareMatchMode ()
-      case _ => TEST_DRIVE_ME
+      case 3 => fastPwmMode (false)
+      case 7 => fastPwmMode (true)
+      case x => println (s"WGM is ${x}"); TEST_DRIVE_ME
     }
     writeToPort ("TCNT0", newCounter)
   }
@@ -40,6 +45,16 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   private def clearTimerOnCompareMatchMode (): Int = {
     var newCounter = readFromPort ("TCNT0") + 1
     if (newCounter == readFromPort ("OCR0A") + 1) {
+      newCounter = 0
+      strobe ()
+    }
+    newCounter
+  }
+
+  private def fastPwmMode (useCompareRegister: Boolean): Int = {
+    var newCounter = readFromPort ("TCNT0") + 1
+    val limit = if (useCompareRegister) {readFromPort ("OCR0A")} else 0xFF
+    if (newCounter == limit + 1) {
       newCounter = 0
       strobe ()
     }
