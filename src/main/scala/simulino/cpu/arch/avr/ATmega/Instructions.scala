@@ -281,19 +281,60 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
 }
 
 object LDD extends AvrInstructionObject[LDD] {
-  override val mask = 0xD2080000
+  override val mask = 0xC2080000
   override val pattern = 0x80000000
   override protected def parse (buffer: Array[UnsignedByte]): LDD = {
-    TEST_DRIVE_ME
-    null
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val (x, q) = parseUnsignedParameter (buffer, 0x10030000) match {
+      case 0x5 => (IndirectionType.PostIncrement, 0)
+      case 0x6 => (IndirectionType.PreDecrement, 0)
+      case _ => (IndirectionType.Unchanged, parseUnsignedParameter (buffer, 0x2C070000))
+    }
+    new LDD (d, x, q)
   }
 }
 
 class LDD (val d: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
-  override def length = {TEST_DRIVE_ME; 0}
-  override def latency = {TEST_DRIVE_ME; 0}
-  override def execute (cpu: AvrCpu) = {TEST_DRIVE_ME; Nil}
-  override def toString = {TEST_DRIVE_ME; ""}
+  override def length = 2
+  override def latency = {
+    if (q > 0) 2
+    else if (x == IndirectionType.PostIncrement) 2
+    else if (x == IndirectionType.PreDecrement) 3
+    else 1
+  }
+  override def execute (cpu: AvrCpu) = {
+    val initialZ = (cpu.register (ZH).value << 8) | cpu.register (ZL).value
+    val preZ = x match {
+      case IndirectionType.Unchanged => initialZ + q
+      case IndirectionType.PostIncrement => initialZ
+      case IndirectionType.PreDecrement => initialZ - 1
+    }
+    val R = cpu.register (preZ)
+    val postZ = x match {
+      case IndirectionType.Unchanged => initialZ
+      case IndirectionType.PostIncrement => preZ + 1
+      case IndirectionType.PreDecrement => preZ
+    }
+    val zMod = if (postZ != initialZ) {
+      List (SetMemory (ZL, postZ & 0xFF), SetMemory (ZH, (postZ >> 8) & 0xFF))
+    }
+    else {
+      Nil
+    }
+    List (IncrementIp (2), SetMemory (d, R)) ++ zMod
+  }
+  override def toString = {
+    x match {
+      case IndirectionType.Unchanged => {
+        q match {
+          case 0 => s"LD R${d}, Z"
+          case _ => s"LDD R${d}, Z+${q}"
+        }
+      }
+      case IndirectionType.PostIncrement => s"LD R${d}, Z+"
+      case IndirectionType.PreDecrement => s"LD R${d}, -Z"
+    }
+  }
 }
 
 object LDI extends AvrInstructionObject[LDI] {
@@ -310,7 +351,7 @@ class LDI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2), SetMemory (d, K))
-  override def toString = s"LDI R${d}, ${K}"
+  override def toString = s"LDI R${d}, $$${toHex (K, 2)}"
 }
 
 object MULS extends AvrInstructionObject[MULS] {

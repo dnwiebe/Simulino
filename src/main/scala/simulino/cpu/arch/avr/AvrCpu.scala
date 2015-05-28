@@ -17,6 +17,10 @@ object RegisterNames {
   val SPL = 0x5D
   val XL = 0x1A
   val XH = 0x1B
+  val YL = 0x1C
+  val YH = 0x1D
+  val ZL = 0x1E
+  val ZH = 0x1F
   val RAMPX = 0x59
   val SREG = 0x5F
 }
