@@ -575,8 +575,9 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("LDD") {
-      when (cpu.register (0x1E)).thenReturn (0x34)
-      when (cpu.register (0x1F)).thenReturn (0x12)
+      when (cpu.register (ZL)).thenReturn (0x34)
+      when (cpu.register (ZH)).thenReturn (0x12)
+      when (cpu.register (RAMPZ)).thenReturn (0x00)
       when (cpu.register (0x1234)).thenReturn (42)
       when (cpu.register (0x1233)).thenReturn (41)
       when (cpu.register (0x125E)).thenReturn (43)
@@ -650,7 +651,8 @@ class InstructionsTest extends path.FunSpec {
             val result = instruction.execute (cpu)
 
             it ("produces the right events") {
-              assert (result === List (IncrementIp (2), SetMemory (0x15, 42), SetMemory (0x1E, 0x35), SetMemory (0x1F, 0x12)))
+              assert (result === List (IncrementIp (2), SetMemory (0x15, 42),
+                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x35)))
             }
           }
         }
@@ -678,7 +680,8 @@ class InstructionsTest extends path.FunSpec {
             val result = instruction.execute (cpu)
 
             it ("produces the right events") {
-              assert (result === List (IncrementIp (2), SetMemory (0x15, 41), SetMemory (0x1E, 0x33), SetMemory (0x1F, 0x12)))
+              assert (result === List (IncrementIp (2), SetMemory (0x15, 41),
+                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x33)))
             }
           }
         }
@@ -1095,8 +1098,8 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("creates the right events") {
-            assert (result === List (IncrementIp (2), SetMemory (RAMPX, 0x12),
-              SetMemory (XH, 0x34), SetMemory (XL, 0x56), SetMemory (0x123456, 0x5A)))
+            assert (result === List (IncrementIp (2), SetMemory (0x123456, 0x5A),
+              SetMemory (RAMPX, 0x12), SetMemory (XH, 0x34), SetMemory (XL, 0x56)))
           }
         }
       }
@@ -1113,8 +1116,8 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("creates the right events") {
-            assert (result === List (IncrementIp (2), SetMemory (RAMPX, 0x12),
-              SetMemory (XH, 0x34), SetMemory (XL, 0x57), SetMemory (0x123456, 0x5A)))
+            assert (result === List (IncrementIp (2), SetMemory (0x123456, 0x5A),
+              SetMemory (RAMPX, 0x12), SetMemory (XH, 0x34), SetMemory (XL, 0x57)))
           }
         }
       }
@@ -1131,8 +1134,8 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("creates the right events") {
-            assert (result === List (IncrementIp (2), SetMemory (RAMPX, 0x12),
-              SetMemory (XH, 0x34), SetMemory (XL, 0x55), SetMemory (0x123455, 0x5A)))
+            assert (result === List (IncrementIp (2), SetMemory (0x123455, 0x5A),
+              SetMemory (RAMPX, 0x12), SetMemory (XH, 0x34), SetMemory (XL, 0x55)))
           }
         }
       }

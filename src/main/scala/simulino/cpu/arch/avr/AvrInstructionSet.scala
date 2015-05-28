@@ -19,7 +19,7 @@ object AvrInstructionSet {
     add (0x2, EOR)
     add (0x3, CPI)
     add (0x6, ORI)
-    add (0x8, LDD)
+    add (0x8, LDD, STD)
     add (0x9, JMP /* Not in all AVR instruction sets */, SEx, ST)
     add (0xB, IN, OUT)
     add (0xC, RJMP)
@@ -38,6 +38,9 @@ class AvrInstructionSet extends InstructionSet[AvrCpu] {
   
   override def apply (buffer: Array[UnsignedByte]): Option[Instruction[AvrCpu]] = {
     val sesquidecile = buffer(1).value >> 4
+    if (sesquidecile == 0x8) {
+      val x = 4
+    }
     val instructions: Seq[Instruction[AvrCpu]] = sesquideciles(sesquidecile).flatMap {instObj =>
       instObj(buffer).asInstanceOf[Option[Instruction[AvrCpu]]]
     }

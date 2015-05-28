@@ -44,7 +44,8 @@ trait InstructionObject[T <: Instruction[_]] {
   }
 
   private def matchOpcodePattern (buffer: Array[UnsignedByte], mask: Int, pattern: Int): Boolean = {
-    (bufferToInt (buffer) & mask) == pattern
+    val bufVal = bufferToInt (buffer)
+    (bufVal & mask) == pattern
   }
 }
 

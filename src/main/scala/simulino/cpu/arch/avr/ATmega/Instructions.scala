@@ -303,24 +303,19 @@ class LDD (val d: Int, val x: IndirectionType, val q: Int) extends Instruction[A
     else 1
   }
   override def execute (cpu: AvrCpu) = {
-    val initialZ = (cpu.register (ZH).value << 8) | cpu.register (ZL).value
-    val preZ = x match {
-      case IndirectionType.Unchanged => initialZ + q
-      case IndirectionType.PostIncrement => initialZ
-      case IndirectionType.PreDecrement => initialZ - 1
+    val initialValue = getExtended (cpu, Zfull)
+    val preValue = x match {
+      case IndirectionType.Unchanged => initialValue + q
+      case IndirectionType.PostIncrement => initialValue
+      case IndirectionType.PreDecrement => initialValue - 1
     }
-    val R = cpu.register (preZ)
-    val postZ = x match {
-      case IndirectionType.Unchanged => initialZ
-      case IndirectionType.PostIncrement => preZ + 1
-      case IndirectionType.PreDecrement => preZ
+    val R = cpu.register (preValue)
+    val postValue = x match {
+      case IndirectionType.Unchanged => initialValue
+      case IndirectionType.PostIncrement => preValue + 1
+      case IndirectionType.PreDecrement => preValue
     }
-    val zMod = if (postZ != initialZ) {
-      List (SetMemory (ZL, postZ & 0xFF), SetMemory (ZH, (postZ >> 8) & 0xFF))
-    }
-    else {
-      Nil
-    }
+    val zMod = if (postValue != initialValue) setExtended (Zfull, postValue) else Nil
     List (IncrementIp (2), SetMemory (d, R)) ++ zMod
   }
   override def toString = {
@@ -548,14 +543,27 @@ class ST (val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
     val Rr = cpu.register (r)
-    val address = (cpu.register (RAMPX).value << 16) | (cpu.register (XH).value << 8) | cpu.register (XL).value
+    val address = getExtended (cpu, Xfull)
     val preAddress = x.preOperate (address)
     val setMemory = SetMemory (preAddress, Rr)
     val postAddress = x.postOperate (preAddress)
-    val setRAMPX = SetMemory (RAMPX, (postAddress >> 16) & 0xFF)
-    val setXH = SetMemory (XH, (postAddress >> 8) & 0xFF)
-    val setXL = SetMemory (XL, postAddress & 0xFF)
-    List (IncrementIp (2), setRAMPX, setXH, setXL, setMemory)
+    List (IncrementIp (2), setMemory) ++ setExtended (Xfull, postAddress)
   }
   override def toString = s"ST ${x.toString ("X")}, R${r}"
+}
+
+object STD extends AvrInstructionObject[STD] {
+  override val mask = 0xC2080000
+  override val pattern = 0x82000000
+  override protected def parse (buffer: Array[UnsignedByte]): STD = {
+    TEST_DRIVE_ME
+  }
+}
+
+class STD (val q: Int, val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
+  override def length = TEST_DRIVE_ME
+  override def latency = TEST_DRIVE_ME
+  override def execute (cpu: AvrCpu) = {
+    TEST_DRIVE_ME
+  }
 }

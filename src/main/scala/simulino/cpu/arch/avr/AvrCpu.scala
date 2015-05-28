@@ -22,7 +22,26 @@ object RegisterNames {
   val ZL = 0x1E
   val ZH = 0x1F
   val RAMPX = 0x59
+  val RAMPY = 0x5A
+  val RAMPZ = 0x5B
   val SREG = 0x5F
+
+  val Xfull = (RAMPX, XH, XL)
+  val Yfull = (RAMPY, YH, YL)
+  val Zfull = (RAMPZ, ZH, ZL)
+
+  def getExtended (cpu: AvrCpu, registers: (Int, Int, Int)): Int = {
+    ((cpu.register (registers._1).value & 0xFF) << 16) |
+      ((cpu.register (registers._2).value & 0xFF) << 8) |
+      (cpu.register (registers._3).value & 0xFF)
+  }
+  def setExtended (registers: (Int, Int, Int), value: Int): List[CpuChange] = {
+    List (
+      SetMemory (registers._1, (value >> 16) & 0xFF),
+      SetMemory (registers._2, (value >> 8) & 0xFF),
+      SetMemory (registers._3, value & 0xFF)
+    )
+  }
 }
 
 class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
