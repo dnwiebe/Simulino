@@ -1140,5 +1140,117 @@ class InstructionsTest extends path.FunSpec {
         }
       }
     }
+
+    describe ("STD") {
+      when (cpu.register (15)).thenReturn (42)
+      when (cpu.register (ZL)).thenReturn (0x34)
+      when (cpu.register (ZH)).thenReturn (0x12)
+      when (cpu.register (RAMPZ)).thenReturn (0x00)
+      it ("is properly unrecognized") {
+        assert (STD (unsignedBytes (0xF8, 0x80)) === None)
+      }
+
+      describe ("case i/iv") {
+        describe ("when properly parsed with ds and no qs") {
+          val instruction = STD (unsignedBytes (0xF0, 0x83)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.r === 0x1F)
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x0)
+          }
+
+          it ("takes one cycle") {
+            assert (instruction.latency === 1)
+          }
+        }
+        describe ("when properly parsed with qs and no ds") {
+          val instruction = STD (unsignedBytes (0x07, 0xAE)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.r === 0x0)
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x3F)
+          }
+        }
+        describe ("with qs and ds") {
+          val instruction = new STD (0x15, IndirectionType.Unchanged, 0x2A)
+
+          it ("is two bytes long") {
+            assert (instruction.length === 2)
+          }
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x1234, 42)))
+            }
+          }
+        }
+      }
+
+      describe ("case ii") {
+        describe ("when properly parsed") {
+          val instruction = STD (unsignedBytes (0x51, 0x93)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.r === 0x15)
+            assert (instruction.x === IndirectionType.PostIncrement)
+            assert (instruction.q === 0x00)
+          }
+
+          it ("is two bytes long") {
+            assert (instruction.length === 2)
+          }
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x1234, 42),
+                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x35)))
+            }
+          }
+        }
+      }
+
+      describe ("case iii") {
+        describe ("when properly parsed") {
+          val instruction = STD (unsignedBytes (0x52, 0x93)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.r === 0x15)
+            assert (instruction.x === IndirectionType.PreDecrement)
+            assert (instruction.q === 0x00)
+          }
+
+          it ("is two bytes long") {
+            assert (instruction.length === 2)
+          }
+
+          it ("takes three cycles") {
+            assert (instruction.latency === 3)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x1233, 42),
+                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x33)))
+            }
+          }
+        }
+      }
+    }
   }
 }

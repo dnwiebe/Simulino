@@ -556,14 +556,45 @@ object STD extends AvrInstructionObject[STD] {
   override val mask = 0xC2080000
   override val pattern = 0x82000000
   override protected def parse (buffer: Array[UnsignedByte]): STD = {
-    TEST_DRIVE_ME
+    val r = parseUnsignedParameter (buffer, 0x01F00000)
+    val (x, q) = parseUnsignedParameter (buffer, 0x10030000) match {
+      case 0x5 => (IndirectionType.PostIncrement, 0)
+      case 0x6 => (IndirectionType.PreDecrement, 0)
+      case _ => (IndirectionType.Unchanged, parseUnsignedParameter (buffer, 0x2C070000))
+    }
+    new STD (r, x, q)
   }
 }
 
-class STD (val q: Int, val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
-  override def length = TEST_DRIVE_ME
-  override def latency = TEST_DRIVE_ME
+class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 0
   override def execute (cpu: AvrCpu) = {
-    TEST_DRIVE_ME
+    val initialValue = getExtended (cpu, Zfull)
+    val preValue = x match {
+      case IndirectionType.Unchanged => initialValue + q
+      case IndirectionType.PostIncrement => initialValue
+      case IndirectionType.PreDecrement => initialValue - 1
+    }
+    val R = cpu.register (preValue)
+    val postValue = x match {
+      case IndirectionType.Unchanged => initialValue
+      case IndirectionType.PostIncrement => preValue + 1
+      case IndirectionType.PreDecrement => preValue
+    }
+    val zMod = if (postValue != initialValue) setExtended (Zfull, postValue) else Nil
+    List (IncrementIp (2), SetMemory (R, r)) ++ zMod
+  }
+  override def toString = {
+    x match {
+      case IndirectionType.Unchanged => {
+        q match {
+          case 0 => s"ST Z, R${r}"
+          case _ => s"STD Z+${q}, R${r}"
+        }
+      }
+      case IndirectionType.PostIncrement => s"ST Z+, R${r}"
+      case IndirectionType.PreDecrement => s"ST -Z, R${r}"
+    }
   }
 }
