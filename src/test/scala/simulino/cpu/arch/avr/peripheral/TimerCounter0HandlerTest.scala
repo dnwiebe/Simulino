@@ -2,7 +2,7 @@ package simulino.cpu.arch.avr.peripheral
 
 import org.mockito.Matchers
 import org.scalatest.path
-import simulino.cpu.arch.avr.PortMap
+import simulino.cpu.arch.avr.{AvrCpu, PortMap}
 import org.mockito.Mockito._
 
 /**
@@ -10,9 +10,11 @@ import org.mockito.Mockito._
  */
 class TimerCounter0HandlerTest extends path.FunSpec {
   describe ("A TimerCounter0Handler") {
+    val cpu = mock (classOf[AvrCpu])
     val portMap = mock (classOf[PortMap])
+    when (cpu.portMap).thenReturn (portMap)
     val subject = new TimerCounter0Handler ()
-    subject.portMap = portMap
+    subject.initialize (cpu)
 
     describe ("when a 1 is written to TOV0") {
       subject.acceptChange ("TOV0", 0, 1)
@@ -68,6 +70,10 @@ class TimerCounter0HandlerTest extends path.FunSpec {
 
           it ("strobes the overflow flag") {
             verify (portMap).writeToPort ("TOV0", 1)
+          }
+
+          it ("does not raise an interrupt") {
+            verify (cpu, never).raiseInterrupt (Matchers.anyString ())
           }
         }
       }

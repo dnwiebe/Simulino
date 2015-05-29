@@ -34,6 +34,13 @@ class AvrCpuTest extends path.FunSpec {
       }
     }
 
+    it ("has the expected interrupt vectors") {
+      assert (subject.interruptVectors("RESET") === 0x00)
+      assert (subject.interruptVectors("TIM0_COMPA") === 0x54)
+      assert (subject.interruptVectors("TIM0_COMPB") === 0x58)
+      assert (subject.interruptVectors("TIM0_OVF") === 0x5C)
+    }
+
     describe ("directed to set R28 to 47") {
       subject.receive (SetMemory (28, 47))
 

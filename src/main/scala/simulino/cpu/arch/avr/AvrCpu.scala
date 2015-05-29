@@ -1,12 +1,14 @@
 package simulino.cpu.arch.avr
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
 import simulino.cpu.{PushIp, Cpu, CpuChange}
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
 import simulino.utils.Utils._
+import scala.collection.JavaConverters._
 
 /**
  * Created by dnwiebe on 5/13/15.
@@ -50,6 +52,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   val dataMemory = new Memory (8192)
   val instructionSet = new AvrInstructionSet ()
   val portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
+  val interruptVectors = extractInterruptVectors (config.classSpecific)
 
   def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
   def setMemory (address: Int, value: UnsignedByte): Unit = {dataMemory.update (address, value)}
@@ -76,6 +79,10 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     (shifted & 0x01) == 1
   }
 
+  def raiseInterrupt (name: String): Unit = {
+    TEST_DRIVE_ME
+  }
+
   private def handleSetMemory (address: Int, value: UnsignedByte): Unit = {
     setMemory (address, value)
   }
@@ -100,5 +107,12 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     if (classSpecific == null) {return Nil}
     val configNode = classSpecific.get ("portMap")
     if (configNode == null) Nil else List (PortConfiguration (configNode))
+  }
+
+  private def extractInterruptVectors (classSpecific: JsonNode): Map[String, Int] = {
+    if (classSpecific == null) {return Map ()}
+    classSpecific.get ("interruptVectors").asInstanceOf[ArrayNode].elements ().asScala.map {node =>
+      (node.get ("name").asText, hexOrDec (node.get ("address")))
+    }.toMap
   }
 }

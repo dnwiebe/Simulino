@@ -95,6 +95,7 @@ class PortMapTest extends path.FunSpec {
         describe ("which is then used to initialize a PortMap") {
           val cpu = mock (classOf[AvrCpu])
           val subject = new PortMap (cpu, List (config))
+          when (cpu.portMap).thenReturn (subject)
 
           describe ("that sees a memory change that doesn't affect anything") {
             Changes.changes.clear ()
@@ -156,32 +157,40 @@ class PortMapTest extends path.FunSpec {
             }
           }
 
-          describe ("that is given to a handler that reads from an unrequested port") {
+          describe ("that is given to a handler") {
             val handler = new PortHandler () {
               override val name = "Bandit"
               override val portNames = Nil
               override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {readFromPort ("ER")}
             }
-            handler.portMap = subject
+            handler.initialize (cpu)
 
-            describe ("when the handler makes the read") {
+            describe ("that reads from an unrequested port") {
               val result = Try {handler.acceptChange ("blah", 0, 0)}
 
               it ("complains") {
                 fails (result, new IllegalArgumentException (s"${handler.getClass.getName} attempted read from unrequested port ER"))
               }
             }
+
+            describe ("that tries to reinitialize") {
+              val result = Try {handler.initialize (cpu)}
+
+              it ("complains") {
+                fails (result, new IllegalStateException (s"${handler.getClass.getName} may not be reinitialized"))
+              }
+            }
           }
 
-          describe ("that is given to a handler that writes to an unrequested port") {
+          describe ("that is given to a handler") {
             val handler = new PortHandler () {
               override val name = "Bandit"
               override val portNames = Nil
               override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {writeToPort ("EL", 0)}
             }
-            handler.portMap = subject
+            handler.initialize (cpu)
 
-            describe ("when the handler makes the write") {
+            describe ("that writes to an unrequested port") {
               val result = Try {handler.acceptChange ("blah", 0, 0)}
 
               it ("complains") {

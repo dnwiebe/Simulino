@@ -35,23 +35,31 @@ case class Port (name: String, address: Int, lowBit: Int, bitLength: Int, direct
 }
 
 trait PortHandler {
+  private var initialized = false
+  private var cpu: AvrCpu = null
   val name: String
   val portNames: Seq[String]
-  var portMap: PortMap = null
+
+  def initialize (cpu: AvrCpu): Unit = {
+    if (initialized) {throw new IllegalStateException (s"${getClass.getName} may not be reinitialized")}
+    this.cpu = cpu
+    initialized = true
+  }
+
   def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {}
 
   protected def writeToPort (name: String, value: Int): Unit = {
     if (!portNames.contains (name)) {
       throw new IllegalArgumentException (s"${getClass.getName} attempted write to unrequested port ${name}")
     }
-    portMap.writeToPort (name, value)
+    cpu.portMap.writeToPort (name, value)
   }
 
   protected def readFromPort (name: String): Int = {
     if (!portNames.contains (name)) {
       throw new IllegalArgumentException (s"${getClass.getName} attempted read from unrequested port ${name}")
     }
-    portMap.readFromPort (name)
+    cpu.portMap.readFromPort (name)
   }
 }
 
@@ -76,10 +84,6 @@ case object PortConfiguration {
       ports,
       portHandlerClasses
     )
-  }
-
-  private def hexOrDec (node: JsonNode): Int = {
-    if (node.isTextual) fromHex (node.asText ()) else node.asInt ()
   }
 }
 
@@ -158,7 +162,7 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     }
     classes.map {cls =>
       val handler = cls.newInstance ()
-      handler.portMap = this
+      handler.initialize (cpu)
       validatePortHandler (handler, portsByName)
       if (classOf[TickSink].isAssignableFrom (handler.getClass)) {
         cpu.engine.addTickSink (handler.asInstanceOf[TickSink])

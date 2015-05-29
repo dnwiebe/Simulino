@@ -1,5 +1,7 @@
 package simulino.utils
 
+import com.fasterxml.jackson.databind.JsonNode
+
 object Utils {
   def toHex(number: Int, requestedLength: Int): String = {
     val hex = Integer.toHexString (number).toUpperCase
@@ -59,6 +61,10 @@ object Utils {
       case s if s.startsWith ("0x") => Integer.parseInt (s.substring (2), 16)
       case s => Integer.parseInt (s)
     }
+  }
+
+  def hexOrDec (node: JsonNode): Int = {
+    if (node.isTextual) fromHex (node.asText ()) else node.asInt ()
   }
 
   def TEST_DRIVE_ME: Nothing = throw new UnsupportedOperationException ("Test-drive me!")
