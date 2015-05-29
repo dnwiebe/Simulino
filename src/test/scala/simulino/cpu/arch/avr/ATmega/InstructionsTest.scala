@@ -1142,7 +1142,7 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("STD") {
-      when (cpu.register (15)).thenReturn (42)
+      when (cpu.register (0x15)).thenReturn (42)
       when (cpu.register (ZL)).thenReturn (0x34)
       when (cpu.register (ZH)).thenReturn (0x12)
       when (cpu.register (RAMPZ)).thenReturn (0x00)
@@ -1160,8 +1160,12 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.q === 0x0)
           }
 
-          it ("takes one cycle") {
-            assert (instruction.latency === 1)
+          it ("is two bytes long") {
+            assert (instruction.length === 2)
+          }
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
           }
         }
         describe ("when properly parsed with qs and no ds") {
@@ -1176,19 +1180,11 @@ class InstructionsTest extends path.FunSpec {
         describe ("with qs and ds") {
           val instruction = new STD (0x15, IndirectionType.Unchanged, 0x2A)
 
-          it ("is two bytes long") {
-            assert (instruction.length === 2)
-          }
-
-          it ("takes two cycles") {
-            assert (instruction.latency === 2)
-          }
-
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
             it ("produces the right events") {
-              assert (result === List (IncrementIp (2), SetMemory (0x1234, 42)))
+              assert (result === List (IncrementIp (2), SetMemory (0x125E, UnsignedByte (42))))
             }
           }
         }
@@ -1204,20 +1200,12 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.q === 0x00)
           }
 
-          it ("is two bytes long") {
-            assert (instruction.length === 2)
-          }
-
-          it ("takes two cycles") {
-            assert (instruction.latency === 2)
-          }
-
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
             it ("produces the right events") {
-              assert (result === List (IncrementIp (2), SetMemory (0x1234, 42),
-                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x35)))
+              assert (result === List (IncrementIp (2), SetMemory (0x1234, 42)) ++
+                setExtended (Zfull, 0x001235))
             }
           }
         }
@@ -1233,20 +1221,12 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.q === 0x00)
           }
 
-          it ("is two bytes long") {
-            assert (instruction.length === 2)
-          }
-
-          it ("takes three cycles") {
-            assert (instruction.latency === 3)
-          }
-
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
             it ("produces the right events") {
-              assert (result === List (IncrementIp (2), SetMemory (0x1233, 42),
-                SetMemory (RAMPZ, 0x00), SetMemory (ZH, 0x12), SetMemory (ZL, 0x33)))
+              assert (result === List (IncrementIp (2), SetMemory (0x1233, 42)) ++
+                setExtended (Zfull, 0x1233))
             }
           }
         }

@@ -568,7 +568,7 @@ object STD extends AvrInstructionObject[STD] {
 
 class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
   override def length = 2
-  override def latency = 0
+  override def latency = 2
   override def execute (cpu: AvrCpu) = {
     val initialValue = getExtended (cpu, Zfull)
     val preValue = x match {
@@ -576,14 +576,14 @@ class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[A
       case IndirectionType.PostIncrement => initialValue
       case IndirectionType.PreDecrement => initialValue - 1
     }
-    val R = cpu.register (preValue)
+    val R = cpu.register (r)
     val postValue = x match {
       case IndirectionType.Unchanged => initialValue
       case IndirectionType.PostIncrement => preValue + 1
       case IndirectionType.PreDecrement => preValue
     }
     val zMod = if (postValue != initialValue) setExtended (Zfull, postValue) else Nil
-    List (IncrementIp (2), SetMemory (R, r)) ++ zMod
+    List (IncrementIp (2), SetMemory (preValue, R)) ++ zMod
   }
   override def toString = {
     x match {
