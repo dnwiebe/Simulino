@@ -65,6 +65,40 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("ADIW") {
+      it ("is properly unrecognized") {
+        assert (ADIW (unsignedBytes (0x00, 0x97)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = ADIW (unsignedBytes (0xAA, 0x96)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 28)
+          assert (instruction.K === 0x2A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (29)).thenReturn (0x01)
+          when (cpu.register (28)).thenReturn (0xE0)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (29, 0x02), SetMemory (28, 0x0A),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (false), C = Some (false))))
+          }
+        }
+      }
+    }
+
     describe ("BRBC") {
       it ("is properly unrecognized") {
         assert (BRBC (unsignedBytes (0x77, 0xE4)) === None)
@@ -714,6 +748,33 @@ class InstructionsTest extends path.FunSpec {
 
           it ("produces the correct events") {
             assert (result === List (IncrementIp (2), SetMemory (0x15, 0xAA)))
+          }
+        }
+      }
+    }
+
+    describe ("LDS") {
+      it ("is properly unrecognized") {
+        assert (LDS (unsignedBytes (0x01, 0x90, 0x00, 0x00)) === None)
+      }
+
+      describe ("when properly parsed") {
+        when (cpu.register (0x3456)).thenReturn (0x42)
+        val instruction = LDS (unsignedBytes (0x50, 0x91, 0x56, 0x34)).get
+
+        it ("is four bytes long") {
+          assert (instruction.length === 4)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (4), SetMemory (0x15, 0x42)))
           }
         }
       }

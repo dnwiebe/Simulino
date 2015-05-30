@@ -39,6 +39,46 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"ADD R${d}, R${r}"
 }
 
+object ADIW extends AvrInstructionObject[ADIW] {
+  override val mask = 0xFF000000
+  override val pattern = 0x96000000
+  override protected def parse (buffer: Array[UnsignedByte]): ADIW = {
+    val preD = parseUnsignedParameter (buffer, 0x00300000)
+    val d = (preD * 2) + 24
+    val K = parseUnsignedParameter (buffer, 0x00CF0000)
+    new ADIW (d, K)
+  }
+}
+
+class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val Rd = ((cpu.register (d + 1).value & 0xFF) << 8) + (cpu.register (d).value & 0xFF)
+    val Rdh = UnsignedByte (Rd >> 8)
+    val R = Rd + K
+    val Rh = UnsignedByte (R >> 8)
+    val Rl = UnsignedByte (R & 0xFF)
+    val Vf = !(Rdh bit 7) && (Rh bit 15)
+    val Nf = (Rh bit 15)
+    val Sf = Vf ^^ Nf
+    val Zf = (R == 0)
+    val Cf = !(Rh bit 7) && (Rdh bit 7)
+    List (IncrementIp (2), SetMemory (d + 1, Rh), SetMemory (d, Rl), SetFlags (S = Some (Sf), V = Some (Vf),
+      N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
+  }
+  override def toString = {
+    val lhs = d match {
+      case 24 => "r25:24"
+      case 26 => "XH:XL"
+      case 28 => "YH:YL"
+      case 30 => "ZH:ZL"
+      case x => s"??${x}??"
+    }
+    s"ADIW ${lhs}, $$${toHex (K, 2)}"
+  }
+}
+
 object BRBC extends AvrInstructionObject[BRBC] {
   override val mask = 0xFC000000
   override val pattern = 0xF4000000
@@ -347,6 +387,26 @@ class LDI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2), SetMemory (d, K))
   override def toString = s"LDI R${d}, $$${toHex (K, 2)}"
+}
+
+object LDS extends AvrInstructionObject[LDS] {
+  override val mask = 0xFE0F0000
+  override val pattern = 0x90000000
+  override protected def parse (buffer: Array[UnsignedByte]): LDS = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val k = parseUnsignedParameter (buffer, 0x0000FFFF)
+    new LDS (d, k)
+  }
+}
+
+class LDS (val d: Int, val k: Int) extends Instruction[AvrCpu] {
+  override def length = 4
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val K = cpu.register (k)
+    List (IncrementIp (4), SetMemory (d, K))
+  }
+  override def toString = s"LDS R${d}, $$${toHex (k, 4)}"
 }
 
 object MULS extends AvrInstructionObject[MULS] {

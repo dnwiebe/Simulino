@@ -1,7 +1,7 @@
 package simulino.cpu
 
 import simulino.engine.{Event, Engine, Subscriber}
-import simulino.memory.Memory
+import simulino.memory.{UnsignedByte, Memory}
 import simulino.simulator.CpuConfiguration
 import simulino.simulator.peripheral.PinSampler
 import simulino.utils.Utils._
@@ -47,6 +47,9 @@ trait Cpu extends Subscriber {
 
   def nextInstruction (): Instruction[_] = {
     val data = programMemory.getData (ip, 4)
+    if ((data(0).value == 0x80) && (data(1).value == 0x91)) {
+      val x = 4
+    }
     val instructionOpt = instructionSet (data)
     instructionOpt match {
       case None => throw new UnsupportedOperationException (s"${getClass.getSimpleName} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
