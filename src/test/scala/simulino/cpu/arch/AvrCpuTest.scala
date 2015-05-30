@@ -1,13 +1,15 @@
 package simulino.cpu.arch
 
+import org.mockito.Matchers
 import simulino.cpu.arch.avr.ATmega.{ADD, SetMemory, SetFlags, Flag}
 import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.IncrementIp
+import simulino.cpu.{PushIp, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.AvrCpu
-import simulino.engine.Engine
+import simulino.cpu.arch.avr.RegisterNames._
+import simulino.engine.{Event, Engine}
 import simulino.memory.{UnsignedByte, Memory}
 import simulino.simulator.{SimulatorConfiguration, CpuConfiguration}
 
@@ -135,6 +137,35 @@ class AvrCpuTest extends path.FunSpec {
 
       it ("shows the value as sp") {
         assert (subject.sp === 0x1234)
+      }
+    }
+
+    describe ("when the global interrupt flag is clear") {
+      subject.dataMemory.update (SREG, 0x00)
+
+      describe ("and an interrupt is raised") {
+        subject.raiseInterrupt ("TIM0_OVF")
+
+        it ("nothing is scheduled for the engine") {
+          verify (engine, never).schedule (Matchers.any (classOf[Event]), Matchers.anyLong ())
+        }
+      }
+    }
+
+    describe ("when the global interrupt flag is set") {
+      subject.dataMemory.update (SREG, 0x80)
+      when (engine.currentTick).thenReturn (4096L)
+      subject.setIpForTest (1000)
+
+      describe ("and an interrupt is raised") {
+        subject.raiseInterrupt ("TIM0_OVF")
+
+        it ("the correct events are scheduled for the engine") {
+          val order = inOrder (engine)
+          order.verify (engine).schedule (PushIp (), 4101L)
+          order.verify (engine).schedule (SetIp (0x5C), 4101L)
+          order.verify (engine).schedule (SetFlags (I = Some (false)), 4101L)
+        }
       }
     }
   }

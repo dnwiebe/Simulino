@@ -63,7 +63,7 @@ class TimerCounter0Handler extends PortHandler with TickSink {
 
   private def strobe (): Unit = {
     writeToPort ("TOV0", 1)
-    if (readFromPort ("TOIE0") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("TOIE0") > 0) {raiseInterrupt ("TIM0_OVF")}
   }
 
   private def clearWithOne (portName: String, newValue: Int): Unit = {

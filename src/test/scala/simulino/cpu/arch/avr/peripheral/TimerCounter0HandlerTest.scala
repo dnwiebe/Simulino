@@ -76,6 +76,18 @@ class TimerCounter0HandlerTest extends path.FunSpec {
             verify (cpu, never).raiseInterrupt (Matchers.anyString ())
           }
         }
+
+        describe ("when the TOIE0 flag is set") {
+          when (portMap.readFromPort ("TOIE0")).thenReturn (1)
+
+          describe ("and a tick is received") {
+            subject.tick (1L)
+
+            it ("raises the correct interrupt") {
+              verify (cpu).raiseInterrupt ("TIM0_OVF")
+            }
+          }
+        }
       }
     }
 

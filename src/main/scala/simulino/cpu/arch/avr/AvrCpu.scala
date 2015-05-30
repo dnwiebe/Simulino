@@ -3,7 +3,7 @@ package simulino.cpu.arch.avr
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
-import simulino.cpu.{PushIp, Cpu, CpuChange}
+import simulino.cpu.{SetIp, PushIp, Cpu, CpuChange}
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
@@ -80,7 +80,13 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   def raiseInterrupt (name: String): Unit = {
-    TEST_DRIVE_ME
+    val sreg = register (SREG).value
+    if ((sreg & 0x80) == 0) {return}
+    val vector = interruptVectors(name)
+    val tick = engine.currentTick + 5
+    engine.schedule (PushIp (), tick)
+    engine.schedule (SetIp (vector), tick)
+    engine.schedule (SetFlags (I = Some (false)), tick)
   }
 
   private def handleSetMemory (address: Int, value: UnsignedByte): Unit = {

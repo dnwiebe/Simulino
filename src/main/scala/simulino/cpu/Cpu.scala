@@ -54,6 +54,16 @@ trait Cpu extends Subscriber {
     }
   }
 
+  protected def handleCpuChange (change: CpuChange): Unit = {
+    change match {
+      case c: IncrementIp => ip += c.increment
+      case c: SetIp => ip = c.newIp
+      case c: IncrementSp => sp += c.increment
+      case c: SetSp => sp = c.newSp
+      case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
+    }
+  }
+
   private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
     val events = instruction.execute (this.asInstanceOf[C])
 System.out.println (s"${toHex (ip, 6)} ${instruction}")
@@ -63,13 +73,8 @@ System.out.println (s"${toHex (ip, 6)} ${instruction}")
     }
   }
 
-  protected def handleCpuChange (change: CpuChange): Unit = {
-    change match {
-      case c: IncrementIp => ip += c.increment
-      case c: SetIp => ip = c.newIp
-      case c: IncrementSp => sp += c.increment
-      case c: SetSp => sp = c.newSp
-      case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
-    }
+  // for testing only
+  def setIpForTest (value: Int): Unit = {
+    _ip = value
   }
 }

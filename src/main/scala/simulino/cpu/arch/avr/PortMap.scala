@@ -61,6 +61,10 @@ trait PortHandler {
     }
     cpu.portMap.readFromPort (name)
   }
+
+  protected def raiseInterrupt (name: String): Unit = {
+    cpu.raiseInterrupt (name)
+  }
 }
 
 case object PortConfiguration {
