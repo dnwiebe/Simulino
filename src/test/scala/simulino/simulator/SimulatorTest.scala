@@ -1,7 +1,8 @@
 package simulino.simulator
 
-import java.io.StringReader
+import java.io.{ByteArrayInputStream, StringReader}
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.scalatest.path
 import org.mockito.Mockito._
@@ -27,9 +28,24 @@ class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuCon
 
 class SimulatorTest extends path.FunSpec {
 
-  val cpuNode = new ObjectNode (null)
+  val istr = new ByteArrayInputStream (
+    """
+      |{
+      |  "memory": {
+      |    "internal": 512,
+      |    "sram": 32
+      |  },
+      |  "portMap": {
+      |    "ports": [],
+      |    "portHandlerClasses": []
+      |  },
+      |  "interruptVectors": []
+      |}
+    """.stripMargin.getBytes)
+  val mapper = new ObjectMapper ()
+  val cpuNode = mapper.readTree (istr)
   val configuration = new SimulatorConfiguration (
-    memory = new MemoryConfiguration (1024, 256, 16),
+    memory = new MemoryConfiguration (1024),
     cpu = new CpuConfiguration (clockSpeed = 1000, cls = classOf[TestCpu], classSpecific = cpuNode)
   )
 
@@ -145,8 +161,8 @@ class SimulatorTest extends path.FunSpec {
   }
 
   describe ("A Simulator with a real AvrCpu") {
-    val memConfig = new MemoryConfiguration (10, 0, 0)
-    val cpuConfig = new CpuConfiguration (1000, classOf[AvrCpu], null)
+    val memConfig = new MemoryConfiguration (10)
+    val cpuConfig = new CpuConfiguration (1000, classOf[AvrCpu], cpuNode)
     val config = new SimulatorConfiguration (memConfig, cpuConfig)
     val subject = new Simulator (config)
 

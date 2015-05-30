@@ -11,17 +11,13 @@ import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
 case object MemoryConfiguration {
   def apply (node: JsonNode): MemoryConfiguration = {
-    val programSize = node.get ("program").asInt
-    val dynamicSize = node.get ("dynamic").asInt
-    val persistentSize = node.get ("persistent").asInt
-    new MemoryConfiguration (programSize, dynamicSize, persistentSize)
+    val programSize = hexOrDec (node.get ("program"))
+    new MemoryConfiguration (programSize)
   }
 }
 
 case class MemoryConfiguration (
-  programSize: Int,
-  dynamicSize: Int,
-  persistentSize: Int
+  programSize: Int
 )
 
 case object CpuConfiguration {

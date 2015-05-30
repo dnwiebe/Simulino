@@ -14,6 +14,8 @@ import simulino.memory.{UnsignedByte, Memory}
 import simulino.simulator.SimulatorConfiguration
 import simulino.utils.TestUtils._
 
+import scala.util.Try
+
 /**
  * Created by dnwiebe on 5/14/15.
  */
@@ -26,6 +28,12 @@ class AvrCpuTest extends path.FunSpec {
     val memory = mock (classOf[Memory])
 
     val subject = new AvrCpu (engine, memory, config)
+
+    it ("has 8704 bytes of memory (8192 SRAM + 512 internal)") {
+      subject.dataMemory.getData (0x21FF, 1) // no exception
+      val result = Try {subject.dataMemory.getData (0x2200, 1)}
+      fails (result, new IllegalArgumentException ("Data buffer must end at or before 8703, not 8704"))
+    }
 
     it ("initially has zeros in all registers") {
       (0x00 until 0x200).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}

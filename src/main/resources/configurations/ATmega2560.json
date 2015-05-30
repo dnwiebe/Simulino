@@ -1,13 +1,17 @@
 {
   "memory": {
-    "program": 262144,
     "dynamic": 8192,
+    "program": 262144,
     "persistent": 4096
   },
   "cpu": {
     "clockSpeed": 16000000,
     "class": "simulino.cpu.arch.avr.AvrCpu",
     "classSpecific": {
+      "memory": {
+        "internal": 512,
+        "sram": 8192
+      },
       "portMap": {
         "ports": [
           {"name": "OCIE0B", "address": "0x6E", "lowBit": 2, "bitLength": 1, "direction": "O"},

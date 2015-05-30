@@ -15,6 +15,7 @@ import scala.collection.JavaConverters._
  */
 
 object RegisterNames {
+  // TODO: These should all be configurable from the JSON file.
   val SPH = 0x5E
   val SPL = 0x5D
   val XL = 0x1A
@@ -49,7 +50,7 @@ object RegisterNames {
 class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   import RegisterNames._
 
-  val dataMemory = new Memory (8192)
+  val dataMemory = createMemory (config.classSpecific)
   val instructionSet = new AvrInstructionSet ()
   val portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
   val interruptVectors = extractInterruptVectors (config.classSpecific)
@@ -106,7 +107,8 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val firstByte = (nextIp >> 16) & 0xFF
     val secondByte = (nextIp >> 8) & 0xFF
     val thirdByte = nextIp & 0xFF
-    dataMemory.addSpan (Span (sp - 2, Array(firstByte, secondByte, thirdByte)))
+    val data = Array(UnsignedByte (firstByte), UnsignedByte (secondByte), UnsignedByte (thirdByte))
+    dataMemory.addSpan (Span (sp - 2, data))
     sp = sp - 3
   }
 
@@ -126,6 +128,14 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     classSpecific.get ("interruptVectors").asInstanceOf[ArrayNode].elements ().asScala.map {node =>
       (node.get ("name").asText, hexOrDec (node.get ("address")))
     }.toMap
+  }
+
+  private def createMemory (classSpecific: JsonNode): Memory = {
+    if (classSpecific == null) {return new Memory (0)}
+    val memoryNode = classSpecific.get ("memory")
+    val internal = hexOrDec (memoryNode.get ("internal"))
+    val sram = hexOrDec (memoryNode.get ("sram"))
+    new Memory (internal + sram)
   }
 
   // for testing only

@@ -21,9 +21,7 @@ class SimulatorConfigurationTest extends path.FunSpec {
     val json =
     s"""{
       | "memory": {
-      |   "program": 1234,
-      |   "dynamic": 2345,
-      |   "persistent": 3456
+      |   "program": 1234
       | },
       | "cpu": {
       |   "clockSpeed": 16000000,
@@ -36,10 +34,8 @@ class SimulatorConfigurationTest extends path.FunSpec {
     """.stripMargin
     val subject = SimulatorConfiguration (new ByteArrayInputStream (json.getBytes))
 
-    it ("has the expected memory sizes") {
+    it ("has the expected memory size") {
       assert (subject.memory.programSize === 1234)
-      assert (subject.memory.dynamicSize === 2345)
-      assert (subject.memory.persistentSize === 3456)
     }
 
     it ("has the expected CPU attributes") {
