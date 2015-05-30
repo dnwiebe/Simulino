@@ -11,5 +11,6 @@ trait CpuChange extends Event {}
 case class IncrementIp (increment: Int) extends CpuChange
 case class SetIp (newIp: Int) extends CpuChange
 case class PushIp () extends CpuChange
+case class Push (value: UnsignedByte) extends CpuChange
 case class IncrementSp (increment: Int) extends CpuChange
 case class SetSp (newSp: Int) extends CpuChange

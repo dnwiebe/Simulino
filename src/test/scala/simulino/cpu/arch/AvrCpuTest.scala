@@ -6,12 +6,13 @@ import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.{PushIp, SetIp, IncrementIp}
+import simulino.cpu.{Push, PushIp, SetIp, IncrementIp}
 import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.engine.{Event, Engine}
 import simulino.memory.{UnsignedByte, Memory}
-import simulino.simulator.{SimulatorConfiguration, CpuConfiguration}
+import simulino.simulator.SimulatorConfiguration
+import simulino.utils.TestUtils._
 
 /**
  * Created by dnwiebe on 5/14/15.
@@ -112,6 +113,33 @@ class AvrCpuTest extends path.FunSpec {
             }
           }
         }
+      }
+    }
+
+    describe ("directed to push a constant") {
+      subject.setSpForTest (500)
+      subject.receive (Push (42))
+
+      it ("stores the constant on the stack") {
+        assert (subject.dataMemory.getData (500, 1)(0) === UnsignedByte (42))
+      }
+
+      it ("decrements the stack pointer") {
+        assert (subject.sp === 499)
+      }
+    }
+
+    describe ("directed to push the Instruction Pointer") {
+      subject.setIpForTest (0x123456)
+      subject.setSpForTest (500)
+      subject.receive (PushIp ())
+
+      it ("stores the IP on the stack") {
+        assert (subject.dataMemory.getData (498, 3) === unsignedBytes (0x12, 0x34, 0x58))
+      }
+
+      it ("reduces the stack pointer") {
+        assert (subject.sp === 497)
       }
     }
 

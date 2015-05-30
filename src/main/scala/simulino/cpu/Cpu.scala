@@ -74,7 +74,5 @@ System.out.println (s"${toHex (ip, 6)} ${instruction}")
   }
 
   // for testing only
-  def setIpForTest (value: Int): Unit = {
-    _ip = value
-  }
+  def setIpForTest (value: Int): Unit = {_ip = value}
 }

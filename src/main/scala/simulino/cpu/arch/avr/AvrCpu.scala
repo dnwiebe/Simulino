@@ -3,7 +3,7 @@ package simulino.cpu.arch.avr
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
-import simulino.cpu.{SetIp, PushIp, Cpu, CpuChange}
+import simulino.cpu._
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
@@ -68,6 +68,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       case c: SetMemory => handleSetMemory (c.address, c.value)
       case c: SetFlags => handleSetFlags (c)
       case c: PushIp => handlePushIp ()
+      case c: Push => handlePush (c)
       case x => super.handleCpuChange (x)
     }
   }
@@ -105,8 +106,13 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val firstByte = (nextIp >> 16) & 0xFF
     val secondByte = (nextIp >> 8) & 0xFF
     val thirdByte = nextIp & 0xFF
-    programMemory.addSpan (Span (sp, Array(thirdByte, secondByte, firstByte)))
+    dataMemory.addSpan (Span (sp - 2, Array(firstByte, secondByte, thirdByte)))
     sp = sp - 3
+  }
+
+  private def handlePush (c: Push): Unit = {
+    dataMemory.update (sp, c.value)
+    sp = sp - 1
   }
 
   private def portMapConfigurations (classSpecific: JsonNode): List[PortConfiguration] = {
@@ -121,4 +127,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       (node.get ("name").asText, hexOrDec (node.get ("address")))
     }.toMap
   }
+
+  // for testing only
+  def setSpForTest (value: Int): Unit = {sp = value}
 }
