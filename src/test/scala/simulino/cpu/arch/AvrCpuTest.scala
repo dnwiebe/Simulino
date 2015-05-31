@@ -6,7 +6,7 @@ import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.{Push, PushIp, SetIp, IncrementIp}
+import simulino.cpu._
 import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.engine.{Event, Engine}
@@ -134,6 +134,20 @@ class AvrCpuTest extends path.FunSpec {
 
       it ("decrements the stack pointer") {
         assert (subject.sp === 499)
+      }
+    }
+
+    describe ("directed to pop to a location") {
+      subject.setSpForTest (500)
+      subject.dataMemory.update (501, 42)
+      subject.receive (Pop (0x15))
+
+      it ("retrieves the data properly") {
+        assert (subject.dataMemory.getData (0x15, 1)(0) === UnsignedByte (42))
+      }
+
+      it ("leaves the stack pointer incremented") {
+        assert (subject.sp === 501)
       }
     }
 

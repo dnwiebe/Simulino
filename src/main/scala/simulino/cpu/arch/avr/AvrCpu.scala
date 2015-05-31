@@ -70,6 +70,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       case c: SetFlags => handleSetFlags (c)
       case c: PushIp => handlePushIp ()
       case c: Push => handlePush (c)
+      case c: Pop => handlePop (c)
       case x => super.handleCpuChange (x)
     }
   }
@@ -115,6 +116,11 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   private def handlePush (c: Push): Unit = {
     dataMemory.update (sp, c.value)
     sp = sp - 1
+  }
+
+  private def handlePop (c: Pop): Unit = {
+    sp = sp + 1
+    dataMemory.update (c.address, dataMemory.getData (sp, 1)(0))
   }
 
   private def portMapConfigurations (classSpecific: JsonNode): List[PortConfiguration] = {
