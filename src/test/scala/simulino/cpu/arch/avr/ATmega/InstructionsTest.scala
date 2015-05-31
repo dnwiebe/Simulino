@@ -617,7 +617,7 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
-    describe ("JMP -- note, this instruction is not available in all AVR cores") {
+    describe ("JMP") {
       it ("is properly unrecognized") {
         assert (JMP (unsignedBytes (0xFD, 0x84, 0xFF, 0xFF)) === None)
       }
@@ -1355,6 +1355,38 @@ class InstructionsTest extends path.FunSpec {
               assert (result === List (IncrementIp (2), SetMemory (0x1233, 42)) ++
                 setExtended (Zfull, 0x1233))
             }
+          }
+        }
+      }
+    }
+
+    describe ("STS") {
+      it ("is properly unrecognized") {
+        assert (STS (unsignedBytes (0x01, 0x92)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = STS (unsignedBytes (0x50, 0x93, 0x5A, 0xA5)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.k === 0xA55A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is four bytes long") {
+          assert (instruction.length === 4)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (0x15)).thenReturn (0x42)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (4), SetMemory (0xA55A, 0x42)))
           }
         }
       }

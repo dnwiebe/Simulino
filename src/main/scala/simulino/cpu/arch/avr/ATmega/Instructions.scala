@@ -700,3 +700,23 @@ class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[A
     }
   }
 }
+
+object STS extends AvrInstructionObject[STS] {
+  override val mask = 0xFE0F0000
+  override val pattern = 0x92000000
+  override protected def parse (buffer: Array[UnsignedByte]): STS = {
+    val k = parseUnsignedParameter (buffer, 0x0000FFFF)
+    val r = parseUnsignedParameter (buffer, 0x01F00000)
+    new STS (k, r)
+  }
+}
+
+class STS (val k: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 4
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val Rr = cpu.register (r)
+    List (IncrementIp (4), SetMemory (k, Rr))
+  }
+  override def toString = s"STS $$${toHex (k, 2)}, R${r}"
+}
