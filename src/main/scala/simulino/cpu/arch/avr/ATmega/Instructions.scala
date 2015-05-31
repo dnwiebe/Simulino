@@ -516,6 +516,24 @@ class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"OUT $$${toHex (A, 2)}, R${r}"
 }
 
+object POP extends AvrInstructionObject[POP] {
+  override val mask = 0xFE0F0000
+  override val pattern = 0x900F0000
+  override protected def parse (buffer: Array[UnsignedByte]): POP = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    new POP (d)
+  }
+}
+
+class POP (val d: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    List (IncrementIp (2), Pop (d))
+  }
+  override def toString = s"POP R${d}"
+}
+
 object PUSH extends AvrInstructionObject[PUSH] {
   override val mask = 0xFE0F0000
   override val pattern = 0x920F0000
