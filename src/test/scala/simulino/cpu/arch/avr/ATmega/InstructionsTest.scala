@@ -18,6 +18,41 @@ class InstructionsTest extends path.FunSpec {
   describe ("Given a mock CPU") {
     val cpu = mock (classOf[AvrCpu])
 
+    describe ("ADC") {
+      it ("is properly unrecognized") {
+        assert (ADC (unsignedBytes (0x00, 0x23)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = ADC (unsignedBytes (0x5A, 0x1D)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.r === 0x0A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed") {
+          when (cpu.register (SREG)).thenReturn (0x01)
+          when (cpu.register (0x15)).thenReturn (0xA5)
+          when (cpu.register (0x0A)).thenReturn (0x5A)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0x00),
+              SetFlags (H = Some (true), S = Some (false), V = Some (false), N = Some (false), Z = Some (true), C = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("ADD") {
       it ("is properly unrecognized") {
         assert (ADD (unsignedBytes (0x08, 0x40)) === None)

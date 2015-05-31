@@ -12,21 +12,25 @@ import simulino.utils.Utils._
   * Created by dnwiebe on 5/12/15.
   */
 
-object ADD extends AvrInstructionObject[ADD] {
+trait ADxObj[T <: Instruction[AvrCpu]] extends AvrInstructionObject[T] {
   override val mask = 0xFC000000
-  override val pattern = 0x0C000000
-  override protected def parse (buffer: Array[UnsignedByte]): ADD = {
-    new ADD (parseUnsignedParameter (buffer, 0x01F00000), parseUnsignedParameter (buffer, 0x020F0000))
+  override protected def parse (buffer: Array[UnsignedByte]): T = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    make (d, r)
   }
+  protected def make (d: Int, r: Int): T
 }
 
-class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+trait ADxCls[T] extends Instruction[AvrCpu] {
+  val d: Int
+  val r: Int
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.register (d)
     val Rr = cpu.register (r)
-    val R = Rd + Rr
+    val R = op (cpu, Rd, Rr)
     val Hf = ((Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && !(R bit 3)) || (!(R bit 3) && (Rd bit 3))
     val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
     val Nf = R bit 7
@@ -36,7 +40,26 @@ class ADD (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Some(Zf), C = Some (Cf)))
   }
-  override def toString = s"ADD R${d}, R${r}"
+  override def toString = s"${getClass.getSimpleName} R${d}, R${r}"
+  protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte): UnsignedByte
+}
+
+object ADC extends ADxObj[ADC] {
+  override val pattern = 0x1C000000
+  override protected def make (d: Int, r: Int): ADC = new ADC (d, r)
+}
+
+class ADC (val d: Int, val r: Int) extends ADxCls[ADC] {
+  override protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte) = Rd + Rr + (cpu.register(SREG).value & 0x01)
+}
+
+object ADD extends ADxObj[ADD] {
+  override val pattern = 0x0C000000
+  override protected def make (d: Int, r: Int): ADD = new ADD (d, r)
+}
+
+class ADD (val d: Int, val r: Int) extends ADxCls[ADD] {
+  override protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte) = Rd + Rr
 }
 
 object ADIW extends AvrInstructionObject[ADIW] {
