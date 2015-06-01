@@ -27,10 +27,6 @@ class CpuTest extends path.FunSpec {
       assert (subject.ip === 0)
     }
 
-    it ("starts with 0 in the SP") {
-      assert (subject.sp === 0)
-    }
-
     describe ("given an Instruction") {
       val oneConsequence = mock (classOf[Event])
       val anotherConsequence = mock (classOf[Event])
@@ -57,22 +53,6 @@ class CpuTest extends path.FunSpec {
 
         it ("does so") {
           assert (subject.ip === 998)
-        }
-      }
-    }
-
-    describe ("directed to set SP") {
-      subject.receive (SetSp (1000))
-
-      it ("does so") {
-        assert (subject.sp === 1000)
-      }
-
-      describe ("and then increment it by -2") {
-        subject.receive (IncrementSp (-2))
-
-        it ("does so") {
-          assert (subject.sp === 998)
         }
       }
     }

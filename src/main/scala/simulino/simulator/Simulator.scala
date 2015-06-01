@@ -2,7 +2,7 @@ package simulino.simulator
 
 import java.io.{InputStreamReader, InputStream, Reader}
 
-import simulino.cpu.Cpu
+import simulino.cpu.{ScheduleNextInstruction, Cpu}
 import simulino.engine.{ScheduledEvent, Event, Engine, Subscriber}
 import simulino.hex.HexLoader
 import simulino.memory.{Memory, UnsignedByte}
@@ -21,7 +21,7 @@ class Simulator (configuration: SimulatorConfiguration) {
   def loadHex (hex: Reader): Unit = {
     val loader = new HexLoader ()
     loader.load (hex, cpu.programMemory)
-    engine.schedule (cpu.nextInstruction(), engine.currentTick)
+    engine.schedule (ScheduleNextInstruction (), engine.currentTick)
   }
 
   def loadHex (hex: InputStream): Unit = {

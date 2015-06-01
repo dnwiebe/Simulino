@@ -177,8 +177,8 @@ class SimulatorTest extends path.FunSpec {
         describe ("when run for four iterations through the loop") {
           subject.runForTicks (12)
 
-          it ("register 0 has been incremented to 4") {
-            assert (subject.cpu.asInstanceOf[AvrCpu].register (0) === UnsignedByte (4))
+          it ("register 0 has been incremented to 5") {
+            assert (subject.cpu.asInstanceOf[AvrCpu].register (0) === UnsignedByte (5))
           }
         }
       }

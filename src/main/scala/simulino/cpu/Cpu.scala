@@ -16,16 +16,11 @@ trait Cpu extends Subscriber {
   val instructionSet: InstructionSet[_]
 
   private var _ip = 0
-  private var _sp = 0
 
   def ip: Int = _ip
-  protected def ip_= (ip: Int): Unit = {
-    _ip = ip
-    engine.schedule (nextInstruction (), engine.nextTick)
+  protected def ip_= (newIp: Int): Unit = {
+    _ip = newIp
   }
-
-  def sp: Int = _sp
-  protected def sp_= (sp: Int): Unit = {_sp = sp}
 
   def addPinSampler (sampler: PinSampler): Unit = {}
 
@@ -45,11 +40,8 @@ trait Cpu extends Subscriber {
     new PFC ()
   }
 
-  def nextInstruction (): Instruction[_] = {
-    val data = programMemory.getData (ip, 4)
-    if ((data(0).value == 0x80) && (data(1).value == 0x91)) {
-      val x = 4
-    }
+  def instructionAt (address: Int): Instruction[_] = {
+    val data = programMemory.getData (address, 4)
     val instructionOpt = instructionSet (data)
     instructionOpt match {
       case None => throw new UnsupportedOperationException (s"${getClass.getSimpleName} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
@@ -61,19 +53,25 @@ trait Cpu extends Subscriber {
     change match {
       case c: IncrementIp => ip += c.increment
       case c: SetIp => ip = c.newIp
-      case c: IncrementSp => sp += c.increment
-      case c: SetSp => sp = c.newSp
-      case x => throw new UnsupportedOperationException (s"Cpu can't handle ${x}")
+      case c: ScheduleNextInstruction => handleScheduleNextInstruction ()
+      case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
     }
   }
 
   private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
+System.out.println (s"${engine.currentTick}: ${toHex (ip, 6)} ${instruction}")
+if (engine.currentTick == 258L) {
+  val x = 4
+}
     val events = instruction.execute (this.asInstanceOf[C])
-System.out.println (s"${toHex (ip, 6)} ${instruction}")
     val tick = engine.currentTick + instruction.latency
-    events.foreach {event =>
-      engine.schedule (event, tick)
-    }
+    events.foreach {engine.schedule (_, tick)}
+    engine.schedule (ScheduleNextInstruction (), tick)
+  }
+
+  private def handleScheduleNextInstruction (): Unit = {
+    val instruction = instructionAt (_ip)
+    engine.schedule (instruction, engine.nextTick)
   }
 
   // for testing only

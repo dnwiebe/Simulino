@@ -131,6 +131,29 @@ class BRBC (val s: Int, val k: Int) extends Instruction[AvrCpu] {
   override def toString = s"BRBC ${s}, ${k}"
 }
 
+object CLx extends AvrInstructionObject[CLx] {
+  override val mask = 0xFF8F0000
+  override val pattern = 0x94880000
+  override protected def parse (buffer: Array[UnsignedByte]): CLx = {
+    parseUnsignedParameter (buffer, 0x00700000) match {
+      case _ => TEST_DRIVE_ME
+    }
+  }
+}
+
+abstract class CLx (flagMask: Int) extends Instruction[AvrCpu] {
+  override def length = {TEST_DRIVE_ME; 2}
+  override def latency = {TEST_DRIVE_ME; 1}
+  override def execute (cpu: AvrCpu) = {
+    TEST_DRIVE_ME
+    List (IncrementIp (2), SetFlags (1 << flagMask, 0xFF))
+  }
+  override def toString = s"CL${flagName}"
+  private def flagName = getClass.getSimpleName.last
+}
+
+class CLI extends CLx (7)
+
 object CP extends AvrInstructionObject[CP] {
   override val mask = 0xFC000000
   override val pattern = 0x14000000
@@ -570,6 +593,23 @@ class RCALL (val k: Int) extends Instruction[AvrCpu] {
     List (PushIp (), IncrementIp ((k + 1) * 2))
   }
   override def toString = s"RCALL ${k}"
+}
+
+object RETI extends AvrInstructionObject[RETI] {
+  override val mask = 0xFFFF0000
+  override val pattern = 0x95180000
+  override protected def parse (buffer: Array[UnsignedByte]): RETI = {
+    new RETI
+  }
+}
+
+class RETI extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 5
+  override def execute (cpu: AvrCpu) = {
+    List (PopIp (), SetFlags (I = Some (true)))
+  }
+  override def toString = "RETI"
 }
 
 object RJMP extends AvrInstructionObject[RJMP] {

@@ -14,5 +14,5 @@ case class PushIp () extends CpuChange
 case class PopIp () extends CpuChange
 case class Push (value: UnsignedByte) extends CpuChange
 case class Pop (address: Int) extends CpuChange
-case class IncrementSp (increment: Int) extends CpuChange
 case class SetSp (newSp: Int) extends CpuChange
+case class ScheduleNextInstruction () extends CpuChange

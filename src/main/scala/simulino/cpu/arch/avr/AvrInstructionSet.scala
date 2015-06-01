@@ -20,7 +20,7 @@ object AvrInstructionSet {
     add (0x3, CPI)
     add (0x6, ORI)
     add (0x8, LDD, STD)
-    add (0x9, ADIW, JMP, LDS, POP, PUSH, SEx, ST, STS)
+    add (0x9, ADIW, CLx, JMP, LDS, POP, PUSH, RETI, SEx, ST, STS)
     add (0xB, IN, OUT)
     add (0xC, RJMP)
     add (0xD, RCALL)

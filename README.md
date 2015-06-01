@@ -16,14 +16,27 @@ instructions, setting registers, changing pin states, and so on are scheduled to
 simulator runs, the event bus is ticked repeatedly; all events scheduled for the current tick are performed (some
 of which will undoubtedly schedule more events for future ticks), then all events for the next tick, and so on.
 
+For example, performing an instruction-pointer-update event, when the next position of the IP is occupied by an `ADD`
+instruction--thus executing it--does not directly make any changes in the state of the CPU or the memory; 
+but it produces an `IncrementIp` event to move the IP to the next instruction, a `SetMemory` event to replace the 
+value in the target register with the calculated sum, and a `SetFlags` event to modify the flags in the status register 
+appropriately.  Since the `ADD` instruction does not execute instantaneously, these events are all scheduled for a
+time in the future, when the instruction is expected to complete.
+
 The vertical stack of horizontal layers is meant to contain a high-level `Cpu` abstraction that knows only a few things:
-for example, instruction pointer, stack pointer, instruction set, and program memory.  A lower layer should know things
-specific to Atmel AVR microcontrollers; a layer under that will know things about particular AVR microcontroller
-families, and the low-level specifics beyond that will be taken care of by JSON configuration files.
+for example, instruction pointer, instruction set, and program memory.  A lower layer should know things specific to 
+Atmel AVR microcontrollers, such as how the stack is implemented; a layer under that will know things about particular 
+AVR microcontroller families, and the low-level specifics beyond that will be taken care of by JSON configuration files.
 
 So far only the two highest levels exist, because most of the specifics I know are for the Atmel ATmega2560.  Hopefully
 the third and fourth layers will materialize once the ATmega2560 nears completion and I start learning about other
 AVR parts.
+
+Interesting note: the AVR ATtiny4 is a six-pin microcontroller, less than 2mm on a side, that has over fifty of the
+instructions in this simulator, sixteen 8-bit registers (numbered 0x10 to 0x1F), 512 bytes (bytes, not kilo or mega)
+of flash memory for a program, and 32 bytes (bytes, not kilo or mega) for runtime variables.  Oh--and the last six
+CPU registers can be combined in pairs into 16-bit address registers, the better to index into that 32-byte address
+space.  What does software craftsmanship look like on an architecture like that?  Comment to @dnwiebe on Twitter.
 
 ### Exterior Architecture
 Currently, the "handle" class is `Simulator`.  You create a `Simulator` from a configuration stream, then load a `.hex`
@@ -32,6 +45,7 @@ Simulino a web service, with clients in many languages.  But that's in the futur
 
 ### Pressing tasks (updated 5/31/2015)
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
+* Each instruction is taking one clock cycle longer than it should.
 * `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
 * `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could

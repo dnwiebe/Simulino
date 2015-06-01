@@ -9,6 +9,7 @@ import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
 import simulino.utils.Utils._
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created by dnwiebe on 5/13/15.
@@ -54,12 +55,13 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   val instructionSet = new AvrInstructionSet ()
   val portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
   val interruptVectors = extractInterruptVectors (config.classSpecific)
+  var activeInterrupts = Set[Int] ()
 
   def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
   def setMemory (address: Int, value: UnsignedByte): Unit = {dataMemory.update (address, value)}
 
-  override def sp: Int = ((register (SPH).value << 8) | register (SPL).value) & 0xFFFF
-  protected override def sp_= (value: Int): Unit = {
+  def sp: Int = ((register (SPH).value << 8) | register (SPL).value) & 0xFFFF
+  protected def sp_= (value: Int): Unit = {
     setMemory (SPH, (value >> 8) & 0xFF)
     setMemory (SPL, value & 0xFF)
   }
@@ -68,9 +70,12 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     change match {
       case c: SetMemory => handleSetMemory (c.address, c.value)
       case c: SetFlags => handleSetFlags (c)
+      case c: SetSp => handleSetSp (c)
       case c: PushIp => handlePushIp ()
+      case c: PopIp => handlePopIp ()
       case c: Push => handlePush (c)
       case c: Pop => handlePop (c)
+      case c: ScheduleNextInstruction => handleScheduleNextInstruction (c)
       case x => super.handleCpuChange (x)
     }
   }
@@ -85,11 +90,8 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   def raiseInterrupt (name: String): Unit = {
     val sreg = register (SREG).value
     if ((sreg & 0x80) == 0) {return}
-    val vector = interruptVectors(name)
-    val tick = engine.currentTick + 5
-    engine.schedule (PushIp (), tick)
-    engine.schedule (SetIp (vector), tick)
-    engine.schedule (SetFlags (I = Some (false)), tick)
+    val vector = interruptVectors (name)
+    activeInterrupts = activeInterrupts + vector
   }
 
   private def handleSetMemory (address: Int, value: UnsignedByte): Unit = {
@@ -103,6 +105,10 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     setMemory (SREG, withSetsAndClears)
   }
 
+  private def handleSetSp (c: SetSp): Unit = {
+    sp = c.newSp
+  }
+
   private def handlePushIp (): Unit = {
     val nextIp = ip + 2
     val firstByte = (nextIp >> 16) & 0xFF
@@ -113,6 +119,14 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     sp = sp - 3
   }
 
+  private def handlePopIp (): Unit = {
+    val firstByte: Int = register (sp + 1)
+    val secondByte: Int = register (sp + 2)
+    val thirdByte: Int = register (sp + 3)
+    sp = sp + 3
+    ip = (firstByte << 16) | (secondByte << 8) | thirdByte
+  }
+
   private def handlePush (c: Push): Unit = {
     dataMemory.update (sp, c.value)
     sp = sp - 1
@@ -121,6 +135,21 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   private def handlePop (c: Pop): Unit = {
     sp = sp + 1
     dataMemory.update (c.address, dataMemory.getData (sp, 1)(0))
+  }
+
+  private def handleScheduleNextInstruction (c: ScheduleNextInstruction): Unit = {
+    if (activeInterrupts.isEmpty) {
+      super.handleCpuChange (c)
+    }
+    else {
+      val vector: Int = activeInterrupts.min
+      activeInterrupts = activeInterrupts - vector
+      val tick = engine.currentTick + 5
+      engine.schedule (PushIp (), tick)
+      engine.schedule (SetIp (vector), tick)
+      engine.schedule (SetFlags (I = Some (false)), tick)
+      engine.schedule (ScheduleNextInstruction (), tick)
+    }
   }
 
   private def portMapConfigurations (classSpecific: JsonNode): List[PortConfiguration] = {

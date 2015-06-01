@@ -45,6 +45,18 @@ class AvrCpuTest extends path.FunSpec {
       }
     }
 
+    it ("starts with 0 in the SP") {
+      assert (subject.sp === 0)
+    }
+
+    describe ("directed to set SP") {
+      subject.receive (SetSp (1000))
+
+      it ("does so") {
+        assert (subject.sp === 1000)
+      }
+    }
+
     it ("has the expected interrupt vectors") {
       assert (subject.interruptVectors("RESET") === 0x00)
       assert (subject.interruptVectors("TIM0_COMPA") === 0x54)
@@ -204,17 +216,32 @@ class AvrCpuTest extends path.FunSpec {
 
     describe ("when the global interrupt flag is set") {
       subject.dataMemory.update (SREG, 0x80)
-      when (engine.currentTick).thenReturn (4096L)
-      subject.setIpForTest (1000)
 
-      describe ("and an interrupt is raised") {
-        subject.raiseInterrupt ("TIM0_OVF")
+      describe ("and some interrupts are raised") {
+        subject.raiseInterrupt ("USART3_TXC") // 0xE0
+        subject.raiseInterrupt ("TIM0_OVF") // 0x5C
+        subject.raiseInterrupt ("SPM_RDY") // 0xA0
 
-        it ("the correct events are scheduled for the engine") {
-          val order = inOrder (engine)
-          order.verify (engine).schedule (PushIp (), 4101L)
-          order.verify (engine).schedule (SetIp (0x5C), 4101L)
-          order.verify (engine).schedule (SetFlags (I = Some (false)), 4101L)
+        it ("those interrupts' vectors are active") {
+          assert (subject.activeInterrupts === Set (0xE0, 0xA0, 0x5C))
+        }
+
+        describe ("and a ScheduleNextInstruction is received") {
+          when (engine.currentTick).thenReturn (4096L)
+          subject.setIpForTest (1000)
+          subject.receive (ScheduleNextInstruction ())
+
+          it ("the highest-priority active interrupt is gone") {
+            assert (subject.activeInterrupts === Set (0xE0, 0xA0))
+          }
+
+          it ("the correct events are scheduled for the engine") {
+            val order = inOrder (engine)
+            order.verify (engine).schedule (PushIp (), 4101L)
+            order.verify (engine).schedule (SetIp (0x5C), 4101L)
+            order.verify (engine).schedule (SetFlags (I = Some (false)), 4101L)
+            order.verify (engine).schedule (ScheduleNextInstruction (), 4101L)
+          }
         }
       }
     }
