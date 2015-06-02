@@ -54,3 +54,5 @@ duplication of effort.  I don't want to get rid of `.length`, because executing 
 an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
 instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
 that change the IP by some amount other than the length of the instruction.
+* On the hardware part, the instruction after a RETI is always executed, even if there are active interrupts pending.
+This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.

@@ -595,6 +595,23 @@ class RCALL (val k: Int) extends Instruction[AvrCpu] {
   override def toString = s"RCALL ${k}"
 }
 
+object RET extends AvrInstructionObject[RET] {
+  override val mask = 0xFFFF0000
+  override val pattern = 0x95080000
+  override protected def parse (buffer: Array[UnsignedByte]): RET = {
+    new RET ()
+  }
+}
+
+class RET extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 5
+  override def execute (cpu: AvrCpu) = {
+    List (PopIp ())
+  }
+  override def toString = "RET"
+}
+
 object RETI extends AvrInstructionObject[RETI] {
   override val mask = 0xFFFF0000
   override val pattern = 0x95180000

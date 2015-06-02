@@ -1076,6 +1076,32 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("RET") {
+      it ("is properly unrecognized") {
+        assert (RET (unsignedBytes (0x18, 0x95)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = RET (unsignedBytes (0x08, 0x95)).get
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes 5 cycles") {
+          assert (instruction.latency === 5)
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (PopIp ()))
+          }
+        }
+      }
+    }
+
     describe ("RETI") {
       it ("is properly unrecognized") {
         assert (RETI (unsignedBytes (0x19, 0x95)) === None)
