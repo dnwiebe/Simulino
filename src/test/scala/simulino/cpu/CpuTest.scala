@@ -4,6 +4,7 @@ import org.mockito.Matchers
 import org.scalatest.path
 import org.mockito.Mockito._
 import org.mockito.Matchers._
+import simulino.cpu.arch.avr.ATmega.NOP
 import simulino.engine.{Event, Engine}
 import simulino.memory.{UnsignedByte, Memory}
 
@@ -45,12 +46,12 @@ class CpuTest extends path.FunSpec {
     }
 
     describe ("directed to schedule an instruction") {
+      when (engine.currentTick).thenReturn (1000)
+      when (engine.nextTick).thenReturn (1001)
       subject.receive (ScheduleNextInstruction ())
 
       it ("does so") {
-        val tick: Long = engine.currentTick
-        fail ()
-        verify (engine).schedule (Matchers.any (classOf[Instruction[_]]), Matchers.eq (tick))
+        verify (engine).schedule (subject.instruction, 1000)
       }
     }
 

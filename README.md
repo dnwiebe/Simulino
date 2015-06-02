@@ -43,9 +43,8 @@ Currently, the "handle" class is `Simulator`.  You create a `Simulator` from a c
 file into it, set up and schedule its inputs and outputs, and let it run for awhile.  Eventually, I'd like to make
 Simulino a web service, with clients in many languages.  But that's in the future.
 
-### Pressing tasks (updated 5/31/2015)
+### Pressing tasks (updated 6/1/2015)
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-* Each instruction is taking one clock cycle longer than it should.
 * `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
 * `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
