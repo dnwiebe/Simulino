@@ -70,6 +70,14 @@ class UnsignedByte (proposedValue: Int, val halfCarry: Boolean,
     new UnsignedByte (result & 0xFF, false, false, false)
   }
 
+  def << (that: Int): Int = {
+    (value & 0xFF) << that
+  }
+
+  def >> (that: Int): Int = {
+    (value & 0xFF) >> that
+  }
+
   def bit (idx: Integer): Boolean = {
     (value >> idx) & 1 match {
       case 0 => false

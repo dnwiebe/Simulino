@@ -43,7 +43,7 @@ Currently, the "handle" class is `Simulator`.  You create a `Simulator` from a c
 file into it, set up and schedule its inputs and outputs, and let it run for awhile.  Eventually, I'd like to make
 Simulino a web service, with clients in many languages.  But that's in the future.
 
-### Pressing tasks (updated 6/1/2015)
+### Pressing tasks (updated 6/2/2015)
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
 * `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
@@ -54,5 +54,8 @@ duplication of effort.  I don't want to get rid of `.length`, because executing 
 an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
 instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
 that change the IP by some amount other than the length of the instruction.
-* On the hardware part, the instruction after a RETI is always executed, even if there are active interrupts pending.
+* On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
 This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
+* Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
+promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
+bringing all the toString methods on `Instruction`s under test.

@@ -10,7 +10,7 @@ import simulino.cpu._
 import simulino.cpu.arch.avr.AvrCpu
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.engine.{Event, Engine}
-import simulino.memory.{UnsignedByte, Memory}
+import simulino.memory.{Span, UnsignedByte, Memory}
 import simulino.simulator.SimulatorConfiguration
 import simulino.utils.TestUtils._
 
@@ -177,6 +177,20 @@ class AvrCpuTest extends path.FunSpec {
       }
     }
 
+    describe ("directed to pop the Instruction Pointer") {
+      subject.setSpForTest (500)
+      subject.dataMemory.addSpan (Span (501, unsignedBytes (0x12, 0x34, 0x56)))
+      subject.receive (PopIp ())
+
+      it ("sets IP properly") {
+        assert (subject.ip === 0x123456)
+      }
+
+      it ("leaves the stack pointer incremented") {
+        assert (subject.sp === 503)
+      }
+    }
+
     describe ("when set up with ones in Registers 0 and 1") {
       subject.setMemory(0, UnsignedByte (1))
       subject.setMemory(1, UnsignedByte (1))
@@ -194,8 +208,8 @@ class AvrCpuTest extends path.FunSpec {
     }
 
     describe ("when the stack register is set to 0x1234") {
-      subject.setMemory (0x5E, 0x12)
-      subject.setMemory (0x5D, 0x34)
+      subject.setMemory (SPH, 0x12)
+      subject.setMemory (SPL, 0x34)
 
       it ("shows the value as sp") {
         assert (subject.sp === 0x1234)

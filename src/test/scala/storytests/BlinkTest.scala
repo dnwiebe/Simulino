@@ -21,7 +21,7 @@ class BlinkTest extends path.FunSpec {
         subject.addPinSampler (sampler)
 
         describe ("and run for three seconds") {
-//          pending
+          pending
           subject.runForSeconds (3.0)
 
           it ("shows pin 13 going on and off appropriately") {

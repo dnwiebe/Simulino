@@ -59,7 +59,7 @@ trait Cpu extends Subscriber {
   }
 
   private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
-System.out.println (s"${engine.currentTick}: ${toHex (ip, 6)} ${instruction}")
+println (s"${engine.currentTick}: ${toHex (ip, 6)} ${instruction}")
     val events = instruction.execute (this.asInstanceOf[C])
     val tick = engine.currentTick + instruction.latency
     events.foreach {engine.schedule (_, tick)}

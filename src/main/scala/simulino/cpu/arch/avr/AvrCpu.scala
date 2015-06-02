@@ -120,11 +120,12 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   private def handlePopIp (): Unit = {
-    val firstByte: Int = register (sp + 1)
-    val secondByte: Int = register (sp + 2)
-    val thirdByte: Int = register (sp + 3)
+    val data = dataMemory.getData (sp + 1, 3)
     sp = sp + 3
-    ip = (firstByte << 16) | (secondByte << 8) | thirdByte
+    val firstByte = data(0) << 16
+    val secondByte = data(1) << 8
+    val thirdByte = data(2) << 0
+    ip = firstByte | secondByte | thirdByte
   }
 
   private def handlePush (c: Push): Unit = {
@@ -144,6 +145,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     else {
       val vector: Int = activeInterrupts.min
       activeInterrupts = activeInterrupts - vector
+println (s"${engine.currentTick}: --- Interrupt $$${toHex (vector, 2)} ---")
       val tick = engine.currentTick + 5
       engine.schedule (PushIp (), tick)
       engine.schedule (SetIp (vector), tick)
