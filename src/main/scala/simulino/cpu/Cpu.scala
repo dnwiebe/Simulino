@@ -71,7 +71,7 @@ if (engine.currentTick == 258L) {
 
   private def handleScheduleNextInstruction (): Unit = {
     val instruction = instructionAt (_ip)
-    engine.schedule (instruction, engine.nextTick)
+    engine.schedule (instruction, engine.currentTick)
   }
 
   // for testing only

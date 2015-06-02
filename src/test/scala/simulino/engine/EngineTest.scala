@@ -33,6 +33,69 @@ class EngineTest extends path.FunSpec {
 
     class EmptyEvent () extends Event
 
+    trait SelfEvent extends Event {
+      def execute (engine: Engine): Unit
+    }
+
+    case class LazyEvent () extends SelfEvent {
+      override def execute (engine: Engine): Unit = {}
+    }
+
+    case class GeneratorEvent (tick: Long) extends SelfEvent {
+      override def execute (engine: Engine): Unit = {
+        engine.schedule (new LazyEvent (), tick)
+      }
+    }
+
+    class SelfSubscriber (engine: Engine) extends Subscriber {
+      override def receive = {
+        case e: SelfEvent => e.execute (engine)
+        case _ => throw new UnsupportedOperationException (s"Can't handle ${getClass.getSimpleName}")
+      }
+    }
+
+    describe ("given a Subscriber") {
+      subject.addSubscriber (new SelfSubscriber (subject))
+
+      describe ("and a LazyEvent") {
+        subject.schedule (new LazyEvent (), subject.currentTick)
+
+        describe ("and ticked") {
+          subject.tick ()
+
+          it ("the schedule is empty") {
+            assert (subject.events.isEmpty === true)
+          }
+        }
+
+        describe ("and a GeneratorEvent aimed at the next tick") {
+          val currentTick = subject.currentTick
+          subject.schedule (new GeneratorEvent (subject.nextTick), currentTick)
+
+          describe ("and ticked") {
+            subject.tick ()
+
+            it ("the schedule contains only the one generated EmptyEvent") {
+              assert (subject.events === List (ScheduledEvent (currentTick + 1, LazyEvent ())))
+            }
+          }
+        }
+
+        describe ("and a GeneratorEvent aimed at the current tick") {
+          val currentTick = subject.currentTick
+          subject.schedule (new GeneratorEvent (currentTick), currentTick)
+
+          describe ("and ticked") {
+            subject.tick ()
+
+            it ("the schedule is empty") {
+              assert (subject.events.isEmpty === true)
+            }
+          }
+        }
+      }
+    }
+
     describe ("ticked over five times") {
       (1 to 5).foreach {i => subject.tick ()}
 
@@ -136,12 +199,12 @@ class EngineTest extends path.FunSpec {
       }
     }
 
-    class PickySubscriber (target: Event) extends Subscriber {
+    class PickySubscriber (name: String, engine: Engine, target: Event) extends Subscriber {
       var fired = false
       override def receive = {
         case e: Event if e == target => fired match {
           case false => fired = true
-          case true => fail ("Subscriber already fired")
+          case true => fail (s"At tick ${engine.currentTick}, subscriber ${name} has already fired")
         }
         case e =>
       }
@@ -150,11 +213,11 @@ class EngineTest extends path.FunSpec {
     describe ("given two Events for tick 3 and two subscribers to listen for them") {
       val oneEvent = new EmptyEvent ()
       subject.schedule (oneEvent, 3L)
-      val oneSubscriber = new PickySubscriber (oneEvent)
+      val oneSubscriber = new PickySubscriber ("oneSubscriber", subject, oneEvent)
       subject.addSubscriber(oneSubscriber)
       val anotherEvent = new EmptyEvent ()
       subject.schedule (anotherEvent, 3L)
-      val anotherSubscriber = new PickySubscriber (anotherEvent)
+      val anotherSubscriber = new PickySubscriber ("anotherSubscriber", subject, anotherEvent)
       subject.addSubscriber(anotherSubscriber)
 
       describe ("and ticked past 3") {

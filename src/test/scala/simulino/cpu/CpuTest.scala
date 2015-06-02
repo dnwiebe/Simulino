@@ -1,5 +1,6 @@
 package simulino.cpu
 
+import org.mockito.Matchers
 import org.scalatest.path
 import org.mockito.Mockito._
 import org.mockito.Matchers._
@@ -35,9 +36,21 @@ class CpuTest extends path.FunSpec {
       when (instruction.execute (subject)).thenReturn (List (oneConsequence, anotherConsequence))
       subject.receive (instruction)
 
-      it ("executes the instruction with the Cpu and schedules the consequences") {
-        verify (engine).schedule (oneConsequence, 5)
-        verify (engine).schedule (anotherConsequence, 5)
+      it ("executes the instruction with the Cpu, schedules the consequences, and prepares the next instruction") {
+        val order = inOrder (engine)
+        order.verify (engine).schedule (oneConsequence, 5)
+        order.verify (engine).schedule (anotherConsequence, 5)
+        order.verify (engine).schedule (ScheduleNextInstruction (), 5)
+      }
+    }
+
+    describe ("directed to schedule an instruction") {
+      subject.receive (ScheduleNextInstruction ())
+
+      it ("does so") {
+        val tick: Long = engine.currentTick
+        fail ()
+        verify (engine).schedule (Matchers.any (classOf[Instruction[_]]), Matchers.eq (tick))
       }
     }
 

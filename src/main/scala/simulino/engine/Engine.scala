@@ -7,21 +7,29 @@ import simulino.utils.Utils._
  * Created by dnwiebe on 5/8/15.
  */
 class Engine {
-  private var _currentTick = 0L
-  private val events = new ListBuffer[ScheduledEvent] ()
+  private var _currentTick: Long = 0L
+  val events = new ListBuffer[ScheduledEvent] ()
   private var tickSinks: List[TickSink] = Nil
   private var subscribers: List[Subscriber] = Nil
 
   def tick (): Unit = {
-    val currentEvents = events.takeWhile {event => event.tick == currentTick}
-    events.remove (0, currentEvents.size)
-    currentEvents.foreach (handle)
+    var clean = false
+    while (!clean) {
+      val currentEvents = events.takeWhile { event => event.tick == currentTick }
+      if (currentEvents.isEmpty) {
+        clean = true
+      }
+      else {
+        events.remove (0, currentEvents.size)
+        currentEvents.foreach (handle)
+      }
+    }
     tickSinks.foreach {_.tick (currentTick)}
     _currentTick += 1
   }
 
-  def currentTick = _currentTick
-  def nextTick = currentTick + 1
+  def currentTick: Long = _currentTick
+  def nextTick: Long = currentTick + 1L
 
   def schedule (event: Event, tick: Long): Unit = {
     schedule (ScheduledEvent (tick, event))
