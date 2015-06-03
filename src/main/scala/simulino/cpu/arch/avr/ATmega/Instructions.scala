@@ -706,6 +706,35 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"SBC R${d}, R${r}"
 }
 
+object SBCI extends AvrInstructionObject[SBCI] {
+  override val mask = 0xF0000000
+  override val pattern = 0x40000000
+  override protected def parse (buffer: Array[UnsignedByte]): SBCI = {
+    val rawD = parseUnsignedParameter (buffer, 0x00F00000)
+    val K = parseUnsignedParameter (buffer, 0x0F0F0000)
+    new SBCI (rawD + 0x10, K)
+  }
+}
+
+class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val C = if (cpu.flag (Flag.C)) 1 else 0
+    val R = Rd - K - C
+    val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R.value == 0
+    val Cf = (!(Rd bit 7) && (K bit 7)) || ((K bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
+      Z = Some (Zf), C = Some (Cf)))
+  }
+  override def toString = s"SBCI R${d}, $$${toHex (K, 2)}"
+}
+
 object SEx extends AvrInstructionObject[SEx] {
   override val mask = 0xFF8F0000
   override val pattern = 0x94080000
