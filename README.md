@@ -55,6 +55,10 @@ something.
 1. `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
 be optimized a little.
 
+1. For instructions that set status flags, the flag-setting code is pretty much copied directly from the AVR datasheet,
+and there are significant opportunities for factoring out duplication, which would also make testing significantly
+easier.  Finding the duplication, though, and classifying it intelligently, won't be trivial.
+
 1. I really don't like the way this project handles unsigned values.  We have `UnsignedByte` that's supposed to be
 taking care of that, but somehow there's still an awful lot of `& 0xFF` around...which means there may not be enough
 of it, and we may be cruising for a bruising; that is, maybe we're incorrectly treating an unsigned value like a

@@ -1615,5 +1615,38 @@ class InstructionsTest extends path.FunSpec {
         }
       }
     }
+
+    describe ("SUBI") {
+      it ("is properly unrecognized") {
+        assert (SUBI (unsignedBytes (0x00, 0x40)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = SUBI (unsignedBytes (0xA5, 0x5A)).get
+
+        it ("has the right parameters") {
+          assert (instruction.d === 0x1A)
+          assert (instruction.K === UnsignedByte (0xA5))
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (0x1A)).thenReturn (0x5A)
+          val result = instruction.execute (cpu)
+
+          it ("returns the proper results") {
+            assert (result === List (IncrementIp (2), SetMemory (0x1A, 0xB5),
+              SetFlags (H = Some (false), S = Some (false), V = Some (true), N = Some (true), Z = Some (false), C = Some (true))))
+          }
+        }
+      }
+    }
   }
 }

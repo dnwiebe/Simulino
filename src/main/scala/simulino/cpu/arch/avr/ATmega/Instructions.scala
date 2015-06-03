@@ -845,16 +845,26 @@ object SUBI extends AvrInstructionObject[SUBI] {
   override val mask = 0xF0000000
   override val pattern = 0x50000000
   override protected def parse (buffer: Array[UnsignedByte]): SUBI = {
-    TEST_DRIVE_ME
-    null
+    val rawD = parseUnsignedParameter (buffer, 0x00F00000)
+    val K = parseUnsignedParameter (buffer, 0x0F0F0000)
+    new SUBI (rawD + 0x10, K)
   }
 }
 
-class SUBI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
-  override def length = {TEST_DRIVE_ME; 0}
-  override def latency = {TEST_DRIVE_ME; 0}
+class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    TEST_DRIVE_ME
-    Nil
+    val Rd = cpu.register (d)
+    val R = Rd - K
+    val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R.value == 0
+    val Cf = (!(Rd bit 7) && (K bit 7)) || ((K bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
+      Z = Some (Zf), C = Some (Cf)))
   }
+  override def toString = s"SUBI R${d}, $$${toHex (K, 2)}"
 }
