@@ -43,19 +43,34 @@ Currently, the "handle" class is `Simulator`.  You create a `Simulator` from a c
 file into it, set up and schedule its inputs and outputs, and let it run for awhile.  Eventually, I'd like to make
 Simulino a web service, with clients in many languages.  But that's in the future.
 
-### Pressing tasks (updated 6/2/2015)
+### In Progress (updated 6/3/2015)
+
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-* `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
+
+### Prioritized Backlog (updated 6/3/2015)
+
+1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
-* `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
+
+1. `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
 be optimized a little.
-* Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
+
+1. I really don't like the way this project handles unsigned values.  We have `UnsignedByte` that's supposed to be
+taking care of that, but somehow there's still an awful lot of `& 0xFF` around...which means there may not be enough
+of it, and we may be cruising for a bruising; that is, maybe we're incorrectly treating an unsigned value like a
+signed value somewhere, but nothing has failed so far because all the values that have gone through it have so far
+been small.  We ought to figure out what's insufficient about `UnsignedByte`, fix it, and go through and get rid of 
+all that masking.
+
+1. Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
+promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
+bringing all the `toString` methods on `Instruction`s under test.
+
+1. On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
+This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
+
+1. Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
 duplication of effort.  I don't want to get rid of `.length`, because executing branching instructions doesn't produce
 an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
 instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
 that change the IP by some amount other than the length of the instruction.
-* On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
-This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
-* Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
-promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
-bringing all the toString methods on `Instruction`s under test.

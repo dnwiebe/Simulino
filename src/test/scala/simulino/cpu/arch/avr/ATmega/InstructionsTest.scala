@@ -647,38 +647,98 @@ class InstructionsTest extends path.FunSpec {
       when (cpu.register (ZL)).thenReturn (0x34)
       when (cpu.register (ZH)).thenReturn (0x12)
       when (cpu.register (RAMPZ)).thenReturn (0x00)
+      when (cpu.register (YL)).thenReturn (0x56)
+      when (cpu.register (YH)).thenReturn (0x34)
+      when (cpu.register (RAMPY)).thenReturn (0x12)
       when (cpu.register (0x1234)).thenReturn (42)
       when (cpu.register (0x1233)).thenReturn (41)
       when (cpu.register (0x125E)).thenReturn (43)
+      when (cpu.register (0x123456)).thenReturn (24)
       it ("is properly unrecognized") {
-        assert (LDD (unsignedBytes (0xF8, 0x80)) === None)
+        // Y
+        assert (LDD (unsignedBytes (0x08, 0xC0)) === None)
+        assert (LDD (unsignedBytes (0x08, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x0C, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0x92)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0x94)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0x98)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0xB0)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0xD0)) === None)
+
+        // Z
+        assert (LDD (unsignedBytes (0x00, 0xC0)) === None)
+        assert (LDD (unsignedBytes (0x00, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x04, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x02, 0x92)) === None)
+        assert (LDD (unsignedBytes (0x02, 0x94)) === None)
+        assert (LDD (unsignedBytes (0x02, 0x98)) === None)
+        assert (LDD (unsignedBytes (0x02, 0xB0)) === None)
+        assert (LDD (unsignedBytes (0x02, 0xD0)) === None)
       }
 
       describe ("case i/iv") {
-        describe ("when properly parsed with ds and no qs") {
+        describe ("when properly parsed with Y, ds and no qs") {
+          val instruction = LDD (unsignedBytes (0x08, 0x81)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.d === 0x10)
+            assert (instruction.r === 'Y')
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x0)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x10, 24)))
+            }
+          }
+        }
+
+        describe ("when properly parsed with Z, ds and no qs") {
           val instruction = LDD (unsignedBytes (0xF0, 0x81)).get
 
           it ("produces the correct parameters") {
             assert (instruction.d === 0x1F)
+            assert (instruction.r === 'Z')
             assert (instruction.x === IndirectionType.Unchanged)
             assert (instruction.q === 0x0)
+          }
+
+          it ("is two bytes long") {
+            assert (instruction.length === 2)
           }
 
           it ("takes one cycle") {
             assert (instruction.latency === 1)
           }
         }
-        describe ("when properly parsed with qs and no ds") {
-          val instruction = LDD (unsignedBytes (0x07, 0xAC)).get
+
+        describe ("when properly parsed with Y, qs and no ds") {
+          val instruction = LDD (unsignedBytes (0x0F, 0xAC)).get
 
           it ("produces the correct parameters") {
             assert (instruction.d === 0x0)
+            assert (instruction.r === 'Y')
             assert (instruction.x === IndirectionType.Unchanged)
             assert (instruction.q === 0x3F)
           }
         }
-        describe ("with qs and ds") {
-          val instruction = new LDD (0x15, IndirectionType.Unchanged, 0x2A)
+
+        describe ("when properly parsed with Z, qs and no ds") {
+          val instruction = LDD (unsignedBytes (0x07, 0xAC)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.d === 0x0)
+            assert (instruction.r === 'Z')
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x3F)
+          }
+        }
+
+        describe ("with Z, qs and ds") {
+          val instruction = new LDD (0x15, 'Z', IndirectionType.Unchanged, 0x2A)
 
           it ("is two bytes long") {
             assert (instruction.length === 2)
@@ -699,11 +759,12 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("case ii") {
-        describe ("when properly parsed") {
+        describe ("when properly parsed with Z") {
           val instruction = LDD (unsignedBytes (0x51, 0x91)).get
 
           it ("produces the correct parameters") {
             assert (instruction.d === 0x15)
+            assert (instruction.r === 'Z')
             assert (instruction.x === IndirectionType.PostIncrement)
             assert (instruction.q === 0x00)
           }
@@ -728,11 +789,12 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("case iii") {
-        describe ("when properly parsed") {
+        describe ("when properly parsed with Z") {
           val instruction = LDD (unsignedBytes (0x52, 0x91)).get
 
           it ("produces the correct parameters") {
             assert (instruction.d === 0x15)
+            assert (instruction.r === 'Z')
             assert (instruction.x === IndirectionType.PreDecrement)
             assert (instruction.q === 0x00)
           }
@@ -810,6 +872,39 @@ class InstructionsTest extends path.FunSpec {
 
           it ("produces the correct events") {
             assert (result === List (IncrementIp (4), SetMemory (0x15, 0x42)))
+          }
+        }
+      }
+    }
+
+    describe ("MOVW") {
+      it ("is properly unrecognized") {
+        assert (MOVW (unsignedBytes (0x00, 0x02)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = MOVW (unsignedBytes (0xA5, 0x01)).get
+
+        it ("has the correct parameters") {
+          assert (instruction.d === 0x14)
+          assert (instruction.r === 0x0A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (0x0A)).thenReturn (0x34)
+          when (cpu.register (0x0B)).thenReturn (0x12)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x14, 0x34), SetMemory (0x15, 0x12)))
           }
         }
       }

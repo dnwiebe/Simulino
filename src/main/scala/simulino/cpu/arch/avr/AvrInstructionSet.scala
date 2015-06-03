@@ -14,13 +14,15 @@ object AvrInstructionSet {
   
   private def initializeSesquideciles: Unit = {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
-    add (0x0, ADD, CPC, MULS, NOP, SBC)
+    add (0x0, ADD, CPC, MOVW, MULS, NOP, SBC)
     add (0x1, ADC, CP, CPSE)
     add (0x2, EOR)
     add (0x3, CPI)
+    add (0x5, LDD, STD)
     add (0x6, ORI)
     add (0x8, LDD, STD)
-    add (0x9, ADIW, CLx, JMP, LDS, POP, PUSH, RET, RETI, SEx, ST, STS)
+    add (0x9, ADIW, CLx, JMP, LDD, LDS, POP, PUSH, RET, RETI, SEx, ST, STD, STS)
+    add (0xA, LDD, STD)
     add (0xB, IN, OUT)
     add (0xC, RJMP)
     add (0xD, RCALL)
@@ -44,7 +46,11 @@ class AvrInstructionSet extends InstructionSet[AvrCpu] {
     instructions match {
       case Nil => None
       case inst :: Nil => Some (inst)
-      case _ => throw new IllegalStateException (s"Internal error: ambiguous buffer ${buffer}")
+      case _ => {
+        val strBuffer = buffer.mkString(" ")
+        val strInstructions = instructions.mkString ("(\"", "\", \"", "\")")
+        throw new IllegalStateException (s"Internal error: ambiguous buffer (${strBuffer}): could be any of ${strInstructions}")
+      }
     }
   }
 }

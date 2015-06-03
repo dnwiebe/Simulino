@@ -367,20 +367,49 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
 }
 
 object LDD extends AvrInstructionObject[LDD] {
-  override val mask = 0xC2080000
-  override val pattern = 0x80000000
+  override val mask = 0xFFFFFFFF // not used
+  override val pattern = 0xFFFFFFFF // not used
+  val maskPatternPairs = List (
+    (0xD2080000, 0x80080000),
+    (0xFE0F0000, 0x90090000),
+    (0xFE0F0000, 0x900A0000),
+    (0xD2080000, 0x80000000),
+    (0xFE0F0000, 0x90010000),
+    (0xFE0F0000, 0x90020000)
+  )
+
+  override def apply (buffer: Array[UnsignedByte]): Option[LDD] = {
+    val matches = maskPatternPairs.flatMap {pair =>
+      val (mask, pattern) = pair
+      if (matchOpcodePattern (buffer, mask, pattern)) Some (parse (buffer)) else None
+    }
+    matches match {
+      case Nil => None
+      case x :: Nil => Some (x)
+      case _ => {
+        val strBuffer = buffer.mkString(" ")
+        val strInstructions = matches.mkString ("(\"", "\", \"", "\")")
+        throw new IllegalStateException (s"Internal error: ambiguous buffer (${strBuffer}): could be any of ${strInstructions}")
+      }
+    }
+  }
+
   override protected def parse (buffer: Array[UnsignedByte]): LDD = {
     val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = (buffer(0).value & 0x08) match {
+      case 0x08 => 'Y'
+      case 0x00 => 'Z'
+    }
     val (x, q) = parseUnsignedParameter (buffer, 0x10030000) match {
       case 0x5 => (IndirectionType.PostIncrement, 0)
       case 0x6 => (IndirectionType.PreDecrement, 0)
       case _ => (IndirectionType.Unchanged, parseUnsignedParameter (buffer, 0x2C070000))
     }
-    new LDD (d, x, q)
+    new LDD (d, r, x, q)
   }
 }
 
-class LDD (val d: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
+class LDD (val d: Int, val r: Char, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = {
     if (q > 0) 2
@@ -389,7 +418,8 @@ class LDD (val d: Int, val x: IndirectionType, val q: Int) extends Instruction[A
     else 1
   }
   override def execute (cpu: AvrCpu) = {
-    val initialValue = getExtended (cpu, Zfull)
+    val regTuple = if (r == 'Y') Yfull else Zfull
+    val initialValue = getExtended (cpu, regTuple)
     val preValue = x match {
       case IndirectionType.Unchanged => initialValue + q
       case IndirectionType.PostIncrement => initialValue
@@ -401,19 +431,19 @@ class LDD (val d: Int, val x: IndirectionType, val q: Int) extends Instruction[A
       case IndirectionType.PostIncrement => preValue + 1
       case IndirectionType.PreDecrement => preValue
     }
-    val zMod = if (postValue != initialValue) setExtended (Zfull, postValue) else Nil
-    List (IncrementIp (2), SetMemory (d, R)) ++ zMod
+    val regMod = if (postValue != initialValue) setExtended (regTuple, postValue) else Nil
+    List (IncrementIp (2), SetMemory (d, R)) ++ regMod
   }
   override def toString = {
     x match {
       case IndirectionType.Unchanged => {
         q match {
-          case 0 => s"LD R${d}, Z"
-          case _ => s"LDD R${d}, Z+${q}"
+          case 0 => s"LD R${d}, ${r}"
+          case _ => s"LDD R${d}, ${r}+${q}"
         }
       }
-      case IndirectionType.PostIncrement => s"LD R${d}, Z+"
-      case IndirectionType.PreDecrement => s"LD R${d}, -Z"
+      case IndirectionType.PostIncrement => s"LD R${d}, ${r}+"
+      case IndirectionType.PreDecrement => s"LD R${d}, -${r}"
     }
   }
 }
@@ -453,6 +483,27 @@ class LDS (val d: Int, val k: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (4), SetMemory (d, K))
   }
   override def toString = s"LDS R${d}, $$${toHex (k, 4)}"
+}
+
+object MOVW extends AvrInstructionObject[MOVW] {
+  override val mask = 0xFF000000
+  override val pattern = 0x01000000
+  override protected def parse (buffer: Array[UnsignedByte]): MOVW = {
+    val rawD = parseUnsignedParameter (buffer, 0x00F00000)
+    val rawR = parseUnsignedParameter (buffer, 0x000F0000)
+    new MOVW (rawD << 1, rawR << 1)
+  }
+}
+
+class MOVW (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val RrL = cpu.register (r)
+    val RrH = cpu.register (r + 1)
+    List (IncrementIp (2), SetMemory (d, RrL), SetMemory (d + 1, RrH))
+  }
+  override def toString = s"MOVW R${d + 1}:${d}, R${r + 1}:${r}"
 }
 
 object MULS extends AvrInstructionObject[MULS] {
@@ -516,7 +567,7 @@ class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
     val Zf = (R == 0)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
   }
-  override def toString = s"ORI R${d}, $$${K}"
+  override def toString = s"ORI R${d}, $$${toHex (K, 2)}"
 }
 
 object OUT extends AvrInstructionObject[OUT] {
