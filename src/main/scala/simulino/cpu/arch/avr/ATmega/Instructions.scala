@@ -366,9 +366,7 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def toString = s"JMP ${k}"
 }
 
-object LDD extends AvrInstructionObject[LDD] {
-  override val mask = 0xFFFFFFFF // not used
-  override val pattern = 0xFFFFFFFF // not used
+object LDD extends ComplexAvrInstructionObject[LDD] {
   val maskPatternPairs = List (
     (0xD2080000, 0x80080000),
     (0xFE0F0000, 0x90090000),
@@ -377,22 +375,6 @@ object LDD extends AvrInstructionObject[LDD] {
     (0xFE0F0000, 0x90010000),
     (0xFE0F0000, 0x90020000)
   )
-
-  override def apply (buffer: Array[UnsignedByte]): Option[LDD] = {
-    val matches = maskPatternPairs.flatMap {pair =>
-      val (mask, pattern) = pair
-      if (matchOpcodePattern (buffer, mask, pattern)) Some (parse (buffer)) else None
-    }
-    matches match {
-      case Nil => None
-      case x :: Nil => Some (x)
-      case _ => {
-        val strBuffer = buffer.mkString(" ")
-        val strInstructions = matches.mkString ("(\"", "\", \"", "\")")
-        throw new IllegalStateException (s"Internal error: ambiguous buffer (${strBuffer}): could be any of ${strInstructions}")
-      }
-    }
-  }
 
   override protected def parse (buffer: Array[UnsignedByte]): LDD = {
     val d = parseUnsignedParameter (buffer, 0x01F00000)
@@ -780,25 +762,37 @@ class ST (val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"ST ${x.toString ("X")}, R${r}"
 }
 
-object STD extends AvrInstructionObject[STD] {
-  override val mask = 0xC2080000
-  override val pattern = 0x82000000
+object STD extends ComplexAvrInstructionObject[STD] {
+  val maskPatternPairs = List (
+    (0xD2080000, 0x82080000),
+    (0xFE0F0000, 0x92090000),
+    (0xFE0F0000, 0x920A0000),
+    (0xD2080000, 0x82000000),
+    (0xFE0F0000, 0x92010000),
+    (0xFE0F0000, 0x92020000)
+  )
+
   override protected def parse (buffer: Array[UnsignedByte]): STD = {
     val r = parseUnsignedParameter (buffer, 0x01F00000)
+    val d = (buffer(0).value & 0x08) match {
+      case 0x08 => 'Y'
+      case 0x00 => 'Z'
+    }
     val (x, q) = parseUnsignedParameter (buffer, 0x10030000) match {
       case 0x5 => (IndirectionType.PostIncrement, 0)
       case 0x6 => (IndirectionType.PreDecrement, 0)
       case _ => (IndirectionType.Unchanged, parseUnsignedParameter (buffer, 0x2C070000))
     }
-    new STD (r, x, q)
+    new STD (d, r, x, q)
   }
 }
 
-class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
+class STD (val d: Char, val r: Int, val x: IndirectionType, val q: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val initialValue = getExtended (cpu, Zfull)
+    val regTuple = if (d == 'Y') Yfull else Zfull
+    val initialValue = getExtended (cpu, regTuple)
     val preValue = x match {
       case IndirectionType.Unchanged => initialValue + q
       case IndirectionType.PostIncrement => initialValue
@@ -810,19 +804,19 @@ class STD (val r: Int, val x: IndirectionType, val q: Int) extends Instruction[A
       case IndirectionType.PostIncrement => preValue + 1
       case IndirectionType.PreDecrement => preValue
     }
-    val zMod = if (postValue != initialValue) setExtended (Zfull, postValue) else Nil
-    List (IncrementIp (2), SetMemory (preValue, R)) ++ zMod
+    val regMod = if (postValue != initialValue) setExtended (regTuple, postValue) else Nil
+    List (IncrementIp (2), SetMemory (preValue, R)) ++ regMod
   }
   override def toString = {
     x match {
       case IndirectionType.Unchanged => {
         q match {
-          case 0 => s"ST Z, R${r}"
-          case _ => s"STD Z+${q}, R${r}"
+          case 0 => s"ST ${d}, R${r}"
+          case _ => s"STD ${d}+${q}, R${r}"
         }
       }
-      case IndirectionType.PostIncrement => s"ST Z+, R${r}"
-      case IndirectionType.PreDecrement => s"ST -Z, R${r}"
+      case IndirectionType.PostIncrement => s"ST ${d}+, R${r}"
+      case IndirectionType.PreDecrement => s"ST -${d}, R${r}"
     }
   }
 }
@@ -845,4 +839,22 @@ class STS (val k: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (4), SetMemory (k, Rr))
   }
   override def toString = s"STS $$${toHex (k, 2)}, R${r}"
+}
+
+object SUBI extends AvrInstructionObject[SUBI] {
+  override val mask = 0xF0000000
+  override val pattern = 0x50000000
+  override protected def parse (buffer: Array[UnsignedByte]): SUBI = {
+    TEST_DRIVE_ME
+    null
+  }
+}
+
+class SUBI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
+  override def length = {TEST_DRIVE_ME; 0}
+  override def latency = {TEST_DRIVE_ME; 0}
+  override def execute (cpu: AvrCpu) = {
+    TEST_DRIVE_ME
+    Nil
+  }
 }

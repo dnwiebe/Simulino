@@ -16,3 +16,25 @@ trait AvrInstructionObject[T <: Instruction[AvrCpu]] extends InstructionObject[T
     }}
   }
 }
+
+trait ComplexAvrInstructionObject[T <: Instruction[AvrCpu]] extends AvrInstructionObject[T]{
+  final override val mask = 0xFFFFFFFF // not used
+  final override val pattern = 0xFFFFFFFF // not used
+  protected val maskPatternPairs: List[(Int, Int)]
+
+  override def apply (buffer: Array[UnsignedByte]): Option[T] = {
+    val matches = maskPatternPairs.flatMap {pair =>
+      val (mask, pattern) = pair
+      if (matchOpcodePattern (buffer, mask, pattern)) Some (parse (buffer)) else None
+    }
+    matches match {
+      case Nil => None
+      case x :: Nil => Some (x)
+      case _ => {
+        val strBuffer = buffer.mkString(" ")
+        val strInstructions = matches.mkString ("(\"", "\", \"", "\")")
+        throw new IllegalStateException (s"Internal error: ambiguous buffer (${strBuffer}): could be any of ${strInstructions}")
+      }
+    }
+  }
+}

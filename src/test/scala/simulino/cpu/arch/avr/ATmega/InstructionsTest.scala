@@ -1452,15 +1452,57 @@ class InstructionsTest extends path.FunSpec {
       when (cpu.register (ZL)).thenReturn (0x34)
       when (cpu.register (ZH)).thenReturn (0x12)
       when (cpu.register (RAMPZ)).thenReturn (0x00)
+      when (cpu.register (0x10)).thenReturn (24)
+      when (cpu.register (YL)).thenReturn (0x56)
+      when (cpu.register (YH)).thenReturn (0x34)
+      when (cpu.register (RAMPY)).thenReturn (0x12)
       it ("is properly unrecognized") {
-        assert (STD (unsignedBytes (0xF8, 0x80)) === None)
+        // Y
+        assert (STD (unsignedBytes (0x08, 0xC2)) === None)
+        assert (STD (unsignedBytes (0x08, 0x92)) === None)
+        assert (STD (unsignedBytes (0x0C, 0x92)) === None)
+        assert (STD (unsignedBytes (0x0A, 0x90)) === None)
+        assert (STD (unsignedBytes (0x0A, 0x96)) === None)
+        assert (STD (unsignedBytes (0x0A, 0x9A)) === None)
+        assert (STD (unsignedBytes (0x0A, 0xB2)) === None)
+        assert (STD (unsignedBytes (0x0A, 0xD2)) === None)
+
+        // Z
+        assert (STD (unsignedBytes (0x00, 0xC2)) === None)
+        assert (STD (unsignedBytes (0x00, 0x92)) === None)
+        assert (STD (unsignedBytes (0x04, 0x92)) === None)
+        assert (STD (unsignedBytes (0x02, 0x90)) === None)
+        assert (STD (unsignedBytes (0x02, 0x96)) === None)
+        assert (STD (unsignedBytes (0x02, 0x9A)) === None)
+        assert (STD (unsignedBytes (0x02, 0xB2)) === None)
+        assert (STD (unsignedBytes (0x02, 0xD2)) === None)
       }
 
       describe ("case i/iv") {
-        describe ("when properly parsed with ds and no qs") {
+        describe ("when properly parsed with Y, ds and no qs") {
+          val instruction = STD (unsignedBytes (0x08, 0x83)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.d === 'Y')
+            assert (instruction.r === 0x10)
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x0)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x123456, 24)))
+            }
+          }
+        }
+
+        describe ("when properly parsed with Z, ds and no qs") {
           val instruction = STD (unsignedBytes (0xF0, 0x83)).get
 
           it ("produces the correct parameters") {
+            assert (instruction.d === 'Z')
             assert (instruction.r === 0x1F)
             assert (instruction.x === IndirectionType.Unchanged)
             assert (instruction.q === 0x0)
@@ -1474,17 +1516,18 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.latency === 2)
           }
         }
-        describe ("when properly parsed with qs and no ds") {
+        describe ("when properly parsed with Z, qs and no ds") {
           val instruction = STD (unsignedBytes (0x07, 0xAE)).get
 
           it ("produces the correct parameters") {
+            assert (instruction.d === 'Z')
             assert (instruction.r === 0x0)
             assert (instruction.x === IndirectionType.Unchanged)
             assert (instruction.q === 0x3F)
           }
         }
-        describe ("with qs and ds") {
-          val instruction = new STD (0x15, IndirectionType.Unchanged, 0x2A)
+        describe ("with Z, qs and ds") {
+          val instruction = new STD ('Z', 0x15, IndirectionType.Unchanged, 0x2A)
 
           describe ("when executed") {
             val result = instruction.execute (cpu)
@@ -1501,6 +1544,7 @@ class InstructionsTest extends path.FunSpec {
           val instruction = STD (unsignedBytes (0x51, 0x93)).get
 
           it ("produces the correct parameters") {
+            assert (instruction.d === 'Z')
             assert (instruction.r === 0x15)
             assert (instruction.x === IndirectionType.PostIncrement)
             assert (instruction.q === 0x00)
@@ -1522,6 +1566,7 @@ class InstructionsTest extends path.FunSpec {
           val instruction = STD (unsignedBytes (0x52, 0x93)).get
 
           it ("produces the correct parameters") {
+            assert (instruction.d === 'Z')
             assert (instruction.r === 0x15)
             assert (instruction.x === IndirectionType.PreDecrement)
             assert (instruction.q === 0x00)
