@@ -16,7 +16,7 @@ object AvrInstructionSet {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
     add (0x0, ADD, CPC, MOVW, MULS, NOP, SBC)
     add (0x1, ADC, CP, CPSE)
-    add (0x2, EOR)
+    add (0x2, AND, EOR)
     add (0x3, CPI)
     add (0x4, SBCI)
     add (0x5, LDD, STD, SUBI)

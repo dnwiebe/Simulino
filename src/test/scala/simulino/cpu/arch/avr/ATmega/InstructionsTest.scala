@@ -134,6 +134,51 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("AND") {
+      it ("is properly unrecognized") {
+        assert (AND (unsignedBytes (0x00, 0x24)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = AND (unsignedBytes (0xA5, 0x22)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x0A)
+          assert (instruction.r === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed resulting in a negative number") {
+          when (cpu.register (0x0A)).thenReturn (0x80)
+          when (cpu.register (0x15)).thenReturn (0x80)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x0A, 0x80),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+
+        describe ("when executed resulting in a zero") {
+          when (cpu.register (0x0A)).thenReturn (0x80)
+          when (cpu.register (0x15)).thenReturn (0x00)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x0A, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("BRBC") {
       it ("is properly unrecognized") {
         assert (BRBC (unsignedBytes (0x77, 0xE4)) === None)

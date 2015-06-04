@@ -102,6 +102,32 @@ class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   }
 }
 
+object AND extends AvrInstructionObject[AND] {
+  override val mask = 0xFC000000
+  override val pattern = 0x20000000
+  override protected def parse (buffer: Array[UnsignedByte]): AND = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new AND (d, r)
+  }
+}
+
+class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = UnsignedByte ((Rd.value & Rr.value) & 0xFF)
+    val Vf = false
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R == 0
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"sAND R${d}, R${r}"
+}
+
 object BRBC extends AvrInstructionObject[BRBC] {
   override val mask = 0xFC000000
   override val pattern = 0xF4000000
