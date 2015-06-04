@@ -467,6 +467,56 @@ class LDS (val d: Int, val k: Int) extends Instruction[AvrCpu] {
   override def toString = s"LDS R${d}, $$${toHex (k, 4)}"
 }
 
+object LPM extends ComplexAvrInstructionObject[LPM] {
+  override val maskPatternPairs = List (
+    (0xFFEF0000, 0x95C80000),
+    (0xFE0C0000, 0x90040000)
+  )
+  override protected def parse (buffer: Array[UnsignedByte]): LPM = {
+    parseUnsignedParameter (buffer, 0x0E000000) match {
+      case 0x2 => parseCaseI (buffer)
+      case _ => parseOtherCases (buffer)
+    }
+  }
+  private def parseCaseI (buffer: Array[UnsignedByte]): LPM = {
+    val d = 0
+    val extended = parseUnsignedParameter (buffer, 0x00100000) != 0
+    val increment = false
+    new LPM (d, extended, increment)
+  }
+  private def parseOtherCases (buffer: Array[UnsignedByte]): LPM = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val extended = parseUnsignedParameter (buffer, 0x00020000) != 0
+    val increment = parseUnsignedParameter (buffer, 0x00010000) != 0
+    new LPM (d, extended, increment)
+  }
+}
+
+class LPM (val d: Int, val extended: Boolean, val increment: Boolean) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 3
+  override def execute (cpu: AvrCpu) = {
+    val address = getExtended (cpu, Zfull)
+    val R = cpu.programMemory.getData (address, 1)(0)
+    val handleZ = increment match {
+      case false => Nil
+      case true => {
+        val newAddress = extended match {
+          case false => (address & 0xFFFF0000) | ((address + 1) & 0xFFFF)
+          case true => address + 1
+        }
+        setExtended (Zfull, newAddress)
+      }
+    }
+    List (IncrementIp (2), SetMemory (d, R)) ++ handleZ
+  }
+  override def toString = {
+    val opcode = if (extended) "ELPM" else "LPM"
+    val r = if (increment) "Z+" else "Z"
+    s"${opcode} R${d}, ${r}"
+  }
+}
+
 object MOVW extends AvrInstructionObject[MOVW] {
   override val mask = 0xFF000000
   override val pattern = 0x01000000

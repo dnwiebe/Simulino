@@ -877,6 +877,177 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("LPM/ELPM") {
+      it ("is properly unrecognized") {
+        assert (LPM (unsignedBytes (0xD9, 0x95)) === None)
+        assert (LPM (unsignedBytes (0xC9, 0x95)) === None)
+        assert (LPM (unsignedBytes (0x00, 0x90)) === None)
+        assert (LPM (unsignedBytes (0x08, 0x90)) === None)
+        assert (LPM (unsignedBytes (0x0C, 0x90)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x92)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x94)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x96)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x98)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x9A)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x9C)) === None)
+        assert (LPM (unsignedBytes (0x04, 0x9E)) === None)
+      }
+
+      describe ("when properly parsed as case i unextended") {
+        val instruction = LPM (unsignedBytes (0xC8, 0x95)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0)
+          assert (instruction.extended === false)
+          assert (instruction.increment === false)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes three cycles") {
+          assert (instruction.latency === 3)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x12)
+          when (cpu.register (ZH)).thenReturn (0x34)
+          when (cpu.register (ZL)).thenReturn (0x56)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x123456, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x00, 42)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as case i extended") {
+        val instruction = LPM (unsignedBytes (0xD8, 0x95)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0)
+          assert (instruction.extended === true)
+          assert (instruction.increment === false)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x12)
+          when (cpu.register (ZH)).thenReturn (0x34)
+          when (cpu.register (ZL)).thenReturn (0x56)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x123456, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x00, 42)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as case ii unextended") {
+        val instruction = LPM (unsignedBytes (0x54, 0x91)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.extended === false)
+          assert (instruction.increment === false)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x01)
+          when (cpu.register (ZH)).thenReturn (0xFF)
+          when (cpu.register (ZL)).thenReturn (0xFF)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 42)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as case ii extended") {
+        val instruction = LPM (unsignedBytes (0x56, 0x91)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.extended === true)
+          assert (instruction.increment === false)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x01)
+          when (cpu.register (ZH)).thenReturn (0xFF)
+          when (cpu.register (ZL)).thenReturn (0xFF)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 42)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as case iii unextended") {
+        val instruction = LPM (unsignedBytes (0x55, 0x91)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.extended === false)
+          assert (instruction.increment === true)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x01)
+          when (cpu.register (ZH)).thenReturn (0xFF)
+          when (cpu.register (ZL)).thenReturn (0xFF)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 42),
+              SetMemory (RAMPZ, 0x01), SetMemory (ZH, 0x00), SetMemory (ZL, 0x00)))
+          }
+        }
+      }
+
+      describe ("when properly parsed as case iii extended") {
+        val instruction = LPM (unsignedBytes (0x57, 0x91)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.extended === true)
+          assert (instruction.increment === true)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (RAMPZ)).thenReturn (0x01)
+          when (cpu.register (ZH)).thenReturn (0xFF)
+          when (cpu.register (ZL)).thenReturn (0xFF)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 42),
+              SetMemory (RAMPZ, 0x02), SetMemory (ZH, 0x00), SetMemory (ZL, 0x00)))
+          }
+        }
+      }
+    }
+
     describe ("MOVW") {
       it ("is properly unrecognized") {
         assert (MOVW (unsignedBytes (0x00, 0x02)) === None)
