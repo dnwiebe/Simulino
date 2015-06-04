@@ -128,24 +128,26 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"sAND R${d}, R${r}"
 }
 
-object BRBC extends AvrInstructionObject[BRBC] {
-  override val mask = 0xFC000000
-  override val pattern = 0xF4000000
-  override protected def parse (buffer: Array[UnsignedByte]): BRBC = {
+object BRBx extends AvrInstructionObject[BRBx] {
+  override val mask = 0xF8000000
+  override val pattern = 0xF0000000
+  override protected def parse (buffer: Array[UnsignedByte]): BRBx = {
     val s = parseUnsignedParameter (buffer, 0x00070000)
+    val set = parseUnsignedParameter (buffer, 0x04000000) == 0
     val unsignedK = parseUnsignedParameter (buffer, 0x03F80000)
     val k = if ((unsignedK & 0x40) == 0) unsignedK else (unsignedK | 0xFFFFFF80)
-    new BRBC (s, k)
+    new BRBx (s, set, k)
   }
 }
 
-class BRBC (val s: Int, val k: Int) extends Instruction[AvrCpu] {
+class BRBx (val s: Int, val set: Boolean, val k: Int) extends Instruction[AvrCpu] {
   private var latencyOpt: Option[Int] = None
   override def length = 2
   override def latency = latencyOpt.get
   override def execute (cpu: AvrCpu) = {
     val sreg = cpu.register (SREG).value
-    if ((sreg & (1 << s)) == 0) {
+    val shouldBranchOn = if (set) {f: Int => (f != 0)} else {f: Int => (f == 0)}
+    if (shouldBranchOn (sreg & (1 << s))) {
       latencyOpt = Some (2)
       List (IncrementIp ((k + 1) * 2))
     }
@@ -154,31 +156,32 @@ class BRBC (val s: Int, val k: Int) extends Instruction[AvrCpu] {
       List (IncrementIp (2))
     }
   }
-  override def toString = s"BRBC ${s}, ${k}"
+  override def toString = {
+    val opcode = if (set) "BRBS" else "BRBC"
+    s"${opcode} ${s}, ${k}"
+  }
 }
 
 object CLx extends AvrInstructionObject[CLx] {
   override val mask = 0xFF8F0000
   override val pattern = 0x94880000
   override protected def parse (buffer: Array[UnsignedByte]): CLx = {
-    parseUnsignedParameter (buffer, 0x00700000) match {
-      case _ => TEST_DRIVE_ME
-    }
+    val f = parseUnsignedParameter (buffer, 0x00700000)
+    new CLx (f)
   }
 }
 
-abstract class CLx (flagMask: Int) extends Instruction[AvrCpu] {
-  override def length = {TEST_DRIVE_ME; 2}
-  override def latency = {TEST_DRIVE_ME; 1}
+class CLx (var f: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    TEST_DRIVE_ME
-    List (IncrementIp (2), SetFlags (1 << flagMask, 0xFF))
+    List (IncrementIp (2), SetFlags (1 << f, 0x00))
   }
-  override def toString = s"CL${flagName}"
-  private def flagName = getClass.getSimpleName.last
+  override def toString = {
+    val flag = Flag.values()(7 - f)
+    s"CL${flag.name ()}"
+  }
 }
-
-class CLI extends CLx (7)
 
 object CP extends AvrInstructionObject[CP] {
   override val mask = 0xFC000000

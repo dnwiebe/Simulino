@@ -28,7 +28,7 @@ object AvrInstructionSet {
     add (0xC, RJMP)
     add (0xD, RCALL)
     add (0xE, LDI)
-    add (0xF, BRBC)
+    add (0xF, BRBx)
   }
   
   private def add (sesquidecile: Int, instructions: InstructionObject[_]*): Unit = {
