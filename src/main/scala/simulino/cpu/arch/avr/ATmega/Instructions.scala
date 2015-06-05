@@ -379,7 +379,6 @@ class IN (val d: Int, val A: Int) extends Instruction[AvrCpu] {
   override def toString = s"IN R${d}, $$${toHex (A, 2)}"
 }
 
-// Not available in all CPUs; here temporarily so that CPSE has a four-byte instruction to skip
 object JMP extends AvrInstructionObject[JMP] {
   override val mask = 0xFE0E0000
   override val pattern = 0x940C0000
@@ -631,6 +630,31 @@ class NOP () extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = List (IncrementIp (2))
   override def toString = s"NOP"
+}
+
+object OR extends AvrInstructionObject[OR] {
+  override val mask = 0xFC000000
+  override val pattern = 0x28000000
+  override protected def parse (buffer: Array[UnsignedByte]): OR = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new OR (d, r)
+  }
+}
+
+class OR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = Rd | Rr
+    val Nf = (R bit 7)
+    val Sf = Nf
+    val Zf = (R == 0)
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"OR R${d}, R${r}"
 }
 
 object ORI extends AvrInstructionObject[ORI] {

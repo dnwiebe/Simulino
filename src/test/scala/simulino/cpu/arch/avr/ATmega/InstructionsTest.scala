@@ -1350,6 +1350,50 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("OR") {
+      when (cpu.register (0x15)).thenReturn (0x00)
+      it ("is properly unrecognized") {
+        assert (OR (unsignedBytes (0x00, 0x38)) === None)
+      }
+
+      describe ("when parsed correctly") {
+        val instruction = OR (unsignedBytes (0x5A, 0x29)).get
+
+        it ("has the correct parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.r === 0x0A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed with one zero value") {
+          when (cpu.register (0x0A)).thenReturn (0xB4)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0xB4),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+
+        describe ("when executed with two zero values") {
+          when (cpu.register (0x0A)).thenReturn (0x00)
+          val result = instruction.execute (cpu)
+
+          it ("generates the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("ORI") {
       when (cpu.register (0x15)).thenReturn (0x00)
       it ("is properly unrecognized") {
