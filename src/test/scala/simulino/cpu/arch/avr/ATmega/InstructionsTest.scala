@@ -797,26 +797,38 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("LDD") {
-      when (cpu.register (ZL)).thenReturn (0x34)
-      when (cpu.register (ZH)).thenReturn (0x12)
-      when (cpu.register (RAMPZ)).thenReturn (0x00)
+      when (cpu.register (XL)).thenReturn (0x21)
+      when (cpu.register (XH)).thenReturn (0x43)
+      when (cpu.register (RAMPX)).thenReturn (0x65)
       when (cpu.register (YL)).thenReturn (0x56)
       when (cpu.register (YH)).thenReturn (0x34)
       when (cpu.register (RAMPY)).thenReturn (0x12)
+      when (cpu.register (ZL)).thenReturn (0x34)
+      when (cpu.register (ZH)).thenReturn (0x12)
+      when (cpu.register (RAMPZ)).thenReturn (0x00)
       when (cpu.register (0x1234)).thenReturn (42)
       when (cpu.register (0x1233)).thenReturn (41)
       when (cpu.register (0x125E)).thenReturn (43)
       when (cpu.register (0x123456)).thenReturn (24)
+      when (cpu.register (0x654321)).thenReturn (242)
+
       it ("is properly unrecognized") {
+        // X
+        assert (LDD (unsignedBytes (0x0F, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x08, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x04, 0x90)) === None)
+        assert (LDD (unsignedBytes (0x0C, 0x92)) === None)
+        assert (LDD (unsignedBytes (0x0C, 0x94)) === None)
+        assert (LDD (unsignedBytes (0x0C, 0x98)) === None)
+
         // Y
         assert (LDD (unsignedBytes (0x08, 0xC0)) === None)
         assert (LDD (unsignedBytes (0x08, 0x90)) === None)
-        assert (LDD (unsignedBytes (0x0C, 0x90)) === None)
         assert (LDD (unsignedBytes (0x0A, 0x92)) === None)
         assert (LDD (unsignedBytes (0x0A, 0x94)) === None)
         assert (LDD (unsignedBytes (0x0A, 0x98)) === None)
-        assert (LDD (unsignedBytes (0x0A, 0xB0)) === None)
-        assert (LDD (unsignedBytes (0x0A, 0xD0)) === None)
+        assert (LDD (unsignedBytes (0x02, 0xB0)) === None)
+        assert (LDD (unsignedBytes (0x02, 0xD0)) === None)
 
         // Z
         assert (LDD (unsignedBytes (0x00, 0xC0)) === None)
@@ -825,11 +837,30 @@ class InstructionsTest extends path.FunSpec {
         assert (LDD (unsignedBytes (0x02, 0x92)) === None)
         assert (LDD (unsignedBytes (0x02, 0x94)) === None)
         assert (LDD (unsignedBytes (0x02, 0x98)) === None)
-        assert (LDD (unsignedBytes (0x02, 0xB0)) === None)
-        assert (LDD (unsignedBytes (0x02, 0xD0)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0xB0)) === None)
+        assert (LDD (unsignedBytes (0x0A, 0xD0)) === None)
       }
 
       describe ("case i/iv") {
+        describe ("when properly parsed with X, ds and no qs") {
+          val instruction = LDD (unsignedBytes (0x0C, 0x91)).get
+
+          it ("produces the correct parameters") {
+            assert (instruction.d === 0x10)
+            assert (instruction.r === 'X')
+            assert (instruction.x === IndirectionType.Unchanged)
+            assert (instruction.q === 0x0)
+          }
+
+          describe ("when executed") {
+            val result = instruction.execute (cpu)
+
+            it ("produces the right events") {
+              assert (result === List (IncrementIp (2), SetMemory (0x10, 242)))
+            }
+          }
+        }
+
         describe ("when properly parsed with Y, ds and no qs") {
           val instruction = LDD (unsignedBytes (0x08, 0x81)).get
 

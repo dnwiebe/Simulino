@@ -5,6 +5,7 @@ import simulino.cpu._
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
 import simulino.cpu.arch.avr.ATmega.Flag._
+import simulino.cpu.arch.avr.ATmega.IndirectionType._
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.utils.Utils._
 
@@ -397,24 +398,42 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
 
 object LDD extends ComplexAvrInstructionObject[LDD] {
   val maskPatternPairs = List (
-    (0xD2080000, 0x80080000),
+    (0xFE0F0000, 0x900C0000),
+    (0xFE0F0000, 0x900D0000),
+    (0xFE0F0000, 0x900E0000),
+
     (0xFE0F0000, 0x90090000),
     (0xFE0F0000, 0x900A0000),
-    (0xD2080000, 0x80000000),
+    (0xD2080000, 0x80080000),
+
     (0xFE0F0000, 0x90010000),
-    (0xFE0F0000, 0x90020000)
+    (0xFE0F0000, 0x90020000),
+    (0xD2080000, 0x80000000)
   )
 
   override protected def parse (buffer: Array[UnsignedByte]): LDD = {
     val d = parseUnsignedParameter (buffer, 0x01F00000)
-    val r = (buffer(0).value & 0x08) match {
-      case 0x08 => 'Y'
-      case 0x00 => 'Z'
+    val firstNybble = buffer(1).value >> 4
+    val rDiscrim = buffer(0).value & 0x0C
+    val xDiscrim = buffer(0).value & 0x03
+    val (r, x) = (firstNybble, rDiscrim, xDiscrim) match {
+      case (0x9, 0xC, 0x0) => ('X', Unchanged)
+      case (0x9, 0xC, 0x1) => ('X', PostIncrement)
+      case (0x9, 0xC, 0x2) => ('X', PreDecrement)
+      case (0x9, 0x8, 0x1) => ('Y', PostIncrement)
+      case (0x9, 0x8, 0x2) => ('Y', PreDecrement)
+      case (0x9, 0x0, 0x1) => ('Z', PostIncrement)
+      case (0x9, 0x0, 0x2) => ('Z', PreDecrement)
+      case _ => parseUnsignedParameter (buffer, 0xD2080000) match {
+        case 0x11 => ('Y', Unchanged)
+        case 0x10 => ('Z', Unchanged)
+        case _ => TEST_DRIVE_ME
+      }
     }
-    val (x, q) = parseUnsignedParameter (buffer, 0x10030000) match {
-      case 0x5 => (IndirectionType.PostIncrement, 0)
-      case 0x6 => (IndirectionType.PreDecrement, 0)
-      case _ => (IndirectionType.Unchanged, parseUnsignedParameter (buffer, 0x2C070000))
+    val q = (r, x, parseUnsignedParameter (buffer, 0x2C070000)) match {
+      case ('X', _, _) => 0
+      case (_, Unchanged, q) => q
+      case _ => 0
     }
     new LDD (d, r, x, q)
   }
@@ -429,7 +448,6 @@ class LDD (val d: Int, val r: Char, val x: IndirectionType, val q: Int) extends 
     else 1
   }
   override def execute (cpu: AvrCpu) = {
-    val regTuple = if (r == 'Y') Yfull else Zfull
     val initialValue = getExtended (cpu, regTuple)
     val preValue = x match {
       case IndirectionType.Unchanged => initialValue + q
@@ -455,6 +473,14 @@ class LDD (val d: Int, val r: Char, val x: IndirectionType, val q: Int) extends 
       }
       case IndirectionType.PostIncrement => s"LD R${d}, ${r}+"
       case IndirectionType.PreDecrement => s"LD R${d}, -${r}"
+    }
+  }
+  private def regTuple = {
+    r match {
+      case 'X' => Xfull
+      case 'Y' => Yfull
+      case 'Z' => Zfull
+      case _ => TEST_DRIVE_ME
     }
   }
 }
