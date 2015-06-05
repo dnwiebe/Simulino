@@ -126,7 +126,7 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Zf = R == 0
     List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
   }
-  override def toString = s"sAND R${d}, R${r}"
+  override def toString = s"AND R${d}, R${r}"
 }
 
 object BRBx extends AvrInstructionObject[BRBx] {
@@ -569,6 +569,26 @@ class LPM (val d: Int, val extended: Boolean, val increment: Boolean) extends In
     val r = if (increment) "Z+" else "Z"
     s"${opcode} R${d}, ${r}"
   }
+}
+
+object MOV extends AvrInstructionObject[MOV] {
+  override val mask = 0xFC000000
+  override val pattern = 0x2C000000
+  override protected def parse (buffer: Array[UnsignedByte]): MOV = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new MOV (d, r)
+  }
+}
+
+class MOV (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rr = cpu.register (r)
+    List (IncrementIp (2), SetMemory (d, Rr))
+  }
+  override def toString = s"MOV R${d}, R${r}"
 }
 
 object MOVW extends AvrInstructionObject[MOVW] {

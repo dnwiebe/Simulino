@@ -1232,6 +1232,39 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("MOV") {
+      it ("is properly unrecognized") {
+        assert (MOV (unsignedBytes (0x00, 0x3C)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = MOV (unsignedBytes (0x5A, 0x2D)).get
+
+        it ("has the correct parameters") {
+          assert (instruction.d === 0x15)
+          assert (instruction.r === 0x0A)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("when executed") {
+          when (cpu.register (0x0A)).thenReturn (0x34)
+          when (cpu.register (0x15)).thenReturn (0x12)
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0x34)))
+          }
+        }
+      }
+    }
+
     describe ("MOVW") {
       it ("is properly unrecognized") {
         assert (MOVW (unsignedBytes (0x00, 0x02)) === None)
