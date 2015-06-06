@@ -129,6 +129,31 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"AND R${d}, R${r}"
 }
 
+object ANDI extends AvrInstructionObject[ANDI] {
+  override val mask = 0xF0000000
+  override val pattern = 0x70000000
+  override protected def parse (buffer: Array[UnsignedByte]): ANDI = {
+    val rawD = parseUnsignedParameter (buffer, 0x00F00000)
+    val K = parseUnsignedParameter (buffer, 0x0F0F0000)
+    new ANDI (rawD + 0x10, K)
+  }
+}
+
+class ANDI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val R = UnsignedByte ((Rd.value & K.value) & 0xFF)
+    val Vf = false
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R == 0
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"ANDI R${d}, $$${toHex (K, 2)}"
+}
+
 object BRBx extends AvrInstructionObject[BRBx] {
   override val mask = 0xF8000000
   override val pattern = 0xF0000000
