@@ -17,6 +17,7 @@
           {"name": "OCIE0B", "address": "0x6E", "lowBit": 2, "bitLength": 1, "direction": "O"},
           {"name": "OCIE0A", "address": "0x6E", "lowBit": 1, "bitLength": 1, "direction": "O"},
           {"name": "TOIE0", "address": "0x6E", "lowBit": 0, "bitLength": 1, "direction": "O"},
+          {"name": "EIND", "address": "0x5C", "lowBit": 0, "bitLength": 8, "direction": "B"},
           {"name": "OCR0B", "address": "0x48", "lowBit": 0, "bitLength": 8, "direction": "O"},
           {"name": "OCR0A", "address": "0x47", "lowBit": 0, "bitLength": 8, "direction": "O"},
           {"name": "TCNT0", "address": "0x46", "lowBit": 0, "bitLength": 8, "direction": "B"},

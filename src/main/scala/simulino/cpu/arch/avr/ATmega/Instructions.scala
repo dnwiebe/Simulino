@@ -336,6 +336,26 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   }
 }
 
+object EIJMP extends AvrInstructionObject[EIJMP] {
+  override val mask = 0xFFFF0000
+  override val pattern = 0x94190000
+  override protected def parse (buffer: Array[UnsignedByte]): EIJMP = {
+    new EIJMP ()
+  }
+}
+
+class EIJMP () extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val high = cpu.portMap.readFromPort("EIND") << 16
+    val middle = (cpu.register (ZH).value & 0xFF) << 8
+    val low = (cpu.register (ZL).value & 0xFF)
+    List (SetIp ((high | middle | low) << 1))
+  }
+  override def toString = "EIJMP"
+}
+
 object EOR extends AvrInstructionObject[EOR] {
   override val mask = 0xFC000000
   override val pattern = 0x24000000
@@ -358,6 +378,25 @@ class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"EOR R${d}, R${r}"
+}
+
+object IJMP extends AvrInstructionObject[IJMP] {
+  override val mask = 0xFFFF0000
+  override val pattern = 0x94090000
+  override protected def parse (buffer: Array[UnsignedByte]): IJMP = {
+    TEST_DRIVE_ME
+    new IJMP ()
+  }
+}
+
+class IJMP () extends Instruction[AvrCpu] {
+  override def length = {TEST_DRIVE_ME; 0}
+  override def latency = {TEST_DRIVE_ME; 0}
+  override def execute (cpu: AvrCpu) = {
+    TEST_DRIVE_ME
+    Nil
+  }
+  override def toString = "IJMP"
 }
 
 object IN extends AvrInstructionObject[IN] {

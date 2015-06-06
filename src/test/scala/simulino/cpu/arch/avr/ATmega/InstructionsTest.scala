@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.avr.AvrCpu
+import simulino.cpu.arch.avr.{PortMap, AvrCpu}
 import simulino.cpu._
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.ATmega.IndirectionType._
@@ -684,6 +684,37 @@ class InstructionsTest extends path.FunSpec {
 
           it ("takes three cycles") {
             assert (instruction.latency === 3)
+          }
+        }
+      }
+    }
+
+    describe ("EIJMP") {
+      it ("is properly unrecognized") {
+        assert (EIJMP (unsignedBytes (0x09, 0x94)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = EIJMP (unsignedBytes (0x19, 0x94)).get
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        describe ("and executed") {
+          val portMap = mock (classOf[PortMap])
+          when (portMap.readFromPort ("EIND")).thenReturn (0x12)
+          when (cpu.portMap).thenReturn (portMap)
+          when (cpu.register (ZH)).thenReturn (0x34)
+          when (cpu.register (ZL)).thenReturn (0x56)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (SetIp (0x2468AC)))
           }
         }
       }
