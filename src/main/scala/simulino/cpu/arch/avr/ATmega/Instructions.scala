@@ -159,7 +159,8 @@ class BRBx (val s: Int, val set: Boolean, val k: Int) extends Instruction[AvrCpu
   }
   override def toString = {
     val opcode = if (set) "BRBS" else "BRBC"
-    s"${opcode} ${s}, ${k}"
+    val flagName = Flag.values ()(7 - s).name ()
+    s"${opcode} '${flagName}', ${k}"
   }
 }
 
@@ -882,6 +883,35 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
       Z = Some (Zf), C = Some (Cf)))
   }
   override def toString = s"SBCI R${d}, $$${toHex (K, 2)}"
+}
+
+object SBIW extends AvrInstructionObject[SBIW] {
+  override val mask = 0xFF000000
+  override val pattern = 0x97000000
+  override protected def parse (buffer: Array[UnsignedByte]): SBIW = {
+    val rawD = parseUnsignedParameter (buffer, 0x00300000)
+    val K = parseUnsignedParameter (buffer, 0x00CF0000)
+    new SBIW ((rawD << 1) + 24, K)
+  }
+}
+
+class SBIW (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 2
+  override def execute (cpu: AvrCpu) = {
+    val Rdh = cpu.register (d + 1)
+    val Rdl = cpu.register (d)
+    val Rd = ((Rdh.value & 0xFF) << 8) | (Rdl.value & 0xFF)
+    val R = Rd - K
+    val Vf = (Rdh bit 7) && !((R & 0x1000) > 0)
+    val Nf = (R & 0x1000) > 0
+    val Sf = Nf ^^ Vf
+    val Zf = R == 0
+    val Cf = ((R & 0x1000) > 0) && !(Rdh bit 7)
+    List (IncrementIp (2), SetMemory (d + 1, (R >> 8) & 0xFF), SetMemory (d, R & 0xFF),
+      SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
+  }
+  override def toString = s"SBIW R${d + 1}:R${d}, $$${toHex (K, 2)}"
 }
 
 object SEx extends AvrInstructionObject[SEx] {
