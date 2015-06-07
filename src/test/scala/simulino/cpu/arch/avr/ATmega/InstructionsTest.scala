@@ -732,6 +732,58 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("DEC") {
+      it ("is properly unrecognized") {
+        assert (DEC (unsignedBytes (0x0B, 0x94)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = DEC (unsignedBytes (0x5A, 0x95)).get
+
+        it ("has the proper parameters") {
+          assert (instruction.d === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one  cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        describe ("and executed to decrement from 1 to 0") {
+          when (cpu.register (0x15)).thenReturn (0x01)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0x00),
+              SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+
+        describe ("and executed to decrement from 0 to -1") {
+          when (cpu.register (0x15)).thenReturn (0x00)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0xFF),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false))))
+          }
+        }
+
+        describe ("and executed to decrement from -128 to 127") {
+          when (cpu.register (0x15)).thenReturn (0x80)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0x7F),
+              SetFlags (S = Some (true), V = Some (true), N = Some (false), Z = Some (false))))
+          }
+        }
+      }
+    }
+
     describe ("EIJMP") {
       it ("is properly unrecognized") {
         assert (EIJMP (unsignedBytes (0x09, 0x94)) === None)

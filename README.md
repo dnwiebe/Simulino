@@ -52,7 +52,7 @@ or a write to memory location $25, which is PORTB, bit 7 of which controls pin 1
 Then I'll take a break from implementing instructions and make `PortHandler`s for the `PORT`xs.
 
 ### Prioritized Backlog
-Updated 6/6/2015
+Updated 6/7/2015
 
 1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
@@ -84,3 +84,7 @@ duplication of effort.  I don't want to get rid of `.length`, because executing 
 an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
 instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
 that change the IP by some amount other than the length of the instruction.
+
+1. Code for the instructions needs to be a permanent part of Simulino, of course, or at the very least in a linked-in
+`.jar` file, but the question of which instructions are active members of the instruction set should be answered by 
+configuration information in the JSON file loaded when the `Simulator` object is constructed.

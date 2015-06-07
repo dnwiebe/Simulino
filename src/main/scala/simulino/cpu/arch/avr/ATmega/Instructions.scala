@@ -362,6 +362,31 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   }
 }
 
+object DEC extends AvrInstructionObject[DEC] {
+  override val mask = 0xFE0F0000
+  override val pattern = 0x940A0000
+  override protected def parse (buffer: Array[UnsignedByte]): DEC = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    new DEC (d)
+  }
+}
+
+class DEC (val d: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val R = UnsignedByte ((Rd.value - 1) & 0xFF)
+    val Vf = Rd.value == 0x80
+    val Nf = R bit 7
+    val Sf = Vf ^^ Nf
+    val Zf = R.value == 0
+    List (IncrementIp (2), SetMemory (d, R),
+      SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+  }
+  override def toString = s"DEC R${d}"
+}
+
 object EIJMP extends AvrInstructionObject[EIJMP] {
   override val mask = 0xFFFF0000
   override val pattern = 0x94190000
