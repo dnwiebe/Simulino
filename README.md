@@ -44,15 +44,20 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 6/3/2015
+Updated 6/7/2015
 
-* Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-Currently I'm just implementing any instructions found to be used but undefined until I find an OUT to port $05 
-or a write to memory location $25, which is PORTB, bit 7 of which controls pin 13, which is where the LED is.
-Then I'll take a break from implementing instructions and make `PortHandler`s for the `PORT`xs.
+* Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
+promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
+bringing all the `toString` methods on `Instruction`s under test.  We might also want to include some kind of state
+transition logging: for example, for a `PUSH` instruction, what value was pushed and to where in memory.
 
 ### Prioritized Backlog
 Updated 6/7/2015
+
+1. Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
+Currently I'm just implementing any instructions found to be used but undefined until I find an OUT to port $05 
+or a write to memory location $25, which is PORTB, bit 7 of which controls pin 13, which is where the LED is.
+Then I'll take a break from implementing instructions and make `PortHandler`s for the `PORT`xs.
 
 1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
@@ -70,11 +75,6 @@ of it, and we may be cruising for a bruising; that is, maybe we're incorrectly t
 signed value somewhere, but nothing has failed so far because all the values that have gone through it have so far
 been small.  We ought to figure out what's insufficient about `UnsignedByte`, fix it, and go through and get rid of 
 all that masking.
-
-1. Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
-promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
-bringing all the `toString` methods on `Instruction`s under test.  We might also want to include some kind of state
-transition logging: for example, for a `PUSH` instruction, what value was pushed and to where in memory.
 
 1. On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
 This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.

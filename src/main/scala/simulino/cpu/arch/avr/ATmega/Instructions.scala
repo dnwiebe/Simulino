@@ -1175,6 +1175,35 @@ class STS (val k: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"STS $$${toHex (k, 2)}, R${r}"
 }
 
+object SUB extends AvrInstructionObject[SUB] {
+  override val mask = 0xFC000000
+  override val pattern = 0x18000000
+  override protected def parse (buffer: Array[UnsignedByte]): SUB = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    val r = parseUnsignedParameter (buffer, 0x020F0000)
+    new SUB (d, r)
+  }
+}
+
+class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val Rr = cpu.register (r)
+    val R = Rd - Rr
+    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Nf = R bit 7
+    val Sf = Nf ^^ Vf
+    val Zf = R.value == 0
+    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
+      Z = Some (Zf), C = Some (Cf)))
+  }
+  override def toString = s"SUB R${d}, R${r}"
+}
+
 object SUBI extends AvrInstructionObject[SUBI] {
   override val mask = 0xF0000000
   override val pattern = 0x50000000

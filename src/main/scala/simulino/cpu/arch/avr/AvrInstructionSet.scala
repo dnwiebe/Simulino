@@ -15,7 +15,7 @@ object AvrInstructionSet {
   private def initializeSesquideciles (): Unit = {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
     add (0x0, ADD, CPC, MOVW, MULS, NOP, SBC)
-    add (0x1, ADC, CP, CPSE)
+    add (0x1, ADC, CP, CPSE, SUB)
     add (0x2, AND, EOR, MOV, OR)
     add (0x3, CPI)
     add (0x4, SBCI)
