@@ -1,7 +1,8 @@
 package simulino.cpu.arch.avr.ATmega
 
-import simulino.cpu.arch.avr.AvrCpu
+import simulino.cpu.arch.avr.{AvrInstructionSet, AvrCpu}
 import simulino.cpu._
+import simulino.engine.Event
 import simulino.memory.UnsignedByte
 import simulino.cpu.Implicits.RegisterBit
 import simulino.cpu.arch.avr.ATmega.Flag._
@@ -947,6 +948,42 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
       Z = Some (Zf), C = Some (Cf)))
   }
   override def toString = s"SBCI R${d}, $$${toHex (K, 2)}"
+}
+
+object SBIS extends AvrInstructionObject[SBIS] {
+  override val mask = 0xFF000000
+  override val pattern = 0x9B000000
+  override protected def parse (buffer: Array[UnsignedByte]): SBIS = {
+    val A = parseUnsignedParameter (buffer, 0x00F80000)
+    val b = parseUnsignedParameter (buffer, 0x00070000)
+    new SBIS (A, b)
+  }
+}
+
+class SBIS (val A: Int, val b: Int) extends Instruction[AvrCpu] {
+  private var _latencyOpt: Option[Int] = None
+  override def length = 2
+  override def latency = _latencyOpt.get
+  override def execute (cpu: AvrCpu): List[Event] = {
+    val ioValue = cpu.register (A + 0x20).value
+    val bitIsSet = (ioValue & (1 << b)) != 0
+    if (!bitIsSet) {
+      _latencyOpt = Some (1)
+      List (IncrementIp (2))
+    }
+    else {
+      val nextInstruction = findNextInstruction (cpu)
+      val length = nextInstruction.length
+      _latencyOpt = Some ((nextInstruction.length / 2) + 1)
+      List (IncrementIp (2 + length))
+    }
+  }
+  override def toString = s"SBIS $$${toHex (A, 2)}, ${b}"
+
+  private def findNextInstruction (cpu: AvrCpu): Instruction[AvrCpu] = {
+    val buffer = cpu.programMemory.getData (cpu.ip + 2, 4)
+    new AvrInstructionSet ().apply (buffer).get
+  }
 }
 
 object SBIW extends AvrInstructionObject[SBIW] {

@@ -1884,6 +1884,72 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("SBIS") {
+      it ("is properly unrecognized") {
+        assert (SBIS (unsignedBytes (0x00, 0x9A)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = SBIS (unsignedBytes (0xAD, 0x9B)).get
+
+        it ("has the right parameters") {
+          assert (instruction.A === 0x15)
+          assert (instruction.b === 0x05)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        describe ("when executed with bit clear") {
+          when (cpu.register (0x35)).thenReturn (0x00)
+          val result = instruction.execute (cpu)
+
+          it ("does not skip") {
+            assert (result === List (IncrementIp (2)))
+          }
+
+          it ("takes one cycle") {
+            assert (instruction.latency === 1)
+          }
+        }
+
+        describe ("when executed with bit set before two-byte instruction") {
+          when (cpu.register (0x35)).thenReturn (0x20)
+          when (cpu.ip).thenReturn (1000)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (1002, 4)).thenReturn (unsignedBytes (0x00, 0x00, 0x00, 0x00)) // NOP
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("skips two bytes") {
+            assert (result === List (IncrementIp (4)))
+          }
+
+          it ("takes two cycles") {
+            assert (instruction.latency === 2)
+          }
+        }
+
+        describe ("when executed with bit set before four-byte instruction") {
+          when (cpu.register (0x35)).thenReturn (0x20)
+          when (cpu.ip).thenReturn (1000)
+          val programMemory = mock (classOf[Memory])
+          when (programMemory.getData (1002, 4)).thenReturn (unsignedBytes (0x0C, 0x94, 0x00, 0x00)) // JMP
+          when (cpu.programMemory).thenReturn (programMemory)
+          val result = instruction.execute (cpu)
+
+          it ("skips four bytes") {
+            assert (result === List (IncrementIp (6)))
+          }
+
+          it ("takes three cycles") {
+            assert (instruction.latency === 3)
+          }
+        }
+      }
+    }
+
     describe ("SBIW") {
       it ("is properly unrecognized") {
         assert (SBIW (unsignedBytes (0x00, 0x9F)) === None)
