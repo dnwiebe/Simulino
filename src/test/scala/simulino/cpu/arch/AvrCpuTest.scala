@@ -1,13 +1,13 @@
 package simulino.cpu.arch
 
 import org.mockito.Matchers
-import simulino.cpu.arch.avr.ATmega.{ADD, SetMemory, SetFlags, Flag}
+import simulino.cpu.arch.avr.ATmega.{ADD, Flag}
 import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.cpu._
-import simulino.cpu.arch.avr.AvrCpu
+import simulino.cpu.arch.avr._
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.engine.{Event, Engine}
 import simulino.memory.{Span, UnsignedByte, Memory}
@@ -243,6 +243,7 @@ class AvrCpuTest extends path.FunSpec {
         describe ("and a ScheduleNextInstruction is received") {
           when (engine.currentTick).thenReturn (4096L)
           subject.setIpForTest (1000)
+          subject.setSpForTest (1000)
           subject.receive (ScheduleNextInstruction ())
 
           it ("the highest-priority active interrupt is gone") {

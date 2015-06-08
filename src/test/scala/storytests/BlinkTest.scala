@@ -12,6 +12,7 @@ class BlinkTest extends path.FunSpec {
     val jsonStream = getClass.getClassLoader.getResourceAsStream ("configurations/ATmega2560.json")
     val configuration = SimulatorConfiguration (jsonStream)
     val subject = new Simulator (configuration)
+    subject.setExecutionLogger {log => System.out.println (log)}
 
     describe ("and handed the Blink .hex file") {
       subject.loadHex (getClass.getClassLoader.getResourceAsStream ("static/hex/Blink.cpp.hex"))

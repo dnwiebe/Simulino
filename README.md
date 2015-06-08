@@ -44,20 +44,15 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 6/7/2015
+Updated 6/8/2015
 
-* Instruction execution logging has been kind of hacked in as a temporary debugging measure.  Probably we want to
-promote it to a sanctioned feature, though, which will probably involve streams somehow and will certainly involve
-bringing all the `toString` methods on `Instruction`s under test.  We might also want to include some kind of state
-transition logging: for example, for a `PUSH` instruction, what value was pushed and to where in memory.
+* Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
+The necessary instructions seem to have been implemented, but there's a framing error somewhere and the CPU is
+running away.  Gonna figure out why. Then I'll find an OUT to port $05 or a write to memory location $25, which is 
+PORTB, bit 7 of which controls pin 13, which is where the LED is, and make `PortHandler`s for the `PORT`xs.
 
 ### Prioritized Backlog
-Updated 6/7/2015
-
-1. Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-Currently I'm just implementing any instructions found to be used but undefined until I find an OUT to port $05 
-or a write to memory location $25, which is PORTB, bit 7 of which controls pin 13, which is where the LED is.
-Then I'll take a break from implementing instructions and make `PortHandler`s for the `PORT`xs.
+Updated 6/8/2015
 
 1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.

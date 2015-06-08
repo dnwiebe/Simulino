@@ -1,4 +1,4 @@
-package simulino.cpu.arch.avr.ATmega
+package simulino.cpu.arch.avr
 
 import org.scalatest.path
 

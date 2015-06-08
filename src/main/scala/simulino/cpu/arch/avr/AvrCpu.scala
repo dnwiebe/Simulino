@@ -2,14 +2,13 @@ package simulino.cpu.arch.avr
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
-import simulino.cpu.arch.avr.ATmega.{Flag, SetFlags, SetMemory}
+import simulino.cpu.arch.avr.ATmega.Flag
 import simulino.cpu._
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
 import simulino.utils.Utils._
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
 
 /**
  * Created by dnwiebe on 5/13/15.
@@ -39,7 +38,7 @@ object RegisterNames {
       ((cpu.register (registers._2).value & 0xFF) << 8) |
       (cpu.register (registers._3).value & 0xFF)
   }
-  def setExtended (registers: (Int, Int, Int), value: Int): List[CpuChange] = {
+  def setExtended (registers: (Int, Int, Int), value: Int): List[CpuChange[AvrCpu]] = {
     List (
       SetMemory (registers._1, (value >> 16) & 0xFF),
       SetMemory (registers._2, (value >> 8) & 0xFF),
@@ -66,7 +65,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     setMemory (SPL, value & 0xFF)
   }
 
-  override def handleCpuChange (change: CpuChange): Unit = {
+  override def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
     change match {
       case c: SetMemory => handleSetMemory (c.address, c.value)
       case c: SetFlags => handleSetFlags (c)
@@ -138,6 +137,15 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     dataMemory.update (c.address, dataMemory.getData (sp, 1)(0))
   }
 
+  private class InterruptInstruction (val vector: Int) extends Instruction[AvrCpu] {
+    override def length = 0
+    override def latency = 5
+    override def execute (cpu: AvrCpu) = {
+      List (PushIp (), SetIp (vector), SetFlags (I = Some (false)))
+    }
+    override def toString = s"* Interrupt $$${toHex (vector, 2)} *"
+  }
+
   private def handleScheduleNextInstruction (c: ScheduleNextInstruction): Unit = {
     if (activeInterrupts.isEmpty) {
       super.handleCpuChange (c)
@@ -145,11 +153,10 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     else {
       val vector: Int = activeInterrupts.min
       activeInterrupts = activeInterrupts - vector
-println (s"${engine.currentTick}: --- Interrupt $$${toHex (vector, 2)} ---")
       val tick = engine.currentTick + 5
-      engine.schedule (PushIp (), tick)
-      engine.schedule (SetIp (vector), tick)
-      engine.schedule (SetFlags (I = Some (false)), tick)
+      val instruction = new InterruptInstruction (vector)
+      val events = instruction.execute (this)
+      this.scheduleInstructionResults(instruction, tick, events)
       engine.schedule (ScheduleNextInstruction (), tick)
     }
   }

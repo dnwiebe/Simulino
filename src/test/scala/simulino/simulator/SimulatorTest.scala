@@ -14,6 +14,8 @@ import simulino.memory.{Memory, Span, UnsignedByte}
 import simulino.simulator.peripheral.PinSampler
 import simulino.utils.TestUtils._
 
+import scala.collection.mutable.ListBuffer
+
 /**
  * Created by dnwiebe on 5/10/15.
  */
@@ -24,6 +26,32 @@ class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuCon
   when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
   when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))
   override def addPinSampler (sampler: PinSampler): Unit = {pinSamplerAdded = Some (sampler)}
+}
+
+class ExecutionLogTest extends path.FunSpec {
+  describe ("An ExecutionLog with big numbers") {
+    val subject = ExecutionLog (16000000000L, 262144, "INST, Ruc, TI(0)N", "modified stuff")
+
+    describe ("when directed to render itself as a string") {
+      val result = subject.toString
+
+      it ("does so properly"){
+        assert (result === "16000000000:  40000 INST, Ruc, TI(0)N    ; modified stuff")
+      }
+    }
+  }
+
+  describe ("An ExecutionLog with little numbers") {
+    val subject = ExecutionLog (0L, 0, "XY", "nothing")
+
+    describe ("when directed to render itself as a string") {
+      val result = subject.toString
+
+      it ("does so properly"){
+        assert (result === "          0:      0 XY                   ; nothing")
+      }
+    }
+  }
 }
 
 class SimulatorTest extends path.FunSpec {
@@ -107,6 +135,24 @@ class SimulatorTest extends path.FunSpec {
 
         it ("class-specific config") {
           assert (subject.cpu.config.classSpecific === cpuNode)
+        }
+      }
+
+      describe ("when given an execution logger") {
+        val recording = ListBuffer[ExecutionLog] ()
+        val logger = {log: ExecutionLog => recording.append (log)}
+        subject.setExecutionLogger (logger)
+
+        describe ("and the CPU's logger is called a couple of times") {
+          subject.cpu.logInstruction (ExecutionLog (1, 2, "3", "4"))
+          subject.cpu.logInstruction (ExecutionLog (5, 6, "7", "8"))
+
+          it ("the provided logger is called") {
+            assert (recording.toList === List (
+              ExecutionLog (1, 2, "3", "4"),
+              ExecutionLog (5, 6, "7", "8")
+            ))
+          }
         }
       }
     }

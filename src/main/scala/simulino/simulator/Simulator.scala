@@ -12,9 +12,22 @@ import simulino.utils.Utils._
 /**
  * Created by dnwiebe on 5/10/15.
  */
+
+case class ExecutionLog (
+  tick: Long,
+  ip: Int,
+  instruction: String,
+  mods: String
+) {
+  override def toString = {
+    f"$tick%11d: $ip%6X $instruction%-20s ; $mods%s"
+  }
+}
+
 class Simulator (configuration: SimulatorConfiguration) {
   var engine = new Engine ()
   val cpu = prepareCpu (configuration.cpu)
+  var logHandler: ExecutionLog => Unit = {log => }
 
   def id = System.identityHashCode(this)
 
@@ -34,6 +47,10 @@ class Simulator (configuration: SimulatorConfiguration) {
 
   def addPinSampler (sampler: PinSampler): Unit = {
     cpu.addPinSampler (sampler)
+  }
+
+  def setExecutionLogger (logger: ExecutionLog => Unit) = {
+    cpu.logInstruction = logger
   }
 
   def schedule (event: ScheduledEvent): Unit = {

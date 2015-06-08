@@ -1,8 +1,9 @@
 package simulino.cpu
 
+import simulino.cpu.arch.avr.AvrCpu
 import simulino.engine.{Event, Engine, Subscriber}
 import simulino.memory.{UnsignedByte, Memory}
-import simulino.simulator.CpuConfiguration
+import simulino.simulator.{ExecutionLog, CpuConfiguration}
 import simulino.simulator.peripheral.PinSampler
 import simulino.utils.Utils._
 
@@ -27,11 +28,11 @@ trait Cpu extends Subscriber {
   override def receive: PartialFunction[Event, Unit] = {
     class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
       override def isDefinedAt (event: Event): Boolean = {
-        (event.getClass == classOf[CpuChange]) || (event.getClass == classOf[Instruction[_]])
+        (event.getClass == classOf[CpuChange[_]]) || (event.getClass == classOf[Instruction[_]])
       }
       override def apply (event: Event): Unit = {
         event match {
-          case c: CpuChange => handleCpuChange (c)
+          case c: CpuChange[C] => handleCpuChange (c)
           case i: Instruction[C] => handleInstruction (i.asInstanceOf[Instruction[Cpu]])
           case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
         }
@@ -49,7 +50,9 @@ trait Cpu extends Subscriber {
     }
   }
 
-  protected def handleCpuChange (change: CpuChange): Unit = {
+  var logInstruction: ExecutionLog => Unit = {log => }
+
+  protected def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
     change match {
       case c: IncrementIp => ip += c.increment
       case c: SetIp => ip = c.newIp
@@ -59,11 +62,20 @@ trait Cpu extends Subscriber {
   }
 
   private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
-println (s"${engine.currentTick}: ${toHex (ip, 6)} ${instruction}")
     val events = instruction.execute (this.asInstanceOf[C])
     val tick = engine.currentTick + instruction.latency
-    events.foreach {engine.schedule (_, tick)}
+    scheduleInstructionResults (instruction, tick, events)
     engine.schedule (ScheduleNextInstruction (), tick)
+  }
+
+  protected def scheduleInstructionResults (instruction: Instruction[_], tick: Long, events: Seq[Event]): Unit = {
+    val tick = engine.currentTick + instruction.latency
+    val comment = events.flatMap {_ match {
+      case e: CpuChange[Cpu] => Some (e.mods (this))
+      case e => Some (s"${e.getClass.getSimpleName}")
+    }}.mkString ("; ")
+    logInstruction (ExecutionLog (engine.currentTick, ip, instruction.toString, comment))
+    events.foreach {engine.schedule (_, tick)}
   }
 
   private def handleScheduleNextInstruction (): Unit = {

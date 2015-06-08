@@ -1,7 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
 import org.scalatest.path
-import simulino.cpu.arch.avr.{PortMap, AvrCpu}
+import simulino.cpu.arch.avr._
 import simulino.cpu._
 import simulino.cpu.arch.avr.ATmega.Flag._
 import simulino.cpu.arch.avr.ATmega.IndirectionType._
