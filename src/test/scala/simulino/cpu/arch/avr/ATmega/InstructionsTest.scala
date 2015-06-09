@@ -39,6 +39,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ADC R21, R10")
+        }
+
         describe ("and executed") {
           when (cpu.register (SREG)).thenReturn (0x01)
           when (cpu.register (0x15)).thenReturn (0xA5)
@@ -72,6 +76,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one clock cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ADD R10, R21")
         }
 
         describe ("when executed to produce no carry") {
@@ -121,6 +129,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ADIW YH:YL, $2A")
+        }
+
         describe ("when executed") {
           when (cpu.register (29)).thenReturn (0x01)
           when (cpu.register (28)).thenReturn (0xE0)
@@ -153,6 +165,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "AND R10, R21")
         }
 
         describe ("when executed resulting in a negative number") {
@@ -200,6 +216,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ANDI R26, $80")
+        }
+
         describe ("when executed resulting in a negative number") {
           when (cpu.register (0x1A)).thenReturn (0x80)
           val result = instruction.execute (cpu)
@@ -238,6 +258,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("is two bytes long") {
           assert (instruction.length === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "BRBC 'Z', -21")
         }
 
         describe ("when executed with bit Z clear") {
@@ -400,6 +424,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CLH")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -429,6 +457,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one clock cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CP R10, R21")
         }
 
         describe ("and executed with positive d greater than positive r") {
@@ -496,6 +528,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one clock cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CPC R10, R21")
         }
 
         describe ("and executed with positive d greater than positive r and no carry") {
@@ -618,6 +654,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CPI R21, 147")
+        }
+
         describe ("and executed") {
           val result = instruction.execute (cpu)
 
@@ -678,6 +718,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("is two bytes long") {
           assert (instruction.length === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CPSE R10, R21")
         }
 
         describe ("and executed") {
@@ -752,6 +796,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "DEC R21")
+        }
+
         describe ("and executed to decrement from 1 to 0") {
           when (cpu.register (0x15)).thenReturn (0x01)
           val result = instruction.execute (cpu)
@@ -800,6 +848,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "EIJMP")
+        }
+
         describe ("and executed") {
           val portMap = mock (classOf[PortMap])
           when (portMap.readFromPort ("EIND")).thenReturn (0x12)
@@ -836,6 +888,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one clock cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "EOR R10, R21")
         }
 
         describe ("and executed") {
@@ -886,6 +942,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "IN R21, $1A")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -910,6 +970,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes three clock cycles") {
           assert (instruction.latency === 3)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "JMP $2AAAAA")
         }
 
         describe ("when executed") {
@@ -978,6 +1042,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.q === 0x0)
           }
 
+          it ("converts to a String properly") {
+            assert (instruction.toString === "LD R16, X")
+          }
+
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
@@ -995,6 +1063,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.r === 'Y')
             assert (instruction.x === IndirectionType.Unchanged)
             assert (instruction.q === 0x0)
+          }
+
+          it ("converts to a String properly") {
+            assert (instruction.toString === "LD R16, Y")
           }
 
           describe ("when executed") {
@@ -1058,6 +1130,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.latency === 2)
           }
 
+          it ("converts to a String properly") {
+            assert (instruction.toString === "LDD R21, Z+42")
+          }
+
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
@@ -1085,6 +1161,10 @@ class InstructionsTest extends path.FunSpec {
 
           it ("takes two cycles") {
             assert (instruction.latency === 2)
+          }
+
+          it ("converts to a String properly") {
+            assert (instruction.toString === "LD R21, Z+")
           }
 
           describe ("when executed") {
@@ -1115,6 +1195,10 @@ class InstructionsTest extends path.FunSpec {
 
           it ("takes three cycles") {
             assert (instruction.latency === 3)
+          }
+
+          it ("converts to a String properly") {
+            assert (instruction.toString === "LD R21, -Z")
           }
 
           describe ("when executed") {
@@ -1150,6 +1234,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "LDI R21, $AA")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -1175,6 +1263,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes two cycles") {
           assert (instruction.latency === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "LDS R21, $3456")
         }
 
         describe ("when executed") {
@@ -1220,6 +1312,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 3)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "LPM R0, Z")
+        }
+
         describe ("when executed") {
           when (cpu.register (RAMPZ)).thenReturn (0x12)
           when (cpu.register (ZH)).thenReturn (0x34)
@@ -1242,6 +1338,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.d === 0)
           assert (instruction.extended === true)
           assert (instruction.increment === false)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ELPM R0, Z")
         }
 
         describe ("when executed") {
@@ -1268,6 +1368,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.increment === false)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "LPM R21, Z")
+        }
+
         describe ("when executed") {
           when (cpu.register (RAMPZ)).thenReturn (0x01)
           when (cpu.register (ZH)).thenReturn (0xFF)
@@ -1292,6 +1396,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.increment === false)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ELPM R21, Z")
+        }
+
         describe ("when executed") {
           when (cpu.register (RAMPZ)).thenReturn (0x01)
           when (cpu.register (ZH)).thenReturn (0xFF)
@@ -1314,6 +1422,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.d === 0x15)
           assert (instruction.extended === false)
           assert (instruction.increment === true)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "LPM R21, Z+")
         }
 
         describe ("when executed") {
@@ -1379,6 +1491,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "MOV R21, R10")
+        }
+
         describe ("when executed") {
           when (cpu.register (0x0A)).thenReturn (0x34)
           when (cpu.register (0x15)).thenReturn (0x12)
@@ -1412,6 +1528,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "MOVW R21:20, R11:10")
+        }
+
         describe ("when executed") {
           when (cpu.register (0x0A)).thenReturn (0x34)
           when (cpu.register (0x0B)).thenReturn (0x12)
@@ -1440,6 +1560,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes two clock cycles") {
           assert (instruction.latency === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "MULS R2, R3")
         }
 
         describe ("and executed") {
@@ -1499,6 +1623,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "NOP")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -1529,6 +1657,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "OR R21, R10")
         }
 
         describe ("when executed with one zero value") {
@@ -1573,6 +1705,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ORI R21, $B4")
         }
 
         describe ("when executed") {
@@ -1626,6 +1762,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "OUT $1A, R21")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -1654,6 +1794,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes two cycles") {
           assert (instruction.latency === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "POP R21")
         }
 
         describe ("when executed") {
@@ -1688,6 +1832,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "PUSH R21")
+        }
+
         describe ("when executed") {
           when (cpu.register (0x15)).thenReturn (0x42)
           val result = instruction.execute (cpu)
@@ -1719,6 +1867,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 4)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RCALL -19")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -1745,6 +1897,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 5)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RET")
+        }
+
         describe ("when executed") {
           val result = instruction.execute (cpu)
 
@@ -1769,6 +1925,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes 5 cycles") {
           assert (instruction.latency === 5)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RETI")
         }
 
         describe ("when executed") {
@@ -1799,6 +1959,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes two clock cycles") {
           assert (instruction.latency === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RJMP 291")
         }
 
         describe ("when executed") {
@@ -1846,6 +2010,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one clock cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SBC R10, R21")
         }
 
         describe ("when executed without a previous carry and producing no carry") {
@@ -1923,6 +2091,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 1)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SBCI R26, $A5")
+        }
+
         describe ("when executed") {
           when (cpu.flag (Flag.C)).thenReturn (true)
           when (cpu.register (0x1A)).thenReturn (0x5A)
@@ -1951,6 +2123,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("is two bytes long") {
           assert (instruction.length === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SBIS $15, 5")
         }
 
         describe ("when executed with bit clear") {
@@ -2023,6 +2199,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SBIW R27:R26, $2A")
+        }
+
         describe ("when executed") {
           when (cpu.register (27)).thenReturn (0x02)
           when (cpu.register (26)).thenReturn (0x29)
@@ -2050,6 +2230,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SEI")
         }
 
         describe ("when executed") {
@@ -2092,6 +2276,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ST X, R10")
+        }
+
         describe ("and executed") {
           val result = instruction.execute (cpu)
 
@@ -2110,6 +2298,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.r === 0x0A)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ST X+, R10")
+        }
+
         describe ("and executed") {
           val result = instruction.execute (cpu)
 
@@ -2126,6 +2318,10 @@ class InstructionsTest extends path.FunSpec {
         it ("has the proper parameters") {
           assert (instruction.x === PreDecrement)
           assert (instruction.r === 0x0A)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "ST -X, R10")
         }
 
         describe ("and executed") {
@@ -2181,6 +2377,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.q === 0x0)
           }
 
+          it ("converts to a String properly") {
+            assert (instruction.toString === "ST Y, R16")
+          }
+
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
@@ -2221,6 +2421,10 @@ class InstructionsTest extends path.FunSpec {
         describe ("with Z, qs and ds") {
           val instruction = new STD ('Z', 0x15, IndirectionType.Unchanged, 0x2A)
 
+          it ("converts to a String properly") {
+            assert (instruction.toString === "STD Z+42, R21")
+          }
+
           describe ("when executed") {
             val result = instruction.execute (cpu)
 
@@ -2240,6 +2444,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.r === 0x15)
             assert (instruction.x === IndirectionType.PostIncrement)
             assert (instruction.q === 0x00)
+          }
+
+          it ("converts to a String properly") {
+            assert (instruction.toString === "ST Z+, R21")
           }
 
           describe ("when executed") {
@@ -2262,6 +2470,10 @@ class InstructionsTest extends path.FunSpec {
             assert (instruction.r === 0x15)
             assert (instruction.x === IndirectionType.PreDecrement)
             assert (instruction.q === 0x00)
+          }
+
+          it ("converts to a String properly") {
+            assert (instruction.toString === "ST -Z, R21")
           }
 
           describe ("when executed") {
@@ -2297,6 +2509,10 @@ class InstructionsTest extends path.FunSpec {
           assert (instruction.latency === 2)
         }
 
+        it ("converts to a String properly") {
+          assert (instruction.toString === "STS $A55A, R21")
+        }
+
         describe ("when executed") {
           when (cpu.register (0x15)).thenReturn (0x42)
           val result = instruction.execute (cpu)
@@ -2327,6 +2543,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SUB R10, R21")
         }
 
         describe ("when executed") {
@@ -2361,6 +2581,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("takes one cycle") {
           assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "SUBI R26, $A5")
         }
 
         describe ("when executed") {

@@ -483,7 +483,7 @@ class JMP (k: Int) extends Instruction[AvrCpu] {
   override def length = 4
   override def latency = 3
   override def execute (cpu: AvrCpu) = List (SetIp (k << 1))
-  override def toString = s"JMP ${k}"
+  override def toString = s"JMP $$${toHex (k, 4)}"
 }
 
 object LDD extends ComplexAvrInstructionObject[LDD] {
