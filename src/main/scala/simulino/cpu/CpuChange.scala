@@ -28,4 +28,3 @@ case class SetIp (newIp: Int) extends CpuChange[Cpu] {
 case class ScheduleNextInstruction () extends CpuChange[Cpu] {
   override def mods (cpu: Cpu): String = "" //  TODO: Maybe this shouldn't be a CpuChange.
 }
-

@@ -73,15 +73,15 @@ case class SetMemory (address: Int, value: UnsignedByte) extends CpuChange[AvrCp
 case object SetFlags {
 
   def apply (
-              I: Option[Boolean] = None,
-              T: Option[Boolean] = None,
-              H: Option[Boolean] = None,
-              S: Option[Boolean] = None,
-              V: Option[Boolean] = None,
-              N: Option[Boolean] = None,
-              Z: Option[Boolean] = None,
-              C: Option[Boolean] = None
-              ): SetFlags = {
+    I: Option[Boolean] = None,
+    T: Option[Boolean] = None,
+    H: Option[Boolean] = None,
+    S: Option[Boolean] = None,
+    V: Option[Boolean] = None,
+    N: Option[Boolean] = None,
+    Z: Option[Boolean] = None,
+    C: Option[Boolean] = None
+  ): SetFlags = {
     val list = List (I, T, H, S, V, N, Z, C)
     val mask = makeMask (list)
     val pattern = makePattern (list)

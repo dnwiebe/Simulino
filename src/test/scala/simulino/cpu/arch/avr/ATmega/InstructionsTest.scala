@@ -438,6 +438,42 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("COM") {
+      it ("is properly unrecognized") {
+        assert (COM (unsignedBytes (0x01, 0x94)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = COM (unsignedBytes (0x50, 0x95)).get
+
+        it ("has the proper parameter") {
+          assert (instruction.d === 0x15)
+        }
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes one cycle") {
+          assert (instruction.latency === 1)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "COM R21")
+        }
+
+        describe ("when executed") {
+          when (cpu.register (0x15)).thenReturn (0x5A)
+          val result = instruction.execute (cpu)
+
+          it ("creates the proper events") {
+            assert (result === List (IncrementIp (2), SetMemory (0x15, 0xA5),
+              SetFlags (S = Some (true), V = Some (false), N = Some (true), Z = Some (false), C = Some (true))))
+          }
+        }
+      }
+    }
+
     describe ("CP") {
       it ("is properly unrecognized") {
         assert (CP (unsignedBytes (0x1C, 0x01)) === None)
@@ -1935,7 +1971,7 @@ class InstructionsTest extends path.FunSpec {
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
-            assert (result === List (PopIp (), SetFlags (I = Some (true))))
+            assert (result === List (PopIp (), IncrementIp (-2), SetFlags (I = Some (true))))
           }
         }
       }

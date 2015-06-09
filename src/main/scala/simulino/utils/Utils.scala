@@ -63,6 +63,10 @@ object Utils {
     }
   }
 
+  def intFromBytes (bytes: Int*): Int = {
+    bytes.foldLeft (0) {(soFar, byte) => (soFar << 8) | (byte & 0xFF)}
+  }
+
   def hexOrDec (node: JsonNode): Int = {
     if (node.isTextual) fromHex (node.asText ()) else node.asInt ()
   }

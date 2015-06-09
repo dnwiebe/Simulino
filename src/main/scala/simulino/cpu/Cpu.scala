@@ -42,6 +42,7 @@ trait Cpu extends Subscriber {
   }
 
   def instructionAt (address: Int): Instruction[_] = {
+if (address > 0x1000) TEST_DRIVE_ME
     val data = programMemory.getData (address, 4)
     val instructionOpt = instructionSet (data)
     instructionOpt match {
@@ -70,10 +71,10 @@ trait Cpu extends Subscriber {
 
   protected def scheduleInstructionResults (instruction: Instruction[_], tick: Long, events: Seq[Event]): Unit = {
     val tick = engine.currentTick + instruction.latency
-    val comment = events.flatMap {_ match {
+    val comment = events.flatMap {
       case e: CpuChange[Cpu] => Some (e.mods (this))
       case e => Some (s"${e.getClass.getSimpleName}")
-    }}.mkString ("; ")
+    }.mkString ("; ")
     logInstruction (ExecutionLog (engine.currentTick, ip, instruction.toString, comment))
     events.foreach {engine.schedule (_, tick)}
   }

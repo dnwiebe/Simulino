@@ -81,7 +81,7 @@ class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = ((cpu.register (d + 1).value & 0xFF) << 8) + (cpu.register (d).value & 0xFF)
     val Rdh = UnsignedByte (Rd >> 8)
-    val R = Rd + K
+    val R = (Rd + K) & 0xFFFF
     val Rh = UnsignedByte (R >> 8)
     val Rl = UnsignedByte (R & 0xFF)
     val Vf = !(Rdh bit 7) && (Rh bit 15)
@@ -209,6 +209,30 @@ class CLx (var f: Int) extends Instruction[AvrCpu] {
     val flag = Flag.values()(7 - f)
     s"CL${flag.name ()}"
   }
+}
+
+object COM extends AvrInstructionObject[COM] {
+  override val mask = 0xFE0F0000
+  override val pattern = 0x94000000
+  override protected def parse (buffer: Array[UnsignedByte]): COM = {
+    val d = parseUnsignedParameter (buffer, 0x01F00000)
+    new COM (d)
+  }
+}
+
+class COM (var d: Int) extends Instruction[AvrCpu] {
+  override def length = 2
+  override def latency = 1
+  override def execute (cpu: AvrCpu) = {
+    val Rd = cpu.register (d)
+    val R = 0xFF - (Rd.value & 0xFF)
+    val Nf = (R & 0x80) != 0
+    val Sf = Nf
+    val Zf = R == 0
+    List (IncrementIp (2), SetMemory (d, R),
+      SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf), C = Some (true)))
+  }
+  override def toString = s"COM R${d}"
 }
 
 object CP extends AvrInstructionObject[CP] {
@@ -399,10 +423,8 @@ class EIJMP () extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val high = cpu.portMap.readFromPort("EIND") << 16
-    val middle = (cpu.register (ZH).value & 0xFF) << 8
-    val low = (cpu.register (ZL).value & 0xFF)
-    List (SetIp ((high | middle | low) << 1))
+    val wordAddress = intFromBytes (cpu.portMap.readFromPort ("EIND"), cpu.register (ZH), cpu.register (ZL))
+    List (SetIp (wordAddress << 1))
   }
   override def toString = "EIJMP"
 }
@@ -897,7 +919,7 @@ class RETI extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 5
   override def execute (cpu: AvrCpu) = {
-    List (PopIp (), SetFlags (I = Some (true)))
+    List (PopIp (), IncrementIp (-2), SetFlags (I = Some (true)))
   }
   override def toString = "RETI"
 }
