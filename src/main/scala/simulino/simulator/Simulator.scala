@@ -36,6 +36,10 @@ class Simulator (configuration: SimulatorConfiguration) {
     cpu.addPinSampler (sampler)
   }
 
+  def setExecutionLogger (logger: ExecutionLog => Unit) = {
+    cpu.logInstruction = Some (logger)
+  }
+
   def schedule (event: ScheduledEvent): Unit = {
     engine.schedule (event)
   }

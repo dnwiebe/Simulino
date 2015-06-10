@@ -119,9 +119,10 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
   import PortMap._
 
   private val portsByName: Map[String, Port] = extractPortsByName (configs)
-  private val portsByAddress: Map[Int, Seq[Port]] = groupPortsByAddress (portsByName.map {(p) => p._2}.toList)
+  private val (minPort, maxPort) = findMinMax (portsByName.values.map {_.address})
+  private val portsByAddress: Map[Int, Seq[Port]] = groupPortsByAddress (portsByName.values)
   private val handlersByName: Map[String, PortHandler] = extractHandlersByName (configs)
-  private val handlersByPortName: Map[String, Seq[PortHandler]] = groupHandlersByPortName (handlersByName.map {p => p._2}.toList)
+  private val handlersByPortName: Map[String, Seq[PortHandler]] = groupHandlersByPortName (handlersByName.values)
 
   def handler (name: String): Option[PortHandler] = handlersByName.get (name)
 
@@ -139,6 +140,8 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
   }
 
   def memoryChange (address: Int, oldValue: UnsignedByte, newValue: UnsignedByte): Unit = {
+    if (address < minPort) {return}
+    if (address > maxPort) {return}
     val portsForAddress = portsByAddress.getOrElse (address, Nil)
     val portsAffected = portsForAddress.filter {_.affectedByChange (oldValue, newValue)}
     portsAffected.foreach {port =>
@@ -151,7 +154,22 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     configs.foldLeft (List[(String, Port)] ()) {(soFar, config) => soFar ++ config.ports}.toMap
   }
 
-  private def groupPortsByAddress (ports: Seq[Port]): Map[Int, Seq[Port]] = {
+  private def findMinMax (numbers: Iterable[Int]): (Int, Int) = {
+    numbers.foldLeft ((Integer.MAX_VALUE, Integer.MIN_VALUE)) {(soFar, number) =>
+      val (curMin, curMax) = soFar
+      if (number < curMin) {
+        (number, curMax)
+      }
+      else if (number > curMax) {
+        (curMin, number)
+      }
+      else {
+        soFar
+      }
+    }
+  }
+
+  private def groupPortsByAddress (ports: Iterable[Port]): Map[Int, Seq[Port]] = {
     ports.foldLeft (Map[Int, List[Port]] ()) {(soFar, port) =>
       soFar.get (port.address) match {
         case Some (seq) => soFar + (port.address -> (port :: seq))
@@ -160,7 +178,7 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     }
   }
 
-  private def extractHandlersByName (configs: Seq[PortConfiguration]): Map[String, PortHandler] = {
+  private def extractHandlersByName (configs: Iterable[PortConfiguration]): Map[String, PortHandler] = {
     val classes = configs.foldLeft (List[Class[PortHandler]] ()) {(soFar, config) =>
       soFar ++ config.portHandlerClasses
     }
@@ -175,7 +193,7 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     }.toMap
   }
 
-  private def groupHandlersByPortName (handlers: Seq[PortHandler]): Map[String, Seq[PortHandler]] = {
+  private def groupHandlersByPortName (handlers: Iterable[PortHandler]): Map[String, Seq[PortHandler]] = {
     val portNameHandlerPairs = handlers.foldLeft (Seq[(String, PortHandler)] ()) {(soFar, handler) =>
       soFar ++ handler.portNames.map {(_, handler)}
     }

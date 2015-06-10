@@ -30,6 +30,14 @@
           {"name": "OCF0B", "address": "0x35", "lowBit": 2, "bitLength": 1, "direction": "O"},
           {"name": "OCF0A", "address": "0x35", "lowBit": 1, "bitLength": 1, "direction": "O"},
           {"name": "TOV0", "address": "0x35", "lowBit": 0, "bitLength": 1, "direction": "O"},
+          {"name": "PORTB7", "address": "0x25", "lowBit": 7, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB6", "address": "0x25", "lowBit": 6, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB5", "address": "0x25", "lowBit": 5, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB4", "address": "0x25", "lowBit": 4, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB3", "address": "0x25", "lowBit": 3, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB2", "address": "0x25", "lowBit": 2, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB1", "address": "0x25", "lowBit": 1, "bitLength": 1, "direction": "B"},
+          {"name": "PORTB0", "address": "0x25", "lowBit": 0, "bitLength": 1, "direction": "B"},
           {"name": "DDB7", "address": "0x24", "lowBit": 7, "bitLength": 1, "direction": "O"},
           {"name": "DDB6", "address": "0x24", "lowBit": 6, "bitLength": 1, "direction": "O"},
           {"name": "DDB5", "address": "0x24", "lowBit": 5, "bitLength": 1, "direction": "O"},
@@ -37,7 +45,15 @@
           {"name": "DDB3", "address": "0x24", "lowBit": 3, "bitLength": 1, "direction": "O"},
           {"name": "DDB2", "address": "0x24", "lowBit": 2, "bitLength": 1, "direction": "O"},
           {"name": "DDB1", "address": "0x24", "lowBit": 1, "bitLength": 1, "direction": "O"},
-          {"name": "DDB0", "address": "0x24", "lowBit": 0, "bitLength": 1, "direction": "O"}
+          {"name": "DDB0", "address": "0x24", "lowBit": 0, "bitLength": 1, "direction": "O"},
+        ],
+        "portHandlers": [
+          {
+            "class": "simulino.cpu.arch.avr.peripheral.PinPortHandler",
+            "args": {
+              "name": "B"
+            }
+          }
         ],
         "portHandlerClasses": [
           "simulino.cpu.arch.avr.peripheral.TimerCounter0Handler"

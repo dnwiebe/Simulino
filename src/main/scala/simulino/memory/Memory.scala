@@ -25,12 +25,14 @@ class Memory (size: Int) {
     UnsignedByte (data (address))
   }
 
-  def update (address: Int, value: UnsignedByte): Unit = {
+  def update (address: Int, value: UnsignedByte): UnsignedByte = {
     validate (address, s"Address must be between 0 and ${size - 1}")
+    val prev = data (address)
     data (address) = value
+    UnsignedByte (prev)
   }
 
-  def update (address: Int, value: Int): Unit = {
+  def update (address: Int, value: Int): UnsignedByte = {
     update (address, UnsignedByte (value))
   }
 

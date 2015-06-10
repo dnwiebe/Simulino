@@ -109,6 +109,24 @@ class SimulatorTest extends path.FunSpec {
           assert (subject.cpu.config.classSpecific === cpuNode)
         }
       }
+
+      describe ("when given an execution logger") {
+        val recording = ListBuffer[ExecutionLog] ()
+        val logger = {log: ExecutionLog => recording.append (log)}
+        subject.setExecutionLogger (logger)
+
+        describe ("and the CPU's logger is called a couple of times") {
+          subject.cpu.logInstruction.get (ExecutionLog (1, 2, "3", "4"))
+          subject.cpu.logInstruction.get (ExecutionLog (5, 6, "7", "8"))
+
+          it ("the provided logger is called") {
+            assert (recording.toList === List (
+              ExecutionLog (1, 2, "3", "4"),
+              ExecutionLog (5, 6, "7", "8")
+            ))
+          }
+        }
+      }
     }
 
     describe ("given a .hex file with a couple of buffers") {

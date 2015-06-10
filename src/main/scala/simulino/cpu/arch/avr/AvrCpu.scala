@@ -51,14 +51,18 @@ object RegisterNames {
 class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   import RegisterNames._
 
-  val dataMemory = createMemory (config.classSpecific)
+  val dataMemory: Memory = createMemory (config.classSpecific)
   val instructionSet = new AvrInstructionSet ()
-  val portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
-  val interruptVectors = extractInterruptVectors (config.classSpecific)
+  var portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
+  val interruptVectors: Map[String, Int] = extractInterruptVectors (config.classSpecific)
   var activeInterrupts = Set[Int] ()
 
   def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
-  def setMemory (address: Int, value: UnsignedByte): Unit = {dataMemory.update (address, value)}
+
+  def setMemory (address: Int, newValue: UnsignedByte): Unit = {
+    val oldValue = dataMemory.update (address, newValue)
+    portMap.memoryChange (address, oldValue, newValue)
+  }
 
   def sp: Int = ((register (SPH).value << 8) | register (SPL).value) & 0xFFFF
   protected def sp_= (value: Int): Unit = {
