@@ -40,7 +40,7 @@ trait PortHandler {
   private var initialized = false
   private var cpu: AvrCpu = null
   val name: String
-  val portNames: Seq[String]
+  val portNames: List[String]
 
   def initialize (cpu: AvrCpu): Unit = {
     if (initialized) {throw new IllegalStateException (s"${getClass.getName} may not be reinitialized")}

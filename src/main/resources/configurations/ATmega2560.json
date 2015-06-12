@@ -4,6 +4,16 @@
     "program": 262144,
     "persistent": 4096
   },
+  "pinNames": [
+    {"pin": 10, "name": "PORTB4"},
+    {"pin": 11, "name": "PORTB5"},
+    {"pin": 12, "name": "PORTB6"},
+    {"pin": 13, "name": "PORTB7"},
+    {"pin": 50, "name": "PORTB3"},
+    {"pin": 51, "name": "PORTB2"},
+    {"pin": 52, "name": "PORTB1"},
+    {"pin": 53, "name": "PORTB0"}
+  ],
   "cpu": {
     "clockSpeed": 16000000,
     "class": "simulino.cpu.arch.avr.AvrCpu",

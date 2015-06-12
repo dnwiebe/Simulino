@@ -17,7 +17,7 @@ class BlinkTest extends path.FunSpec {
     describe ("and handed the Blink .hex file") {
       subject.loadHex (getClass.getClassLoader.getResourceAsStream ("static/hex/Blink.cpp.hex"))
 
-      describe ("and hooked to a PinSampler on pin 13") {
+      describe ("and hooked to Pin 13") {
         val sampler = new PinSampler (13, configuration)
         subject.addPinSampler (sampler)
 
