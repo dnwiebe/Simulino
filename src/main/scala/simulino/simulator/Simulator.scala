@@ -50,7 +50,7 @@ class Simulator (configuration: SimulatorConfiguration) {
   }
 
   def setExecutionLogger (logger: ExecutionLog => Unit) = {
-    cpu.logInstruction = logger
+    cpu.logInstruction = Some (logger)
   }
 
   def schedule (event: ScheduledEvent): Unit = {

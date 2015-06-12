@@ -52,7 +52,7 @@ class PortMapTest extends path.FunSpec {
 
   describe ("A JSON stream about port configurations") {
     val json =
-      """
+      s"""
         |{
         |  "ports": [
         |    {"name": "EBL", "address": 4660, "lowBit": 0, "bitLength": 1, "direction": "O"},
@@ -61,9 +61,14 @@ class PortMapTest extends path.FunSpec {
         |    {"name": "ER", "address": "0x1234", "lowBit": 3, "bitLength": 1, "direction": "B"},
         |    {"name": "MTH", "address": 4661, "lowBit": 4, "bitLength": 4, "direction": "O"}
         |  ],
-        |  "portHandlerClasses": [
-        |    "simulino.cpu.arch.avr.ExpressionMaker",
-        |    "simulino.cpu.arch.avr.SleepDetector"
+        |  "portHandlers": [
+        |    {
+        |      "class": "simulino.cpu.arch.avr.ExpressionMaker",
+        |      "params": ["fark", 2, "0x4789", "fleeb"]
+        |    },
+        |    {
+        |      "class": "simulino.cpu.arch.avr.SleepDetector"
+        |    }
         |  ]
         |}
       """.stripMargin
@@ -85,11 +90,16 @@ class PortMapTest extends path.FunSpec {
           ))
         }
 
-        it ("produces the correct port handler classes") {
-          assert (config.portHandlerClasses === Seq (
+        it ("produces the correct port handlers") {
+          assert (config.portHandlers.map {_.getClass} === Seq (
             classOf[ExpressionMaker],
             classOf[SleepDetector]
           ))
+          val slpd = config.portHandlers.find {_.getClass == classOf[ExpressionMaker]}.get.asInstanceOf[ExpressionMaker]
+          assert (slpd.s1 === "fark")
+          assert (slpd.s2 === "fleeb")
+          assert (slpd.i1 === 2)
+          assert (slpd.i2 === 0x4789)
         }
 
         describe ("which is then used to initialize a PortMap") {
@@ -202,13 +212,38 @@ class PortMapTest extends path.FunSpec {
       }
     }
   }
+
+  describe ("A JSON stream with port-handler info that doesn't match reality") {
+    val json =
+      s"""
+         |{
+         |  "ports": [],
+         |  "portHandlers": [
+         |    {
+         |      "class": "simulino.cpu.arch.avr.ExpressionMaker",
+         |      "params": ["fark", 2, "0x4789"]
+         |    }
+         |  ]
+         |}
+      """.stripMargin
+    val mapper = new ObjectMapper ()
+    val node = mapper.readTree (new ByteArrayInputStream (json.getBytes))
+
+    describe ("used to initialize a PortConfiguration") {
+      val result = Try {PortConfiguration (node)}
+
+      it ("fails in the expected way") {
+        fails (result, new NoSuchMethodException ("simulino.cpu.arch.avr.ExpressionMaker.<init>(java.lang.String, int, int)"))
+      }
+    }
+  }
 }
 
 object Changes {
   val changes = new ListBuffer[String] ()
 }
 
-class ExpressionMaker () extends PortHandler {
+class ExpressionMaker (val s1: String, val i1: Int, val i2: Int, val s2: String) extends PortHandler {
   override val name = "EXMK"
   override val portNames = List ("EBL", "EL", "EBR", "ER", "MTH")
 

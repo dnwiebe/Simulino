@@ -65,12 +65,18 @@ class AvrCpuTest extends path.FunSpec {
     }
 
     describe ("directed to set R28 to 47") {
+      val portMap = mock (classOf[PortMap])
+      subject.portMap = portMap
       subject.receive (SetMemory (28, 47))
 
       it ("does so") {
         (0 until 32).foreach {i =>
           assert (subject.register (i) === (if (i == 28) UnsignedByte (47) else UnsignedByte (0)))
         }
+      }
+
+      it ("informs the PortMap of the change") {
+        verify (portMap).memoryChange (28, UnsignedByte (0), UnsignedByte (47))
       }
     }
 

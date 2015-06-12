@@ -1,7 +1,9 @@
 package simulino.cpu.arch.avr
 
+import java.lang.reflect.{Parameter, Constructor}
+
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.{ObjectNode, ArrayNode}
 import simulino.cpu.arch.avr.ATmega.PortType
 import simulino.engine.TickSink
 import simulino.memory.{UnsignedByte, Memory}
@@ -69,31 +71,68 @@ trait PortHandler {
 
 case object PortConfiguration {
   def apply (node: JsonNode): PortConfiguration = {
-    val ports = node.get ("ports").asInstanceOf[ArrayNode].elements.asScala.map {item =>
-      (
-        item.get ("name").asText (),
-        Port (
+    val ports = node.get ("ports") match {
+      case null => Nil
+      case portsNode: ArrayNode => portsNode.elements.asScala.map { item =>
+        (
           item.get ("name").asText (),
-          hexOrDec (item.get ("address")),
-          hexOrDec (item.get ("lowBit")),
-          hexOrDec (item.get ("bitLength")),
-          PortType.fromChar (item.get ("direction").asText ().charAt (0))
+          Port (
+            item.get ("name").asText (),
+            hexOrDec (item.get ("address")),
+            hexOrDec (item.get ("lowBit")),
+            hexOrDec (item.get ("bitLength")),
+            PortType.fromChar (item.get ("direction").asText ().charAt (0))
+          )
         )
-      )
-    }.toList
-    val portHandlerClasses = node.get ("portHandlerClasses").asInstanceOf[ArrayNode].elements.asScala.map {item =>
-      Class.forName (item.asText ()).asInstanceOf[Class[PortHandler]]
-    }.toList
+      }.toList
+    }
+    val portHandlers = node.get ("portHandlers") match {
+      case null => Nil
+      case handlersNode: ArrayNode => handlersNode.elements.asScala.map { item =>
+        makePortHandler (item.asInstanceOf[ObjectNode])
+      }.toList
+    }
     new PortConfiguration (
       ports,
-      portHandlerClasses
+      portHandlers
     )
+  }
+
+  private def makePortHandler (item: ObjectNode): PortHandler = {
+    val className = item.get ("class").asText ()
+    val cls = Class.forName (className)
+    val params = makeParams (item.get ("params").asInstanceOf[ArrayNode])
+    val ctor = findConstructor (cls, params)
+    ctor.newInstance (params.toArray.asInstanceOf[Array[_ <: Object]]:_*).asInstanceOf[PortHandler]
+  }
+
+  private def makeParams (item: ArrayNode): Seq[Any] = {
+    if (item == null) {return Nil}
+    val params = item.elements ().asScala
+    params.map {param =>
+      param.isIntegralNumber match {
+        case true => param.asInt
+        case false => param.asText match {
+          case v if v.startsWith ("0x") => textToInt (v)
+          case v => v
+        }
+      }
+    }.toSeq
+  }
+
+  private def findConstructor (cls: Class[_], params: Seq[Any]): Constructor[_] = {
+    val availableTypeList = params.map {
+      case c: Integer => Integer.TYPE
+      case c: String => classOf[String]
+      case _ => TEST_DRIVE_ME
+    }
+    cls.getConstructor (availableTypeList.toArray:_*)
   }
 }
 
 case class PortConfiguration (
   ports: Seq[(String, Port)],
-  portHandlerClasses: Seq[Class[PortHandler]]
+  portHandlers: Seq[PortHandler]
 )
 
 object PortMap {
@@ -119,9 +158,10 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
   import PortMap._
 
   private val portsByName: Map[String, Port] = extractPortsByName (configs)
-  private val portsByAddress: Map[Int, Seq[Port]] = groupPortsByAddress (portsByName.map {(p) => p._2}.toList)
+  private val (minPort, maxPort) = findMinMax (portsByName.values.map {_.address})
+  private val portsByAddress: Map[Int, Seq[Port]] = groupPortsByAddress (portsByName.values)
   private val handlersByName: Map[String, PortHandler] = extractHandlersByName (configs)
-  private val handlersByPortName: Map[String, Seq[PortHandler]] = groupHandlersByPortName (handlersByName.map {p => p._2}.toList)
+  private val handlersByPortName: Map[String, Seq[PortHandler]] = groupHandlersByPortName (handlersByName.values)
 
   def handler (name: String): Option[PortHandler] = handlersByName.get (name)
 
@@ -139,6 +179,8 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
   }
 
   def memoryChange (address: Int, oldValue: UnsignedByte, newValue: UnsignedByte): Unit = {
+    if (address < minPort) {return}
+    if (address > maxPort) {return}
     val portsForAddress = portsByAddress.getOrElse (address, Nil)
     val portsAffected = portsForAddress.filter {_.affectedByChange (oldValue, newValue)}
     portsAffected.foreach {port =>
@@ -151,7 +193,22 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     configs.foldLeft (List[(String, Port)] ()) {(soFar, config) => soFar ++ config.ports}.toMap
   }
 
-  private def groupPortsByAddress (ports: Seq[Port]): Map[Int, Seq[Port]] = {
+  private def findMinMax (numbers: Iterable[Int]): (Int, Int) = {
+    numbers.foldLeft ((Integer.MAX_VALUE, Integer.MIN_VALUE)) {(soFar, number) =>
+      val (curMin, curMax) = soFar
+      if (number < curMin) {
+        (number, curMax)
+      }
+      else if (number > curMax) {
+        (curMin, number)
+      }
+      else {
+        soFar
+      }
+    }
+  }
+
+  private def groupPortsByAddress (ports: Iterable[Port]): Map[Int, Seq[Port]] = {
     ports.foldLeft (Map[Int, List[Port]] ()) {(soFar, port) =>
       soFar.get (port.address) match {
         case Some (seq) => soFar + (port.address -> (port :: seq))
@@ -160,12 +217,11 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     }
   }
 
-  private def extractHandlersByName (configs: Seq[PortConfiguration]): Map[String, PortHandler] = {
-    val classes = configs.foldLeft (List[Class[PortHandler]] ()) {(soFar, config) =>
-      soFar ++ config.portHandlerClasses
+  private def extractHandlersByName (configs: Iterable[PortConfiguration]): Map[String, PortHandler] = {
+    val handlers = configs.foldLeft (List[PortHandler] ()) {(soFar, config) =>
+      soFar ++ config.portHandlers
     }
-    classes.map {cls =>
-      val handler = cls.newInstance ()
+    handlers.map {handler =>
       handler.initialize (cpu)
       validatePortHandler (handler, portsByName)
       if (classOf[TickSink].isAssignableFrom (handler.getClass)) {
@@ -175,7 +231,7 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     }.toMap
   }
 
-  private def groupHandlersByPortName (handlers: Seq[PortHandler]): Map[String, Seq[PortHandler]] = {
+  private def groupHandlersByPortName (handlers: Iterable[PortHandler]): Map[String, Seq[PortHandler]] = {
     val portNameHandlerPairs = handlers.foldLeft (Seq[(String, PortHandler)] ()) {(soFar, handler) =>
       soFar ++ handler.portNames.map {(_, handler)}
     }

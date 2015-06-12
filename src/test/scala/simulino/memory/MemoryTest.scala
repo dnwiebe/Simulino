@@ -80,7 +80,7 @@ class MemoryTest extends path.FunSpec {
 
     describe ("given a single data value") {
       val address = 1000
-      subject (address) = 42
+      val prev = (subject (address) = 42)
 
       it ("getData shows the given value surrounded by zeros") {
         assert (subject.getData (address - 2, 5) === unsignedBytes (0, 0, 42, 0, 0))
@@ -90,6 +90,10 @@ class MemoryTest extends path.FunSpec {
         assert (subject(address - 1) === UnsignedByte (0))
         assert (subject(address + 0) === UnsignedByte (42))
         assert (subject(address + 1) === UnsignedByte (0))
+      }
+
+      it ("returns the previous value") {
+        assert (prev === UnsignedByte (0))
       }
     }
 

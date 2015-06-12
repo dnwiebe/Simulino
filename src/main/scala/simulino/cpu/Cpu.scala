@@ -51,7 +51,7 @@ if (address > 0x1000) TEST_DRIVE_ME
     }
   }
 
-  var logInstruction: ExecutionLog => Unit = {log => }
+  var logInstruction: Option[ExecutionLog => Unit] = None
 
   protected def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
     change match {
@@ -71,11 +71,13 @@ if (address > 0x1000) TEST_DRIVE_ME
 
   protected def scheduleInstructionResults (instruction: Instruction[_], tick: Long, events: Seq[Event]): Unit = {
     val tick = engine.currentTick + instruction.latency
-    val comment = events.flatMap {
-      case e: CpuChange[Cpu] => Some (e.mods (this))
-      case e => Some (s"${e.getClass.getSimpleName}")
-    }.mkString ("; ")
-    logInstruction (ExecutionLog (engine.currentTick, ip, instruction.toString, comment))
+    if (logInstruction.isDefined) {
+      val comment = events.flatMap {
+        case e: CpuChange[Cpu] => Some (e.mods (this))
+        case e => Some (s"${e.getClass.getSimpleName}")
+      }.mkString ("; ")
+      logInstruction.get (ExecutionLog (engine.currentTick, ip, instruction.toString, comment))
+    }
     events.foreach {engine.schedule (_, tick)}
   }
 

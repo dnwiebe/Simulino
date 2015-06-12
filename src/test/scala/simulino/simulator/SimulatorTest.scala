@@ -144,8 +144,8 @@ class SimulatorTest extends path.FunSpec {
         subject.setExecutionLogger (logger)
 
         describe ("and the CPU's logger is called a couple of times") {
-          subject.cpu.logInstruction (ExecutionLog (1, 2, "3", "4"))
-          subject.cpu.logInstruction (ExecutionLog (5, 6, "7", "8"))
+          subject.cpu.logInstruction.get (ExecutionLog (1, 2, "3", "4"))
+          subject.cpu.logInstruction.get (ExecutionLog (5, 6, "7", "8"))
 
           it ("the provided logger is called") {
             assert (recording.toList === List (
