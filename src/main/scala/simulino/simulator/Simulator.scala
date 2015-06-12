@@ -45,8 +45,8 @@ class Simulator (configuration: SimulatorConfiguration) {
     engine.addSubscriber (subscriber)
   }
 
-  def addPinSampler (sampler: PinSampler): Unit = {
-    cpu.addPinSampler (sampler)
+  def pinSampler (boardPin: String): PinSampler = {
+    TEST_DRIVE_ME
   }
 
   def setExecutionLogger (logger: ExecutionLog => Unit) = {
@@ -58,7 +58,7 @@ class Simulator (configuration: SimulatorConfiguration) {
   }
 
   def runForTicks (ticks: Long): Unit = {
-    var mutableTicks = ticks;
+    var mutableTicks = ticks
     while (mutableTicks > 0) {
       engine.tick ()
       mutableTicks -= 1L

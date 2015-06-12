@@ -23,8 +23,6 @@ trait Cpu extends Subscriber {
     _ip = newIp
   }
 
-  def addPinSampler (sampler: PinSampler): Unit = {}
-
   override def receive: PartialFunction[Event, Unit] = {
     class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
       override def isDefinedAt (event: Event): Boolean = {

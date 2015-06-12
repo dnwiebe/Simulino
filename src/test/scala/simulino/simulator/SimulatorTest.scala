@@ -25,7 +25,6 @@ class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuCon
   var pinSamplerAdded: Option[PinSampler] = None
   when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
   when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))
-  override def addPinSampler (sampler: PinSampler): Unit = {pinSamplerAdded = Some (sampler)}
 }
 
 class ExecutionLogTest extends path.FunSpec {
@@ -85,15 +84,6 @@ class SimulatorTest extends path.FunSpec {
 
       it ("has a different ID") {
         assert (subject.id != another.id)
-      }
-    }
-
-    describe ("when a pin sampler is added") {
-      val sampler = mock (classOf[PinSampler])
-      subject.addPinSampler(sampler)
-
-      it ("delegates to the cpu") {
-        assert (subject.cpu.asInstanceOf[TestCpu].pinSamplerAdded.get === sampler)
       }
     }
 

@@ -4,15 +4,15 @@
     "program": 262144,
     "persistent": 4096
   },
-  "pinNames": [
-    {"pin": 10, "name": "PORTB4"},
-    {"pin": 11, "name": "PORTB5"},
-    {"pin": 12, "name": "PORTB6"},
-    {"pin": 13, "name": "PORTB7"},
-    {"pin": 50, "name": "PORTB3"},
-    {"pin": 51, "name": "PORTB2"},
-    {"pin": 52, "name": "PORTB1"},
-    {"pin": 53, "name": "PORTB0"}
+  "pinMap": [
+    {"boardPin": "D10", "chipPin": "PB4"},
+    {"boardPin": "D11", "chipPin": "PB5"},
+    {"boardPin": "D12", "chipPin": "PB6"},
+    {"boardPin": "D13", "chipPin": "PB7"},
+    {"boardPin": "D50", "chipPin": "PB3"},
+    {"boardPin": "D51", "chipPin": "PB2"},
+    {"boardPin": "D52", "chipPin": "PB1"},
+    {"boardPin": "D53", "chipPin": "PB0"}
   ],
   "cpu": {
     "clockSpeed": 16000000,

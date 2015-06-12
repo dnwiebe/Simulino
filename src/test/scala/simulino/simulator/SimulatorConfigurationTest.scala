@@ -23,6 +23,10 @@ class SimulatorConfigurationTest extends path.FunSpec {
       | "memory": {
       |   "program": 1234
       | },
+      | "pinMap": [
+      |   {"boardPin": "Murray", "chipPin": "Rothbard"},
+      |   {"boardPin": "Frank", "chipPin": "Chodorov"}
+      | ],
       | "cpu": {
       |   "clockSpeed": 16000000,
       |   "class": "${classOf[TestCpu].getName}",
@@ -36,6 +40,13 @@ class SimulatorConfigurationTest extends path.FunSpec {
 
     it ("has the expected memory size") {
       assert (subject.memory.programSize === 1234)
+    }
+
+    it ("has the expected pin map") {
+      assert (subject.chipPinFor ("Rothbard") === "Murray")
+      assert (subject.chipPinFor ("Chodorov") === "Frank")
+      assert (subject.boardPinFor ("Murray") === "Rothbard")
+      assert (subject.boardPinFor ("Frank") === "Chodorov")
     }
 
     it ("has the expected CPU attributes") {
