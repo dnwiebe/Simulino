@@ -64,6 +64,10 @@ trait PortHandler {
     cpu.portMap.readFromPort (name)
   }
 
+  protected def showVoltageAtPin (chipPin: String, voltage: Option[Double]) {
+    cpu.showVoltageAtPin (chipPin, voltage)
+  }
+
   protected def raiseInterrupt (name: String): Unit = {
     cpu.raiseInterrupt (name)
   }

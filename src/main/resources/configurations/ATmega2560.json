@@ -67,14 +67,8 @@
           {"name": "PINB0", "address": "0x23", "lowBit": 0, "bitLength": 1, "direction": "O"}
         ],
         "portHandlers": [
-          {
-            "class": "simulino.cpu.arch.avr.peripheral.PinPortHandler",
-            "params": ["B"]
-          },
-          {
-            "class": "simulino.cpu.arch.avr.peripheral.TimerCounter0Handler",
-            "params": []
-          }
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 7]},
+          {"class": "simulino.cpu.arch.avr.peripheral.TimerCounter0Handler", "params": []}
         ]
       },
       "interruptVectors": [

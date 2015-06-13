@@ -26,7 +26,7 @@ case class ExecutionLog (
 
 class Simulator (configuration: SimulatorConfiguration) {
   var engine = new Engine ()
-  val cpu = prepareCpu (configuration.cpu)
+  var cpu = prepareCpu (configuration.cpu)
   var logHandler: ExecutionLog => Unit = {log => }
 
   def id = System.identityHashCode(this)
@@ -46,7 +46,7 @@ class Simulator (configuration: SimulatorConfiguration) {
   }
 
   def pinSampler (boardPin: String): PinSampler = {
-    TEST_DRIVE_ME
+    cpu.pinSampler (configuration.chipPinFor (boardPin))
   }
 
   def setExecutionLogger (logger: ExecutionLog => Unit) = {

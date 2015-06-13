@@ -1,48 +1,52 @@
 package simulino.simulator.peripheral
 
-import org.mockito.Mockito._
 import org.scalatest.path
-import simulino.simulator.{CpuConfiguration, SimulatorConfiguration}
-import simulino.simulator.events.PinVoltageChange
 
 /**
  * Created by dnwiebe on 5/11/15.
  */
 class PinSamplerTest extends path.FunSpec {
   describe ("A PinSampler") {
-    val cpuConfig = mock (classOf[CpuConfiguration])
-    when (cpuConfig.clockSpeed).thenReturn (1000)
-    val subject = new PinSampler (42, new SimulatorConfiguration(cpu = cpuConfig))
+    val subject = new PinSampler (1000)
 
-    describe ("given a couple of events for it and a couple for something else") {
-      subject.receive (new PinVoltageChange(3000, 42, 2.25))
-      subject.receive (new PinVoltageChange(140, 43, 1.125))
-      subject.receive (new PinVoltageChange(1000, 42, 4.5))
-      subject.receive (new PinVoltageChange(1100, 41, 0.0))
-      subject.receive (new PinVoltageChange(2000, 42, 3.75))
+    describe ("without any samples") {
+      it ("shows tri-state everywhere") {
+        assert (subject.sampleAtTick (-1000L) === None)
+        assert (subject.sampleAtTick (0L) === None)
+        assert (subject.sampleAtTick (1000L) === None)
+      }
+    }
 
-      it ("receives the ones intended for it and ignores the others") {
-        assert (subject.sampleAtTick (0) === 0.0)
-        assert (subject.sampleAtTick (140) === 0.0)
-        assert (subject.sampleAtTick (999) === 0.0)
-        assert (subject.sampleAtTick (1000) === 4.5)
-        assert (subject.sampleAtTick (1100) === 4.5)
-        assert (subject.sampleAtTick (1999) === 4.5)
-        assert (subject.sampleAtTick (2000) === 3.75)
-        assert (subject.sampleAtTick (2999) === 3.75)
-        assert (subject.sampleAtTick (3000) === 2.25)
+    describe ("given a couple of samples") {
+      subject.addSample (3000, Some (2.25))
+      subject.addSample (1000, Some (4.5))
+      subject.addSample (2000, Some (3.75))
+      subject.addSample (1500, None)
+
+      it ("shows the expected waveform") {
+        assert (subject.sampleAtTick (0) === None)
+        assert (subject.sampleAtTick (140) === None)
+        assert (subject.sampleAtTick (999) === None)
+        assert (subject.sampleAtTick (1000) === Some (4.5))
+        assert (subject.sampleAtTick (1499) === Some (4.5))
+        assert (subject.sampleAtTick (1500) === None)
+        assert (subject.sampleAtTick (1999) === None)
+        assert (subject.sampleAtTick (2000) === Some (3.75))
+        assert (subject.sampleAtTick (2999) === Some (3.75))
+        assert (subject.sampleAtTick (3000) === Some (2.25))
       }
     }
 
     describe ("given a rising edge at the one-second mark") {
-      subject.receive (new PinVoltageChange (1000, 42, 5.00))
+      subject.addSample (0, Some (0.00))
+      subject.addSample (1000, Some (5.00))
 
       it ("shows zero juuuust before 1s") {
-        assert (subject.sampleAtSecond (0.9999999) === 0.0)
+        assert (subject.sampleAtSecond (0.9999999) === Some (0.0))
       }
 
-      it ("shows zero juuuust after 1s") {
-        assert (subject.sampleAtSecond (1.0000001) === 5.0)
+      it ("shows voltage juuuust after 1s") {
+        assert (subject.sampleAtSecond (1.0000001) === Some (5.0))
       }
     }
   }

@@ -22,7 +22,6 @@ import scala.collection.mutable.ListBuffer
 class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
   val instructionSet = mock (classOf[InstructionSet[TestCpu]])
   val instruction = mock (classOf[Instruction[TestCpu]])
-  var pinSamplerAdded: Option[PinSampler] = None
   when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
   when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))
 }
@@ -73,6 +72,7 @@ class SimulatorTest extends path.FunSpec {
   val cpuNode = mapper.readTree (istr)
   val configuration = new SimulatorConfiguration (
     memory = new MemoryConfiguration (1024),
+    chipPinFor = Map ("Board Pin" -> "Chip Pin"),
     cpu = new CpuConfiguration (clockSpeed = 1000, cls = classOf[TestCpu], classSpecific = cpuNode)
   )
 
@@ -109,6 +109,18 @@ class SimulatorTest extends path.FunSpec {
 
         it ("responds with zeros") {
           assert (result === (0 until 16).map { i => UnsignedByte (0) }.toArray)
+        }
+      }
+
+      describe ("when directed to provide a PinSampler") {
+        val cpu = mock (classOf[Cpu])
+        val expected = new PinSampler (1000)
+        when (cpu.pinSampler ("Chip Pin")).thenReturn (expected)
+        subject.cpu = cpu
+        val result = subject.pinSampler ("Board Pin")
+
+        it ("passes the buck to its cpu") {
+          assert (result === expected)
         }
       }
     }

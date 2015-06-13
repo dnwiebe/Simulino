@@ -7,6 +7,7 @@ import org.mockito.Matchers._
 import simulino.cpu.arch.avr.ATmega.NOP
 import simulino.engine.{Event, Engine}
 import simulino.memory.{UnsignedByte, Memory}
+import simulino.simulator.CpuConfiguration
 
 /**
  * Created by dnwiebe on 5/11/15.
@@ -15,7 +16,7 @@ class CpuTest extends path.FunSpec {
   describe ("A Cpu") {
     class TestCpu (val engine: Engine) extends Cpu {
       val programMemory = new Memory (2000)
-      val config = null
+      val config = new CpuConfiguration(16000000, classOf[TestCpu], null)
       val instruction = mock (classOf[Instruction[TestCpu]])
       when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
       val instructionSet = new InstructionSet[TestCpu] () {
@@ -27,6 +28,48 @@ class CpuTest extends path.FunSpec {
 
     it ("starts with 0 in the IP") {
       assert (subject.ip === 0)
+    }
+
+    describe ("directed to produce a couple of pin samplers") {
+      val oneSampler = subject.pinSampler ("one")
+      val anotherSampler = subject.pinSampler ("another")
+      val anotherAnotherSampler = subject.pinSampler ("another")
+      when (engine.currentTick).thenReturn (1000)
+
+      it ("they have the proper clock speed") {
+        assert (oneSampler.clockSpeed === 16000000)
+        assert (anotherSampler.clockSpeed === 16000000)
+        assert (anotherAnotherSampler.clockSpeed === 16000000)
+      }
+
+      describe ("and stimulated on one pin") {
+        subject.showVoltageAtPin ("one", Some (2.0))
+
+        it ("shows the voltage change on that pin") {
+          assert (oneSampler.sampleAtTick (999) === None)
+          assert (oneSampler.sampleAtTick (1000) === Some (2.0))
+        }
+
+        it ("does not show the voltage change on the other") {
+          assert (anotherSampler.sampleAtTick (1000) === None)
+          assert (anotherAnotherSampler.sampleAtTick (1000) === None)
+        }
+      }
+
+      describe ("and stimulated on another pin") {
+        subject.showVoltageAtPin ("another", Some (2.0))
+
+        it ("shows the voltage change on the other pin") {
+          assert (anotherSampler.sampleAtTick (999) === None)
+          assert (anotherSampler.sampleAtTick (1000) === Some (2.0))
+          assert (anotherAnotherSampler.sampleAtTick (999) === None)
+          assert (anotherAnotherSampler.sampleAtTick (1000) === Some (2.0))
+        }
+
+        it ("does not show the voltage change on the one pin") {
+          assert (oneSampler.sampleAtTick (1000) === None)
+        }
+      }
     }
 
     describe ("given an Instruction") {

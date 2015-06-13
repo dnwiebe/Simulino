@@ -43,10 +43,10 @@ class SimulatorConfigurationTest extends path.FunSpec {
     }
 
     it ("has the expected pin map") {
-      assert (subject.chipPinFor ("Rothbard") === "Murray")
-      assert (subject.chipPinFor ("Chodorov") === "Frank")
-      assert (subject.boardPinFor ("Murray") === "Rothbard")
-      assert (subject.boardPinFor ("Frank") === "Chodorov")
+      assert (subject.boardPinFor ("Rothbard") === "Murray")
+      assert (subject.boardPinFor ("Chodorov") === "Frank")
+      assert (subject.chipPinFor ("Murray") === "Rothbard")
+      assert (subject.chipPinFor ("Frank") === "Chodorov")
     }
 
     it ("has the expected CPU attributes") {

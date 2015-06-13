@@ -10,30 +10,24 @@ import scala.collection.mutable.ListBuffer
 /**
  * Created by dnwiebe on 5/10/15.
  */
-class PinSampler (val pinNumber: Int, configuration: SimulatorConfiguration) extends Subscriber {
+class PinSampler (val clockSpeed: Int) {
 
-  private case class Change (tick: Long, voltage: Double)
-
+  private case class Change (tick: Long, voltage: Option[Double])
   private val samples = new ListBuffer[Change] ()
 
-  override def receive = {
-    case PinVoltageChange (tick, pin, voltage) if pin == pinNumber => addChange (tick, voltage)
-    case _ =>
-  }
-
-  def sampleAtSecond (second: Double): Double = {
-    val tick = (second * configuration.cpu.clockSpeed).toLong
+  def sampleAtSecond (second: Double): Option[Double] = {
+    val tick = (second * clockSpeed).toLong
     sampleAtTick (tick)
   }
 
-  def sampleAtTick (tick: Long): Double = {
+  def sampleAtTick (tick: Long): Option[Double] = {
     (0 until samples.length).find {samples (_).tick <= tick} match {
-      case None => 0.0
+      case None => None
       case Some (idx) => samples (idx).voltage
     }
   }
 
-  private def addChange (tick: Long, voltage: Double): Unit = {
+  def addSample (tick: Long, voltage: Option[Double]): Unit = {
     (0 until samples.length).find {samples (_).tick <= tick} match {
       case None => samples.append (Change (tick, voltage))
       case Some (idx) => samples.insert (idx, Change (tick, voltage))

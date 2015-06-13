@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.scalatest.path
 import org.mockito.Mockito._
 import org.mockito.Matchers
+import simulino.cpu.Cpu
 import simulino.cpu.arch.avr.ATmega.PortType._
 import simulino.memory.{UnsignedByte, Memory}
 import simulino.utils.TestUtils._
@@ -46,6 +47,16 @@ class PortMapTest extends path.FunSpec {
       val ports = Map ("ER" -> Port ("ER", 1000, 0, 8, Input), "EL" -> Port ("EL", 1001, 0, 8, Input))
       it ("when validated doesn't throw anything") {
         PortMap.validatePortHandler (handler, ports)
+      }
+
+      describe ("when directed to show a voltage on a pin") {
+        val cpu = mock (classOf[AvrCpu])
+        handler.initialize (cpu)
+        handler.showVoltageAtPin ("BOBBY", Some (14.5))
+
+        it ("passes the buck to the Cpu") {
+          verify (cpu).showVoltageAtPin ("BOBBY", Some (14.5))
+        }
       }
     }
   }
@@ -274,6 +285,10 @@ class SleepDetector () extends PortHandler {
       case "EL" => Changes.changes += "Checking left eye"; leftEyeClosed = (newValue == 0)
       case "ER" => Changes.changes += "Checking right eye"; rightEyeClosed = (newValue == 0)
     }
+  }
+
+  override def showVoltageAtPin (chipPin: String, voltage: Option[Double]): Unit = {
+    super.showVoltageAtPin (chipPin, voltage)
   }
 
   def isAsleep = leftEyeClosed && rightEyeClosed

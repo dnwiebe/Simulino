@@ -1,30 +1,66 @@
 package simulino.cpu.arch.avr.peripheral
 
+import org.mockito.Matchers
 import org.scalatest.path
 import org.mockito.Mockito._
-import simulino.cpu.arch.avr.AvrCpu
+import simulino.cpu.arch.avr.{PortMap, AvrCpu}
 
 /**
  * Created by dnwiebe on 6/12/15.
  */
 class PinPortHandlerTest extends path.FunSpec {
   describe ("A PinPortHandler") {
-    val subject = new PinPortHandler ("X")
+    val subject = new PinPortHandler ("X", 3)
 
     it ("has the right name") {
-      assert (subject.name === "Port X")
+      assert (subject.name === "Port X3")
     }
 
     it ("requests the correct ports") {
-      val expectedPortNames = (0 until 7).foldLeft (Set[String] ()) {(soFar, idx) =>
-        soFar + s"PINX${idx}" + s"DDX${idx}" + s"PORTX${idx}"
-      }
-      assert (subject.portNames.toSet === expectedPortNames)
+      assert (subject.portNames.toSet === Set ("DDX3", "PORTX3", "PINX3"))
     }
 
-    describe ("given a mock AvrCpu") {
+    describe ("given a mock AvrCpu and PortMap") {
       val cpu = mock (classOf[AvrCpu])
+      val portMap = mock (classOf[PortMap])
+      when (cpu.portMap).thenReturn (portMap)
       subject.initialize (cpu)
+
+      describe ("if configured as an output") {
+        subject.acceptChange ("DDX3", 0, 1)
+
+        describe ("and a new one written to the port bit") {
+          subject.acceptChange ("PORTX3", 0, 1)
+
+          it ("the pin is set high") {
+            verify (cpu).showVoltageAtPin("PX3", Some (5.0))
+          }
+        }
+
+        describe ("and a one rewritten to the port bit") {
+          subject.acceptChange ("PORTX3", 1, 1)
+
+          it ("nothing changes") {
+            verify (cpu, never).showVoltageAtPin(Matchers.any (classOf[String]), Matchers.any (classOf[Option[Double]]))
+          }
+        }
+
+        describe ("and a new zero written to the port bit") {
+          subject.acceptChange ("PORTX3", 1, 0)
+
+          it ("the pin is set low") {
+            verify (cpu).showVoltageAtPin("PX3", Some (0.0))
+          }
+        }
+
+        describe ("and a zero rewritten to the port bit") {
+          subject.acceptChange ("PORTX3", 0, 0)
+
+          it ("nothing changes") {
+            verify (cpu, never).showVoltageAtPin(Matchers.any (classOf[String]), Matchers.any (classOf[Option[Double]]))
+          }
+        }
+      }
     }
   }
 }

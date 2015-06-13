@@ -15,6 +15,7 @@ trait Cpu extends Subscriber {
   val config: CpuConfiguration
   val programMemory: Memory
   val instructionSet: InstructionSet[_]
+  var pinSamplers = Map[String, PinSampler] ()
 
   private var _ip = 0
 
@@ -40,12 +41,28 @@ trait Cpu extends Subscriber {
   }
 
   def instructionAt (address: Int): Instruction[_] = {
-if (address > 0x1000) TEST_DRIVE_ME
     val data = programMemory.getData (address, 4)
     val instructionOpt = instructionSet (data)
     instructionOpt match {
       case None => throw new UnsupportedOperationException (s"${getClass.getSimpleName} could not parse instruction at ${toHex (ip, 6)} from ${data.map {toHex (_, 2)}.mkString (" ")}")
       case Some (i) => i
+    }
+  }
+
+  def showVoltageAtPin (chipPin: String, voltage: Option[Double]) = {
+    pinSamplers.get (chipPin) match {
+      case Some (ps) => ps.addSample (engine.currentTick, voltage)
+      case None =>
+    }
+  }
+
+  def pinSampler (chipPin: String): PinSampler = {
+    if (pinSamplers.contains (chipPin)) {
+      pinSamplers (chipPin)
+    }
+    else {
+      pinSamplers = pinSamplers + (chipPin -> new PinSampler (config.clockSpeed))
+      pinSampler (chipPin)
     }
   }
 

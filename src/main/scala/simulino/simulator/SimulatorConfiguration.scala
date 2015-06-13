@@ -65,7 +65,7 @@ case object SimulatorConfiguration {
         val pairNode = subnode.asInstanceOf[ObjectNode]
         val boardPin = pairNode.get ("boardPin").asText
         val chipPin = pairNode.get ("chipPin").asText
-        ((boardPin, chipPin) :: boardPinFor, (chipPin, boardPin) :: chipPinFor)
+        ((chipPin, boardPin) :: boardPinFor, (boardPin, chipPin) :: chipPinFor)
       }
       (pairsPair._1.toMap, pairsPair._2.toMap)
     }
