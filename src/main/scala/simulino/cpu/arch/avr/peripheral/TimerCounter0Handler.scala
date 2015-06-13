@@ -28,7 +28,9 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {
     portName match {
       case "TOV0" => clearWithOne (portName, newValue)
-      case _ =>
+      case "WGM0" => // TODO
+      case "TOIE0" => // TODO
+      case _ => println (s"\n\nChange to unimplemented port: ${portName}\n\n"); TEST_DRIVE_ME
     }
   }
 

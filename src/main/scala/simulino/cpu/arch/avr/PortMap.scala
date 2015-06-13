@@ -189,7 +189,13 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     val portsAffected = portsForAddress.filter {_.affectedByChange (oldValue, newValue)}
     portsAffected.foreach {port =>
       val handlersAffected = handlersByPortName.getOrElse (port.name, Nil)
-      handlersAffected.foreach {_.acceptChange (port.name, oldValue, newValue)}
+      handlersAffected.foreach {handler =>
+        val mask = (1 << port.bitLength) - 1
+        val rshift = port.lowBit
+        val ov = (oldValue >> rshift) & mask
+        val nv = (newValue >> rshift) & mask
+        handler.acceptChange (port.name, ov, nv)
+      }
     }
   }
 

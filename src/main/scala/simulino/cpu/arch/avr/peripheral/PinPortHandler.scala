@@ -28,6 +28,8 @@ class PinPortHandler (suffix: String, bit: Int) extends PortHandler {
   }
 
   private def acceptDataDirectionChange (oldValue: Int, newValue: Int): Unit = {
-    if (newValue != 1) {TEST_DRIVE_ME}
+    if (newValue != 1) {
+      TEST_DRIVE_ME
+    }
   }
 }
