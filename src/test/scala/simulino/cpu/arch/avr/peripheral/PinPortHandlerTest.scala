@@ -61,6 +61,42 @@ class PinPortHandlerTest extends path.FunSpec {
           }
         }
       }
+
+      describe ("if configured as an input") {
+        subject.acceptChange ("DDX3", 1, 0)
+
+        describe ("and a new one written to the port bit to turn on the pull-up resistor") {
+          subject.acceptChange ("PORTX3", 0, 1)
+
+          it ("the pin is set high") {
+            verify (cpu).showVoltageAtPin("PX3", Some (5.0))
+          }
+        }
+
+        describe ("and a one rewritten to the port bit") {
+          subject.acceptChange ("PORTX3", 1, 1)
+
+          it ("nothing changes") {
+            verify (cpu, never).showVoltageAtPin(Matchers.any (classOf[String]), Matchers.any (classOf[Option[Double]]))
+          }
+        }
+
+        describe ("and a new zero written to the port bit to turn off the pull-up resistor") {
+          subject.acceptChange ("PORTX3", 1, 0)
+
+          it ("the pin is tri-stated") {
+            verify (cpu).showVoltageAtPin("PX3", None)
+          }
+        }
+
+        describe ("and a zero rewritten to the port bit") {
+          subject.acceptChange ("PORTX3", 0, 0)
+
+          it ("nothing changes") {
+            verify (cpu, never).showVoltageAtPin(Matchers.any (classOf[String]), Matchers.any (classOf[Option[Double]]))
+          }
+        }
+      }
     }
   }
 }

@@ -13,6 +13,7 @@ class PinPortHandler (suffix: String, bit: Int) extends PortHandler {
   val PINName = s"PIN${suffix}${bit}"
   val chipPinName = s"P${suffix}${bit}"
   override val portNames = List (DDName, PORTName, PINName)
+  private var isInput = true
 
   override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {
     portName match {
@@ -24,12 +25,15 @@ class PinPortHandler (suffix: String, bit: Int) extends PortHandler {
 
   private def acceptPortChange (oldValue: Int, newValue: Int): Unit = {
     if (newValue == oldValue) {return}
-    showVoltageAtPin (chipPinName, if (newValue == 0) Some (0.0) else Some (5.0))
+    val voltage = (newValue, isInput) match {
+      case (1, _) => Some (5.0)
+      case (0, false) => Some (0.0)
+      case (0, true) => None
+    }
+    showVoltageAtPin (chipPinName, voltage)
   }
 
   private def acceptDataDirectionChange (oldValue: Int, newValue: Int): Unit = {
-    if (newValue != 1) {
-      TEST_DRIVE_ME
-    }
+    isInput = newValue == 0
   }
 }
