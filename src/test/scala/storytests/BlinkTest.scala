@@ -20,14 +20,15 @@ class BlinkTest extends path.FunSpec {
       describe ("and hooked to digital pin 13") {
         val sampler = subject.pinSampler ("D13")
 
-        describe ("and run for three seconds") {
+        describe ("and run for three hundredths of a second") {
           pending
-          subject.runForSeconds (3.0)
+          subject.runForSeconds (0.030)
 
           it ("shows pin 13 going on and off appropriately") {
-            assert (sampler.sampleAtSecond (0.5) === 5.0)
-            assert (sampler.sampleAtSecond (1.5) === 0.0)
-            assert (sampler.sampleAtSecond (2.5) === 5.0)
+println (s"\n\nBlink history:\n${sampler.history}\n\n")
+            assert (sampler.sampleAtSecond (0.005) === 5.0)
+            assert (sampler.sampleAtSecond (0.015) === 0.0)
+            assert (sampler.sampleAtSecond (0.025) === 5.0)
           }
         }
       }

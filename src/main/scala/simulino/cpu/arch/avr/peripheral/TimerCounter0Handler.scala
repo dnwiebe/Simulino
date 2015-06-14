@@ -9,12 +9,14 @@ import simulino.utils.Utils._
  */
 class TimerCounter0Handler extends PortHandler with TickSink {
   override val name = s"Timer/Counter 0"
-  override val portNames = List ("WGM02", "WGM0", "COM0A", "TCNT0", "TOV0", "OCR0A", "TOIE0", "OCIE0A", "OCIE0B")
+  override val portNames = List ("WGM02", "WGM0", "COM0A", "COM0B", "TCNT0", "TOV0", "OCR0A", "TOIE0",
+    "OCIE0A", "OCIE0B", "CS0", "FOC0A", "FOC0B")
 
   override def tick (count: Long): Unit = {
     if (readFromPort ("OCIE0A") > 0) {TEST_DRIVE_ME}
     if (readFromPort ("OCIE0B") > 0) {TEST_DRIVE_ME}
     if (readFromPort ("COM0A") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("COM0B") > 0) {TEST_DRIVE_ME}
     val newCounter = WGM match {
       case 0 => normalMode ()
       case 2 => clearTimerOnCompareMatchMode ()
@@ -29,7 +31,15 @@ class TimerCounter0Handler extends PortHandler with TickSink {
     portName match {
       case "TOV0" => clearWithOne (portName, newValue)
       case "WGM0" => // TODO
+      case "WGM02" => // TODO
       case "TOIE0" => // TODO
+      case "CS0" => // TODO
+      case "COM0A" => // TODO
+      case "COM0B" => // TODO
+      case "FOC0A" => // TODO
+      case "FOC0B" => // TODO
+      case "OCIE0A" => // TODO
+      case "OCIE0B" => // TODO
       case _ => println (s"\n\nChange to unimplemented port: ${portName}\n\n"); TEST_DRIVE_ME
     }
   }

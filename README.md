@@ -44,21 +44,21 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 6/8/2015
+Updated 6/14/2015
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-The necessary instructions seem to have been implemented, but there's a framing error somewhere and the CPU is
-running away.  Gonna figure out why. Then I'll find an OUT to port $05 or a write to memory location $25, which is 
-PORTB, bit 7 of which controls pin 13, which is where the LED is, and make `PortHandler`s for the `PORT`xs.
+Looks like we have to implement the Prescaler and finish TimerCounter0Handler and PinPortHandler.
 
 ### Prioritized Backlog
-Updated 6/8/2015
+Updated 6/14/2015
 
 1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
 
 1. `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
 be optimized a little.
+
+1. Currently, Vcc is hardcoded at 5.0V.  That's a problem; it should be part of the configuration.
 
 1. For instructions that set status flags, the flag-setting code is pretty much copied directly from the AVR datasheet,
 and there are significant opportunities for factoring out duplication, which would also make testing significantly
@@ -83,3 +83,6 @@ that change the IP by some amount other than the length of the instruction.
 1. Code for the instructions needs to be a permanent part of Simulino, of course, or at the very least in a linked-in
 `.jar` file, but the question of which instructions are active members of the instruction set should be answered by 
 configuration information in the JSON file loaded when the `Simulator` object is constructed.
+
+1. There are some serious performance issues here.  A simulated second requires two or three real minutes.  Profile
+the code and see where it can be optimized.

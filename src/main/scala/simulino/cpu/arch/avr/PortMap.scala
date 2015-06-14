@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.{ObjectNode, ArrayNode}
 import simulino.cpu.arch.avr.ATmega.PortType
 import simulino.engine.TickSink
 import simulino.memory.{UnsignedByte, Memory}
+import simulino.cpu.arch.avr.RegisterNames._
 import simulino.utils.Utils._
 import scala.collection.JavaConverters._
 
@@ -20,10 +21,6 @@ trait Subscriber {
 
 case class Port (name: String, address: Int, lowBit: Int, bitLength: Int, direction: PortType) {
   private val mask = ((1 << bitLength) - 1) << lowBit
-
-  def affectedByChange (oldValue: UnsignedByte, newValue: UnsignedByte): Boolean = {
-    (oldValue.value & mask) != (newValue.value & mask)
-  }
 
   def read (byte: UnsignedByte): Int = {
     (byte.value & mask) >> lowBit
@@ -186,9 +183,14 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
     if (address < minPort) {return}
     if (address > maxPort) {return}
     val portsForAddress = portsByAddress.getOrElse (address, Nil)
-    val portsAffected = portsForAddress.filter {_.affectedByChange (oldValue, newValue)}
-    portsAffected.foreach {port =>
+if (portsForAddress.isEmpty && !Set (SREG, SPH, SPL, RAMPX, RAMPY, RAMPZ, 0x5C).contains (address)) {
+  throw new UnsupportedOperationException (s"Write ($$${toHex (address, 2)}): $$${toHex (oldValue, 2)} -> $$${toHex (newValue, 2)} to unknown port")
+}
+    portsForAddress.foreach {port =>
       val handlersAffected = handlersByPortName.getOrElse (port.name, Nil)
+if (handlersAffected.isEmpty && !Set ("EIND").contains (port.name)) {
+  throw new UnsupportedOperationException (s"Write to port ${port.name} ignored by all handlers")
+}
       handlersAffected.foreach {handler =>
         val mask = (1 << port.bitLength) - 1
         val rshift = port.lowBit

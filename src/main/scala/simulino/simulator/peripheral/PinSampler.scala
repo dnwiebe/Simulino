@@ -12,7 +12,7 @@ import scala.collection.mutable.ListBuffer
  */
 class PinSampler (val clockSpeed: Int) {
 
-  private case class Change (tick: Long, voltage: Option[Double])
+  case class Change (tick: Long, voltage: Option[Double])
   private val samples = new ListBuffer[Change] ()
 
   def sampleAtSecond (second: Double): Option[Double] = {
@@ -26,6 +26,8 @@ class PinSampler (val clockSpeed: Int) {
       case Some (idx) => samples (idx).voltage
     }
   }
+
+  def history: List[Change] = samples.toList.reverse
 
   def addSample (tick: Long, voltage: Option[Double]): Unit = {
     (0 until samples.length).find {samples (_).tick <= tick} match {

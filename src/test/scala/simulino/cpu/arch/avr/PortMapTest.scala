@@ -153,8 +153,8 @@ class PortMapTest extends path.FunSpec {
             Changes.changes.clear ()
             subject.memoryChange (4660, 0x08, 0x00)
 
-            it ("produces one change") {
-              assert (Changes.changes.toList === List ("Checking right eye"))
+            it ("produces two Change events") {
+              assert (Changes.changes.toList === List ("Checking left eye", "Checking right eye"))
             }
 
             it ("results in right eye closed") {

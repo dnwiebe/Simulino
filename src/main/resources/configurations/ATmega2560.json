@@ -68,6 +68,13 @@
         ],
         "portHandlers": [
           {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 7]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 6]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 5]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 4]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 3]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 2]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 1]},
+          {"class": "simulino.cpu.arch.avr.peripheral.PinPortHandler", "params": ["B", 0]},
           {"class": "simulino.cpu.arch.avr.peripheral.TimerCounter0Handler", "params": []}
         ]
       },
