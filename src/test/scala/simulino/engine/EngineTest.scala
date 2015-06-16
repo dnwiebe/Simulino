@@ -28,6 +28,19 @@ class EngineTest extends path.FunSpec {
           verify (tickSink).tick (0L)
           verify (tickSink).tick (1L)
         }
+
+        describe ("and with the TickSink removed") {
+          subject.removeTickSink (tickSink)
+
+          describe ("and ticked over twice") {
+            subject.tick ()
+            subject.tick ()
+
+            it ("the TickSink has still only been ticked twice") {
+              verify (tickSink, times (2)).tick (Matchers.anyLong ())
+            }
+          }
+        }
       }
     }
 

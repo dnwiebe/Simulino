@@ -4,6 +4,7 @@ import org.mockito.Matchers
 import org.scalatest.path
 import simulino.cpu.arch.avr.{AvrCpu, PortMap}
 import org.mockito.Mockito._
+import simulino.engine.Engine
 
 /**
  * Created by dnwiebe on 5/25/15.
@@ -13,8 +14,16 @@ class TimerCounter0HandlerTest extends path.FunSpec {
     val cpu = mock (classOf[AvrCpu])
     val portMap = mock (classOf[PortMap])
     when (cpu.portMap).thenReturn (portMap)
+    val engine = mock (classOf[Engine])
+    when (cpu.engine).thenReturn (engine)
+    val prescaler = mock (classOf[Prescaler])
+    when (cpu.prescaler).thenReturn (prescaler)
     val subject = new TimerCounter0Handler ()
     subject.initialize (cpu)
+
+    it ("immediately removes itself as a tick sink upon initialization") {
+      verify (engine).removeTickSink (subject)
+    }
 
     describe ("when a 1 is written to TOV0") {
       subject.acceptChange ("TOV0", 0, 1)
@@ -33,6 +42,62 @@ class TimerCounter0HandlerTest extends path.FunSpec {
 
         it ("the result is cobbled together properly") {
           assert (result === 5)
+        }
+      }
+    }
+
+    describe ("when received is a CS0 value") {
+      describe ("of 000b, meaning no clock source") {
+        subject.acceptChange ("CS0", -1, 0)
+
+        it ("removes itself from engine and prescaler") {
+          verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
+        }
+      }
+
+      describe ("of 001b, meaning no prescaling") {
+        subject.acceptChange ("CS0", -1, 1)
+
+        it ("removes itself from the prescaler and subscribes to the engine") {
+          verify (engine).addTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
+        }
+      }
+
+      describe ("of 010b, meaning 8x prescaling") {
+        subject.acceptChange ("CS0", -1, 2)
+
+        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+          verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).addSubscriber (subject, 8)
+        }
+      }
+
+      describe ("of 011b, meaning 64x prescaling") {
+        subject.acceptChange ("CS0", -1, 3)
+
+        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+          verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).addSubscriber (subject, 64)
+        }
+      }
+
+      describe ("of 100b, meaning 256x prescaling") {
+        subject.acceptChange ("CS0", -1, 4)
+
+        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+          verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).addSubscriber (subject, 256)
+        }
+      }
+
+      describe ("of 101b, meaning 1024x prescaling") {
+        subject.acceptChange ("CS0", -1, 5)
+
+        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+          verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).addSubscriber (subject, 1024)
         }
       }
     }

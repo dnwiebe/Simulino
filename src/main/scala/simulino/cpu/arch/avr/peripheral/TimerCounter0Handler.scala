@@ -1,6 +1,6 @@
 package simulino.cpu.arch.avr.peripheral
 
-import simulino.cpu.arch.avr.PortHandler
+import simulino.cpu.arch.avr.{AvrCpu, PortHandler}
 import simulino.engine.TickSink
 import simulino.utils.Utils._
 
@@ -11,6 +11,13 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   override val name = s"Timer/Counter 0"
   override val portNames = List ("WGM02", "WGM0", "COM0A", "COM0B", "TCNT0", "TOV0", "OCR0A", "TOIE0",
     "OCIE0A", "OCIE0B", "CS0", "FOC0A", "FOC0B")
+  private var cpu: AvrCpu = null
+
+  override def initialize (cpu: AvrCpu) {
+    super.initialize (cpu)
+    this.cpu = cpu
+    cpu.engine.removeTickSink(this)
+  }
 
   override def tick (count: Long): Unit = {
     if (readFromPort ("OCIE0A") > 0) {TEST_DRIVE_ME}
@@ -30,16 +37,17 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {
     portName match {
       case "TOV0" => clearWithOne (portName, newValue)
-      case "WGM0" => // TODO
-      case "WGM02" => // TODO
       case "TOIE0" => // TODO
-      case "CS0" => // TODO
+      case "CS0" => setClockSource (newValue)
       case "COM0A" => // TODO
       case "COM0B" => // TODO
       case "FOC0A" => // TODO
       case "FOC0B" => // TODO
       case "OCIE0A" => // TODO
       case "OCIE0B" => // TODO
+
+      case "WGM0" =>
+      case "WGM02" =>
       case _ => println (s"\n\nChange to unimplemented port: ${portName}\n\n"); TEST_DRIVE_ME
     }
   }
@@ -81,5 +89,17 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   private def clearWithOne (portName: String, newValue: Int): Unit = {
     if (newValue != 1) {TEST_DRIVE_ME}
     writeToPort (portName, 0)
+  }
+
+  private def setClockSource (cs: Int): Unit = {
+    cs match {
+      case 0 => cpu.engine.removeTickSink (this); cpu.prescaler.removeSubscriber (this)
+      case 1 => cpu.engine.addTickSink (this); cpu.prescaler.removeSubscriber (this)
+      case 2 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 8)
+      case 3 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 64)
+      case 4 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 256)
+      case 5 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 1024)
+      case x => println (s"External clock source (CS0 = ${x}) not yet supported"); TEST_DRIVE_ME
+    }
   }
 }

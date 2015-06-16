@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import simulino.cpu.arch.avr.ATmega.Flag
 import simulino.cpu._
+import simulino.cpu.arch.avr.peripheral.Prescaler
 import simulino.engine.Engine
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
@@ -55,6 +56,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   var portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
   val interruptVectors: Map[String, Int] = extractInterruptVectors (config.classSpecific)
   var activeInterrupts = Set[Int] ()
+  var prescaler = portMap.handler ("Prescaler").orNull.asInstanceOf[Prescaler]
 
   def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
 

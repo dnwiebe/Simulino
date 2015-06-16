@@ -234,11 +234,11 @@ if (handlersAffected.isEmpty && !Set ("EIND").contains (port.name)) {
       soFar ++ config.portHandlers
     }
     handlers.map {handler =>
-      handler.initialize (cpu)
       validatePortHandler (handler, portsByName)
       if (classOf[TickSink].isAssignableFrom (handler.getClass)) {
         cpu.engine.addTickSink (handler.asInstanceOf[TickSink])
       }
+      handler.initialize (cpu)
       (handler.name, handler)
     }.toMap
   }

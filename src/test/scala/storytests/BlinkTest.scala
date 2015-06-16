@@ -25,7 +25,10 @@ class BlinkTest extends path.FunSpec {
           subject.runForSeconds (0.030)
 
           it ("shows pin 13 going on and off appropriately") {
-println (s"\n\nBlink history:\n${sampler.history}\n\n")
+val history = sampler.history.map {change =>
+  s"${change.tick}, ${change.voltage.getOrElse ("--")}"
+}.mkString ("\n")
+println (s"\n\nBlink history:\n${history}\n\n")
             assert (sampler.sampleAtSecond (0.005) === 5.0)
             assert (sampler.sampleAtSecond (0.015) === 0.0)
             assert (sampler.sampleAtSecond (0.025) === 5.0)

@@ -47,6 +47,10 @@ class Engine {
     tickSinks = tickSink :: tickSinks
   }
 
+  def removeTickSink (tickSink: TickSink): Unit = {
+    tickSinks = tickSinks.filterNot {_ eq tickSink}
+  }
+
   def addSubscriber (subscriber: Subscriber): Unit = {
     subscribers = subscriber :: subscribers
   }
