@@ -29,6 +29,7 @@ class PinPortHandler (suffix: String, bit: Int) extends PortHandler {
       case (1, _) => Some (5.0)
       case (0, false) => Some (0.0)
       case (0, true) => None
+      case (_, _) => TEST_DRIVE_ME
     }
     showVoltageAtPin (chipPinName, voltage)
   }

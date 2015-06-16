@@ -38,6 +38,8 @@
           {"name": "COM0A", "address": "0x44", "lowBit": 6, "bitLength": 2, "direction": "O"},
           {"name": "COM0B", "address": "0x44", "lowBit": 4, "bitLength": 2, "direction": "O"},
           {"name": "WGM0", "address": "0x44", "lowBit": 0, "bitLength": 2, "direction": "O"},
+          {"name": "TSM", "address": "0x43", "lowBit": 7, "bitLength": 1, "direction": "B"},
+          {"name": "PSRSYNC", "address": "0x43", "lowBit": 0, "bitLength": 1, "direction": "B"},
           {"name": "OCF0B", "address": "0x35", "lowBit": 2, "bitLength": 1, "direction": "O"},
           {"name": "OCF0A", "address": "0x35", "lowBit": 1, "bitLength": 1, "direction": "O"},
           {"name": "TOV0", "address": "0x35", "lowBit": 0, "bitLength": 1, "direction": "O"},
