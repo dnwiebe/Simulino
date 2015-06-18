@@ -24,6 +24,8 @@ class TimerCounter0Handler extends PortHandler with TickSink {
     if (readFromPort ("OCIE0B") > 0) {TEST_DRIVE_ME}
     if (readFromPort ("COM0A") > 0) {TEST_DRIVE_ME}
     if (readFromPort ("COM0B") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("FOC0A") > 0) {TEST_DRIVE_ME}
+    if (readFromPort ("FOC0B") > 0) {TEST_DRIVE_ME}
     val newCounter = WGM match {
       case 0 => normalMode ()
       case 2 => clearTimerOnCompareMatchMode ()
@@ -37,17 +39,17 @@ class TimerCounter0Handler extends PortHandler with TickSink {
   override def acceptChange (portName: String, oldValue: Int, newValue: Int): Unit = {
     portName match {
       case "TOV0" => clearWithOne (portName, newValue)
-      case "TOIE0" => // TODO
       case "CS0" => setClockSource (newValue)
-      case "COM0A" => // TODO
-      case "COM0B" => // TODO
-      case "FOC0A" => // TODO
-      case "FOC0B" => // TODO
-      case "OCIE0A" => // TODO
-      case "OCIE0B" => // TODO
 
       case "WGM0" =>
       case "WGM02" =>
+      case "COM0A" =>
+      case "COM0B" =>
+      case "FOC0A" =>
+      case "FOC0B" =>
+      case "OCIE0A" =>
+      case "OCIE0B" =>
+      case "TOIE0" =>
       case _ => println (s"\n\nChange to unimplemented port: ${portName}\n\n"); TEST_DRIVE_ME
     }
   }
@@ -93,13 +95,29 @@ class TimerCounter0Handler extends PortHandler with TickSink {
 
   private def setClockSource (cs: Int): Unit = {
     cs match {
-      case 0 => cpu.engine.removeTickSink (this); cpu.prescaler.removeSubscriber (this)
-      case 1 => cpu.engine.addTickSink (this); cpu.prescaler.removeSubscriber (this)
-      case 2 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 8)
-      case 3 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 64)
-      case 4 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 256)
-      case 5 => cpu.engine.removeTickSink (this); cpu.prescaler.addSubscriber (this, 1024)
+      case 0 => noClockSource ()
+      case 1 => systemClockSource ()
+      case 2 => prescalerClockSource (8)
+      case 3 => prescalerClockSource (64)
+      case 4 => prescalerClockSource (256)
+      case 5 => prescalerClockSource (1024)
       case x => println (s"External clock source (CS0 = ${x}) not yet supported"); TEST_DRIVE_ME
     }
+  }
+
+  private def noClockSource (): Unit = {
+    cpu.engine.removeTickSink (this)
+    cpu.prescaler.removeSubscriber (this)
+  }
+
+  private def systemClockSource (): Unit = {
+    cpu.engine.addTickSink (this)
+    cpu.prescaler.removeSubscriber (this)
+  }
+
+  private def prescalerClockSource (divisor: Int): Unit = {
+    cpu.engine.removeTickSink (this)
+    cpu.prescaler.removeSubscriber (this)
+    cpu.prescaler.addSubscriber (this, divisor)
   }
 }

@@ -68,8 +68,9 @@ class TimerCounter0HandlerTest extends path.FunSpec {
       describe ("of 010b, meaning 8x prescaling") {
         subject.acceptChange ("CS0", -1, 2)
 
-        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+        it ("removes itself from the engine and prescaler and subscribes to the proper prescaler channel") {
           verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
           verify (prescaler).addSubscriber (subject, 8)
         }
       }
@@ -77,8 +78,9 @@ class TimerCounter0HandlerTest extends path.FunSpec {
       describe ("of 011b, meaning 64x prescaling") {
         subject.acceptChange ("CS0", -1, 3)
 
-        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+        it ("removes itself from the engine and prescaler and subscribes to the proper prescaler channel") {
           verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
           verify (prescaler).addSubscriber (subject, 64)
         }
       }
@@ -86,8 +88,9 @@ class TimerCounter0HandlerTest extends path.FunSpec {
       describe ("of 100b, meaning 256x prescaling") {
         subject.acceptChange ("CS0", -1, 4)
 
-        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+        it ("removes itself from the engine and prescaler and subscribes to the proper prescaler channel") {
           verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
           verify (prescaler).addSubscriber (subject, 256)
         }
       }
@@ -95,8 +98,9 @@ class TimerCounter0HandlerTest extends path.FunSpec {
       describe ("of 101b, meaning 1024x prescaling") {
         subject.acceptChange ("CS0", -1, 5)
 
-        it ("removes itself from the engine and subscribes to the proper prescaler channel") {
+        it ("removes itself from the engine and prescaler and subscribes to the proper prescaler channel") {
           verify (engine, times (2)).removeTickSink (subject)
+          verify (prescaler).removeSubscriber (subject)
           verify (prescaler).addSubscriber (subject, 1024)
         }
       }
