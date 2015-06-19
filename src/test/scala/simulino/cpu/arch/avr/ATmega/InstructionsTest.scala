@@ -404,6 +404,40 @@ class InstructionsTest extends path.FunSpec {
       }
     }
 
+    describe ("CALL") {
+      it ("is properly unrecognized") {
+        assert (CALL (unsignedBytes (0x0C, 0x94, 0x00, 0x00)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = CALL (unsignedBytes (0x5E, 0x95, 0xA5, 0x5A)).get
+
+        it ("has the proper parameter") {
+          assert (instruction.k === 0x2A5AA5)
+        }
+
+        it ("is four bytes long") {
+          assert (instruction.length === 4)
+        }
+
+        it ("takes 5 cycles") {
+          assert (instruction.latency === 5)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "CALL $2A5AA5")
+        }
+
+        describe ("when executed") {
+          val result = instruction.execute (cpu)
+
+          it ("produces the correct events") {
+            assert (result === List (SetIp (0x54B54A)))
+          }
+        }
+      }
+    }
+
     describe ("CLx") {
       it ("is properly unrecognized") {
         assert (CLx (unsignedBytes (0x78, 0x94)) === None)
@@ -951,6 +985,38 @@ class InstructionsTest extends path.FunSpec {
           it ("produces the proper events") {
             assert (result === List (IncrementIp (2), SetMemory (10, 0x00),
               SetFlags (S = Some (false), V = Some (false), N = Some (false), Z = Some (true))))
+          }
+        }
+      }
+    }
+
+    describe ("IJMP") {
+      it ("is properly unrecognized") {
+        assert (IJMP (unsignedBytes (0x19, 0x94)) === None)
+      }
+
+      describe ("when properly parsed") {
+        val instruction = IJMP (unsignedBytes (0x09, 0x94)).get
+
+        it ("is two bytes long") {
+          assert (instruction.length === 2)
+        }
+
+        it ("takes two cycles") {
+          assert (instruction.latency === 2)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "IJMP")
+        }
+
+        describe ("and executed") {
+          when (cpu.register (ZH)).thenReturn (0x34)
+          when (cpu.register (ZL)).thenReturn (0x56)
+          val result = instruction.execute (cpu)
+
+          it ("produces the proper events") {
+            assert (result === List (SetIp (0x0068AC)))
           }
         }
       }

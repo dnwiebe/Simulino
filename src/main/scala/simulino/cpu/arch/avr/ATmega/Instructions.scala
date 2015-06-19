@@ -190,6 +190,24 @@ class BRBx (val s: Int, val set: Boolean, val k: Int) extends Instruction[AvrCpu
   }
 }
 
+object CALL extends AvrInstructionObject[CALL] {
+  override val mask = 0xFE0E0000
+  override val pattern = 0x940E0000
+  override protected def parse (buffer: Array[UnsignedByte]): CALL = {
+    val k = parseUnsignedParameter (buffer, 0x01F1FFFF)
+    new CALL (k)
+  }
+}
+
+class CALL (var k: Int) extends Instruction[AvrCpu] {
+  override def length = 4
+  override def latency = 5
+  override def execute (cpu: AvrCpu) = {
+    List (SetIp (k << 1))
+  }
+  override def toString = s"CALL $$${toHex (k, 6)}"
+}
+
 object CLx extends AvrInstructionObject[CLx] {
   override val mask = 0xFF8F0000
   override val pattern = 0x94880000
@@ -457,17 +475,16 @@ object IJMP extends AvrInstructionObject[IJMP] {
   override val mask = 0xFFFF0000
   override val pattern = 0x94090000
   override protected def parse (buffer: Array[UnsignedByte]): IJMP = {
-    TEST_DRIVE_ME
     new IJMP ()
   }
 }
 
 class IJMP () extends Instruction[AvrCpu] {
-  override def length = {TEST_DRIVE_ME; 0}
-  override def latency = {TEST_DRIVE_ME; 0}
+  override def length = 2
+  override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    TEST_DRIVE_ME
-    Nil
+    val wordAddress = intFromBytes (cpu.register (ZH), cpu.register (ZL))
+    List (SetIp (wordAddress << 1))
   }
   override def toString = "IJMP"
 }

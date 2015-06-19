@@ -47,10 +47,9 @@ Simulino a web service, with clients in many languages.  But that's in the futur
 Updated 6/14/2015
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
-Looks like we have to implement the Prescaler and finish TimerCounter0Handler and PinPortHandler.
 
 ### Prioritized Backlog
-Updated 6/14/2015
+Updated 6/19/2015
 
 1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
 something.
@@ -79,6 +78,9 @@ duplication of effort.  I don't want to get rid of `.length`, because executing 
 an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
 instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
 that change the IP by some amount other than the length of the instruction.
+
+1. Some instructions have different latencies depending on which MCU they execute on.  Currently there's no way to
+represent this in configuration.  There should be.
 
 1. Code for the instructions needs to be a permanent part of Simulino, of course, or at the very least in a linked-in
 `.jar` file, but the question of which instructions are active members of the instruction set should be answered by 
