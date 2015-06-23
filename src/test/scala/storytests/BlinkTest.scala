@@ -29,9 +29,9 @@ val history = sampler.history.map {change =>
   s"${change.tick}, ${change.voltage.getOrElse ("--")}"
 }.mkString ("\n")
 println (s"\n\nBlink history:\n${history}\n\n")
-            assert (sampler.sampleAtSecond (0.005) === 5.0)
-            assert (sampler.sampleAtSecond (0.015) === 0.0)
-            assert (sampler.sampleAtSecond (0.025) === 5.0)
+            assert (sampler.sampleAtSecond (0.005) === Some (5.0))
+            assert (sampler.sampleAtSecond (0.015) === Some (0.0))
+            assert (sampler.sampleAtSecond (0.025) === Some (5.0))
           }
         }
       }
