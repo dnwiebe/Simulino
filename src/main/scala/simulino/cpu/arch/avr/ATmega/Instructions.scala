@@ -24,7 +24,7 @@ trait ADxObj[T <: Instruction[AvrCpu]] extends AvrInstructionObject[T] {
   protected def make (d: Int, r: Int): T
 }
 
-trait ADxCls[T] extends Instruction[AvrCpu] {
+trait ADxCls[T] extends Instruction[AvrCpu] with AvrInstructionUtils {
   val d: Int
   val r: Int
   override def length = 2
@@ -33,7 +33,7 @@ trait ADxCls[T] extends Instruction[AvrCpu] {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = op (cpu, Rd, Rr)
-    val Hf = ((Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && !(R bit 3)) || (!(R bit 3) && (Rd bit 3))
+    val Hf = halfCarry (R, Rd, Rr)
     val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -263,14 +263,14 @@ object CP extends AvrInstructionObject[CP] {
   }
 }
 
-class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
-    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, Rr, R)
     val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -292,7 +292,7 @@ object CPC extends AvrInstructionObject[CPC] {
   }
 }
 
-class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
@@ -300,7 +300,7 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Rr = cpu.getMemory (r)
     val Cp = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - Rr - Cp
-    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, Rr, R)
     val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -322,13 +322,13 @@ object CPI extends AvrInstructionObject[CPI] {
   }
 }
 
-class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val R = Rd - K
-    val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, K, R)
     val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
     val Nf = (R bit 7)
     val Sf = Nf ^^ Vf
@@ -966,14 +966,14 @@ object SBC extends AvrInstructionObject[SBC] {
   }
 }
 
-class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R: UnsignedByte = Rd - Rr - (if (cpu.flag (C)) 1 else 0)
-    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, Rr, R)
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -995,14 +995,14 @@ object SBCI extends AvrInstructionObject[SBCI] {
   }
 }
 
-class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val C = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - K - C
-    val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, K, R)
     val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -1224,14 +1224,14 @@ object SUB extends AvrInstructionObject[SUB] {
   }
 }
 
-class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
-    val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, Rr, R)
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -1253,13 +1253,13 @@ object SUBI extends AvrInstructionObject[SUBI] {
   }
 }
 
-class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
+class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val R = Rd - K
-    val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
+    val Hf = halfCarry (Rd, K, R)
     val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf

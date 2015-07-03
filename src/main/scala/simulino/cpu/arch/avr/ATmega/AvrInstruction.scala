@@ -38,3 +38,12 @@ trait ComplexAvrInstructionObject[T <: Instruction[AvrCpu]] extends AvrInstructi
     }
   }
 }
+
+trait AvrInstructionUtils {
+  def halfCarry (dest: UnsignedByte, src: UnsignedByte, result: UnsignedByte): Boolean = {
+    val nd3 = !(dest bit 3)
+    val s3 = src bit 3
+    val r3 = result bit 3
+    (nd3 && s3) || (s3 && r3) || (r3 && nd3)
+  }
+}
