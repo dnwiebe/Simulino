@@ -37,14 +37,7 @@ trait ADxCls[T] extends Instruction[AvrCpu] with AvrInstructionUtils {
       .negative (Some (R bit 7))
       .zero (Some (R.value == 0))
       .make ()
-    val Hf = halfCarry (R, Rd, Rr)
-    val Vf = overflow (R, Rd, Rr)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zf = R == UnsignedByte (0)
-    val Cf = fullCarry (R, Rd, Rr)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
-      S = Some (Sf), Z = Some(Zf), C = Some (Cf)))
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"${getClass.getSimpleName} R${d}, R${r}"
   protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte): UnsignedByte
@@ -274,14 +267,8 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructio
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
-    val Hf = halfCarry (Rd, Rr, R)
-    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zf = (R == 0)
-    val Cf = fullCarry (Rd, Rr, R)
-    List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
-      Z = Some (Zf), C = Some (Cf)))
+    val setFlags = builder (Rd, Rr, R).make ()
+    List (IncrementIp (2), setFlags)
   }
   override def toString = s"CP R${d}, R${r}"
 }
@@ -304,14 +291,10 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rr = cpu.getMemory (r)
     val Cp = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - Rr - Cp
-    val Hf = halfCarry (Rd, Rr, R)
-    val Vf = overflow (Rd, Rr, R)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zfopt = if (R == 0) None else Some (false)
-    val Cf = fullCarry (Rd, Rr, R)
-    List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
-      Z = Zfopt, C = Some (Cf)))
+    val setFlags = builder (Rd, Rr, R)
+      .zero (if (R == 0) None else Some (false))
+      .make ()
+    List (IncrementIp (2), setFlags)
   }
   override def toString = s"CPC R${d}, R${r}"
 }
@@ -332,13 +315,8 @@ class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Avr
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val R = Rd - K
-    val Hf = halfCarry (Rd, K, R)
-    val Vf = overflow (Rd, K, R)
-    val Nf = (R bit 7)
-    val Sf = Nf ^^ Vf
-    val Zf = R.value == 0
-    val Cf = fullCarry (Rd, K, R)
-    List (IncrementIp (2), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
+    val setFlags = builder (Rd, K, R).make ()
+    List (IncrementIp (2), setFlags)
   }
   override def toString = s"CPI R${d}, ${K.value}"
 }
@@ -417,18 +395,18 @@ object DEC extends AvrInstructionObject[DEC] {
   }
 }
 
-class DEC (val d: Int) extends Instruction[AvrCpu] {
+class DEC (val d: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val R = UnsignedByte ((Rd.value - 1) & 0xFF)
-    val Vf = Rd.value == 0x80
-    val Nf = R bit 7
-    val Sf = Vf ^^ Nf
-    val Zf = R.value == 0
-    List (IncrementIp (2), SetMemory (d, R),
-      SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+    val setFlags = builder (Rd, UnsignedByte (1), R)
+      .halfCarry (None)
+      .carry (None)
+      .overflow (Some (Rd.value == 0x80))
+      .make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"DEC R${d}"
 }
@@ -459,18 +437,19 @@ object EOR extends AvrInstructionObject[EOR] {
   }
 }
 
-class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = Rd ^ Rr
-    val Vf = false
-    val Nf = (R bit 7)
-    val Sf = Vf ^^ Nf
-    val Zf = (R == 0)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+    val setFlags = builder (Rd, Rr, R)
+      .halfCarry (None)
+      .overflow (Some (false))
+      .carry (None)
+      .make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"EOR R${d}, R${r}"
 }
@@ -977,14 +956,10 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R: UnsignedByte = Rd - Rr - (if (cpu.flag (C)) 1 else 0)
-    val Hf = halfCarry (Rd, Rr, R)
-    val Vf = overflow (Rd, Rr, R)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zfopt = if (R == UnsignedByte (0)) None else Some (false)
-    val Cf = fullCarry (Rd, Rr, R)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
-      S = Some (Sf), Z = Zfopt, C = Some (Cf)))
+    val setFlags = builder (Rd, Rr, R)
+      .zero (if (R.value == 0) None else Some (false))
+      .make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"SBC R${d}, R${r}"
 }
@@ -1006,14 +981,8 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
     val Rd = cpu.getMemory (d)
     val C = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - K - C
-    val Hf = halfCarry (Rd, K, R)
-    val Vf = overflow (Rd, K, R)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zf = R.value == 0
-    val Cf = fullCarry (Rd, K, R)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
-      Z = Some (Zf), C = Some (Cf)))
+    val setFlags = builder (Rd, K, R).make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"SBCI R${d}, $$${toHex (K, 2)}"
 }
@@ -1235,14 +1204,8 @@ class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
-    val Hf = halfCarry (Rd, Rr, R)
-    val Vf = overflow (Rd, Rr, R)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zf = R.value == 0
-    val Cf = fullCarry (Rd, Rr, R)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
-      Z = Some (Zf), C = Some (Cf)))
+    val setFlags = builder (Rd, Rr, R).make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"SUB R${d}, R${r}"
 }
@@ -1263,14 +1226,8 @@ class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val R = Rd - K
-    val Hf = halfCarry (Rd, K, R)
-    val Vf = overflow (Rd, K, R)
-    val Nf = R bit 7
-    val Sf = Nf ^^ Vf
-    val Zf = R.value == 0
-    val Cf = fullCarry (Rd, K, R)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
-      Z = Some (Zf), C = Some (Cf)))
+    val setFlags = builder (Rd, K, R).make ()
+    List (IncrementIp (2), SetMemory (d, R), setFlags)
   }
   override def toString = s"SUBI R${d}, $$${toHex (K, 2)}"
 }
