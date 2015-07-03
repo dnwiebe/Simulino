@@ -35,9 +35,9 @@ object RegisterNames {
   val Zfull = (RAMPZ, ZH, ZL)
 
   def getExtended (cpu: AvrCpu, registers: (Int, Int, Int)): Int = {
-    ((cpu.register (registers._1).value & 0xFF) << 16) |
-      ((cpu.register (registers._2).value & 0xFF) << 8) |
-      (cpu.register (registers._3).value & 0xFF)
+    ((cpu.getMemory (registers._1).value & 0xFF) << 16) |
+      ((cpu.getMemory (registers._2).value & 0xFF) << 8) |
+      (cpu.getMemory (registers._3).value & 0xFF)
   }
   def setExtended (registers: (Int, Int, Int), value: Int): List[CpuChange[AvrCpu]] = {
     List (
@@ -58,14 +58,14 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   var activeInterrupts = Set[Int] ()
   var prescaler = portMap.handler ("Prescaler").orNull.asInstanceOf[Prescaler]
 
-  def register (address: Int): UnsignedByte = dataMemory.getData (address, 1)(0)
+  def getMemory (address: Int): UnsignedByte = dataMemory (address)
 
   def setMemory (address: Int, newValue: UnsignedByte): Unit = {
     val oldValue = dataMemory.update (address, newValue)
     portMap.memoryChange (address, oldValue, newValue)
   }
 
-  def sp: Int = ((register (SPH).value << 8) | register (SPL).value) & 0xFFFF
+  def sp: Int = ((getMemory (SPH).value << 8) | getMemory (SPL).value) & 0xFFFF
   protected def sp_= (value: Int): Unit = {
     setMemory (SPH, (value >> 8) & 0xFF)
     setMemory (SPL, value & 0xFF)
@@ -86,14 +86,14 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   def flag (name: Flag): Boolean = {
-    val octet = register (SREG).value
+    val octet = getMemory (SREG).value
     val idx = 7 - name.ordinal ()
     val shifted = octet >> idx
     (shifted & 0x01) == 1
   }
 
   def raiseInterrupt (name: String): Unit = {
-    val sreg = register (SREG).value
+    val sreg = getMemory (SREG).value
     if ((sreg & 0x80) == 0) {return}
     val vector = interruptVectors (name)
     activeInterrupts = activeInterrupts + vector
@@ -104,7 +104,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   private def handleSetFlags (c: SetFlags): Unit = {
-    val original = register (SREG).value
+    val original = getMemory (SREG).value
     val withSets = original | (c.mask & c.pattern)
     val withSetsAndClears = withSets & (~c.mask | c.pattern)
     setMemory (SREG, withSetsAndClears)
@@ -140,7 +140,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
 
   private def handlePop (c: Pop): Unit = {
     sp = sp + 1
-    dataMemory.update (c.address, dataMemory.getData (sp, 1)(0))
+    dataMemory.update (c.address, dataMemory (sp))
   }
 
   private class InterruptInstruction (val vector: Int) extends Instruction[AvrCpu] {

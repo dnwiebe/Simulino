@@ -129,7 +129,7 @@ class PortMapTest extends path.FunSpec {
 
           describe ("on a mocked AvrCpu with mocked memory") {
             val memory = mock (classOf[Memory])
-            when (memory.getData (4661, 1)).thenReturn (Array (UnsignedByte (0xCA)))
+            when (memory (4661)).thenReturn (UnsignedByte (0xCA))
             when (cpu.dataMemory).thenReturn (memory)
 
             describe ("that is instructed to read from a port") {
@@ -164,7 +164,7 @@ class PortMapTest extends path.FunSpec {
 
           describe ("that experiences an incoming change from a PortHandler") {
             val memory = mock (classOf[Memory])
-            when (memory.getData (Matchers.anyInt(), Matchers.eq (1))).thenReturn (Array(UnsignedByte (0x00)))
+            when (memory (Matchers.anyInt())).thenReturn (UnsignedByte (0x00))
             when (cpu.dataMemory).thenReturn (memory)
             val handler = subject.handler ("EXMK").get.asInstanceOf[ExpressionMaker]
             handler.smile ()

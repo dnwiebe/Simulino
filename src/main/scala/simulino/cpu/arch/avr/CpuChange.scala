@@ -15,9 +15,9 @@ case class PushIp () extends CpuChange[AvrCpu] {
     val afterMiddle = (beforeIp >> 8) & 0xFF
     val afterLow = (beforeIp >> 0) & 0xFF
     val beforeSp = cpu.sp
-    val beforeHigh = cpu.register (beforeSp - 0).value & 0xFF
-    val beforeMiddle = cpu.register (beforeSp - 1).value & 0xFF
-    val beforeLow = cpu.register (beforeSp - 2).value & 0xFF
+    val beforeHigh = cpu.getMemory (beforeSp - 0).value & 0xFF
+    val beforeMiddle = cpu.getMemory (beforeSp - 1).value & 0xFF
+    val beforeLow = cpu.getMemory (beforeSp - 2).value & 0xFF
     val afterSp = beforeSp - 3
     val firstXfer = s"($$${toHex (beforeSp - 0, 4)}): $$${toHex (beforeLow, 2)} -> $$${toHex (afterLow, 2)}"
     val secondXfer = s"($$${toHex (beforeSp - 1, 4)}): $$${toHex (beforeMiddle, 2)} -> $$${toHex (afterMiddle, 2)}"
@@ -39,7 +39,7 @@ case class PopIp () extends CpuChange[AvrCpu] {
 case class Push (value: UnsignedByte) extends CpuChange[AvrCpu] {
   override def mods (cpu: AvrCpu): String = {
     val beforeSp = cpu.sp
-    val beforeValue = cpu.register (beforeSp)
+    val beforeValue = cpu.getMemory (beforeSp)
     val afterSp = beforeSp - 1
     s"($$${toHex (beforeSp, 4)}): $$${beforeValue} -> $$${value}; SP: $$${toHex (beforeSp, 4)} -> $$${toHex (afterSp, 4)}"
   }
@@ -49,8 +49,8 @@ case class Pop (address: Int) extends CpuChange[AvrCpu] {
   override def mods (cpu: AvrCpu): String = {
     val beforeSp = cpu.sp
     val afterSp = beforeSp + 1
-    val beforeValue = cpu.register (address)
-    val value = cpu.register (afterSp)
+    val beforeValue = cpu.getMemory (address)
+    val value = cpu.getMemory (afterSp)
     s"($$${toHex (address, 2)}): $$${beforeValue} -> $$${value}; SP: $$${toHex (beforeSp, 4)} -> $$${toHex (afterSp, 4)}"
   }
 }
@@ -64,7 +64,7 @@ case class SetSp (newSp: Int) extends CpuChange[AvrCpu] {
 
 case class SetMemory (address: Int, value: UnsignedByte) extends CpuChange[AvrCpu] {
   override def mods (cpu: AvrCpu): String = {
-    val oldValue = cpu.register (address)
+    val oldValue = cpu.getMemory (address)
     s"($$${toHex (address, 2)}): $$${oldValue} -> $$${value}"
   }
 }
@@ -121,7 +121,7 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
   var C = flag (mask, pattern, 0)
 
   override def mods (cpu: AvrCpu): String = {
-    val beforeFlags = cpu.register (RegisterNames.SREG).value & 0xFF
+    val beforeFlags = cpu.getMemory (RegisterNames.SREG).value & 0xFF
     val afterFlags = (beforeFlags & ~mask) | pattern
     s"SREG: ${flagString (0xFF, beforeFlags)} -> ${flagString (0xFF, afterFlags)}"
   }

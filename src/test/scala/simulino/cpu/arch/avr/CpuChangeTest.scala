@@ -17,9 +17,9 @@ class CpuChangeTest extends path.FunSpec {
 
         when (cpu.ip).thenReturn (0x123456)
         when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.register (0x21FF)).thenReturn (0x65)
-        when (cpu.register (0x21FE)).thenReturn (0x43)
-        when (cpu.register (0x21FD)).thenReturn (0x21)
+        when (cpu.getMemory (0x21FF)).thenReturn (0x65)
+        when (cpu.getMemory (0x21FE)).thenReturn (0x43)
+        when (cpu.getMemory (0x21FD)).thenReturn (0x21)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -33,7 +33,7 @@ class CpuChangeTest extends path.FunSpec {
 
       describe ("directed to show mods") {
         when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.register (0x21FF)).thenReturn (0x12)
+        when (cpu.getMemory (0x21FF)).thenReturn (0x12)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -48,9 +48,9 @@ class CpuChangeTest extends path.FunSpec {
       describe ("directed to show mods") {
         when (cpu.ip).thenReturn (0x1000)
         when (cpu.sp).thenReturn (0x21FC)
-        when (cpu.register (0x21FD)).thenReturn (0x12)
-        when (cpu.register (0x21FE)).thenReturn (0x34)
-        when (cpu.register (0x21FF)).thenReturn (0x56)
+        when (cpu.getMemory (0x21FD)).thenReturn (0x12)
+        when (cpu.getMemory (0x21FE)).thenReturn (0x34)
+        when (cpu.getMemory (0x21FF)).thenReturn (0x56)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -64,8 +64,8 @@ class CpuChangeTest extends path.FunSpec {
 
       describe ("directed to show mods") {
         when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.register (0x42)).thenReturn (0x12)
-        when (cpu.register (0x2200)).thenReturn (0x24)
+        when (cpu.getMemory (0x42)).thenReturn (0x12)
+        when (cpu.getMemory (0x2200)).thenReturn (0x24)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -91,7 +91,7 @@ class CpuChangeTest extends path.FunSpec {
       val subject = SetMemory (0x1234, 0x42)
 
       describe ("directed to show mods") {
-        when (cpu.register (0x1234)).thenReturn (0x24)
+        when (cpu.getMemory (0x1234)).thenReturn (0x24)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -104,7 +104,7 @@ class CpuChangeTest extends path.FunSpec {
       val subject = SetFlags (0xFF, 0xAA)
 
       describe ("directed to show mods") {
-        when (cpu.register (RegisterNames.SREG)).thenReturn (0x55)
+        when (cpu.getMemory (RegisterNames.SREG)).thenReturn (0x55)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {

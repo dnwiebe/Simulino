@@ -30,8 +30,8 @@ trait ADxCls[T] extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = op (cpu, Rd, Rr)
     val Hf = ((Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && !(R bit 3)) || (!(R bit 3) && (Rd bit 3))
     val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
@@ -52,7 +52,7 @@ object ADC extends ADxObj[ADC] {
 }
 
 class ADC (val d: Int, val r: Int) extends ADxCls[ADC] {
-  override protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte) = Rd + Rr + (cpu.register(SREG).value & 0x01)
+  override protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte) = Rd + Rr + (cpu.getMemory(SREG).value & 0x01)
 }
 
 object ADD extends ADxObj[ADD] {
@@ -79,7 +79,7 @@ class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rd = ((cpu.register (d + 1).value & 0xFF) << 8) + (cpu.register (d).value & 0xFF)
+    val Rd = ((cpu.getMemory (d + 1).value & 0xFF) << 8) + (cpu.getMemory (d).value & 0xFF)
     val Rdh = UnsignedByte (Rd >> 8)
     val R = (Rd + K) & 0xFFFF
     val Rh = UnsignedByte (R >> 8)
@@ -118,8 +118,8 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = UnsignedByte ((Rd.value & Rr.value) & 0xFF)
     val Vf = false
     val Nf = R bit 7
@@ -144,7 +144,7 @@ class ANDI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = UnsignedByte ((Rd.value & K.value) & 0xFF)
     val Vf = false
     val Nf = R bit 7
@@ -172,7 +172,7 @@ class BRBx (val s: Int, val set: Boolean, val k: Int) extends Instruction[AvrCpu
   override def length = 2
   override def latency = latencyOpt.get
   override def execute (cpu: AvrCpu) = {
-    val sreg = cpu.register (SREG).value
+    val sreg = cpu.getMemory (SREG).value
     val shouldBranchOn = if (set) {f: Int => (f != 0)} else {f: Int => (f == 0)}
     if (shouldBranchOn (sreg & (1 << s))) {
       latencyOpt = Some (2)
@@ -242,7 +242,7 @@ class COM (var d: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = 0xFF - (Rd.value & 0xFF)
     val Nf = (R & 0x80) != 0
     val Sf = Nf
@@ -267,8 +267,8 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
@@ -296,8 +296,8 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val Cp = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - Rr - Cp
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
@@ -326,7 +326,7 @@ class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = Rd - K
     val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
@@ -354,8 +354,8 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = latencyOpt.get
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     if (Rd != Rr) {
       List (IncrementIp (handleEquality ()))
     }
@@ -417,7 +417,7 @@ class DEC (val d: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = UnsignedByte ((Rd.value - 1) & 0xFF)
     val Vf = Rd.value == 0x80
     val Nf = R bit 7
@@ -441,7 +441,7 @@ class EIJMP () extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val wordAddress = intFromBytes (cpu.portMap.readFromPort ("EIND"), cpu.register (ZH), cpu.register (ZL))
+    val wordAddress = intFromBytes (cpu.portMap.readFromPort ("EIND"), cpu.getMemory (ZH), cpu.getMemory (ZL))
     List (SetIp (wordAddress << 1))
   }
   override def toString = "EIJMP"
@@ -459,8 +459,8 @@ class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = Rd ^ Rr
     val Vf = false
     val Nf = (R bit 7)
@@ -483,7 +483,7 @@ class IJMP () extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val wordAddress = intFromBytes (cpu.register (ZH), cpu.register (ZL))
+    val wordAddress = intFromBytes (cpu.getMemory (ZH), cpu.getMemory (ZL))
     List (SetIp (wordAddress << 1))
   }
   override def toString = "IJMP"
@@ -503,7 +503,7 @@ class IN (val d: Int, val A: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val R = cpu.register (A + 0x20)
+    val R = cpu.getMemory (A + 0x20)
     List (IncrementIp (2), SetMemory (d, R))
   }
   override def toString = s"IN R${d}, $$${toHex (A, 2)}"
@@ -583,7 +583,7 @@ class LDD (val d: Int, val r: Char, val x: IndirectionType, val q: Int) extends 
       case IndirectionType.PostIncrement => initialValue
       case IndirectionType.PreDecrement => initialValue - 1
     }
-    val R = cpu.register (preValue)
+    val R = cpu.getMemory (preValue)
     val postValue = x match {
       case IndirectionType.Unchanged => initialValue
       case IndirectionType.PostIncrement => preValue + 1
@@ -645,7 +645,7 @@ class LDS (val d: Int, val k: Int) extends Instruction[AvrCpu] {
   override def length = 4
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val K = cpu.register (k)
+    val K = cpu.getMemory (k)
     List (IncrementIp (4), SetMemory (d, K))
   }
   override def toString = s"LDS R${d}, $$${toHex (k, 4)}"
@@ -681,7 +681,7 @@ class LPM (val d: Int, val extended: Boolean, val increment: Boolean) extends In
   override def latency = 3
   override def execute (cpu: AvrCpu) = {
     val address = getExtended (cpu, Zfull)
-    val R = cpu.programMemory.getData (address, 1)(0)
+    val R = cpu.programMemory (address)
     val handleZ = increment match {
       case false => Nil
       case true => {
@@ -715,7 +715,7 @@ class MOV (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rr = cpu.register (r)
+    val Rr = cpu.getMemory (r)
     List (IncrementIp (2), SetMemory (d, Rr))
   }
   override def toString = s"MOV R${d}, R${r}"
@@ -735,8 +735,8 @@ class MOVW (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val RrL = cpu.register (r)
-    val RrH = cpu.register (r + 1)
+    val RrL = cpu.getMemory (r)
+    val RrH = cpu.getMemory (r + 1)
     List (IncrementIp (2), SetMemory (d, RrL), SetMemory (d + 1, RrH))
   }
   override def toString = s"MOVW R${d + 1}:${d}, R${r + 1}:${r}"
@@ -756,8 +756,8 @@ class MULS (d: Int, r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rd: Int = cpu.register (d)
-    val Rr: Int = cpu.register (r)
+    val Rd: Int = cpu.getMemory (d)
+    val Rr: Int = cpu.getMemory (r)
     val R = Rd * Rr
     val Cf = ((R & 0x8000) != 0)
     val Zf = (R == 0)
@@ -796,8 +796,8 @@ class OR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = Rd | Rr
     val Nf = (R bit 7)
     val Sf = Nf
@@ -821,7 +821,7 @@ class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = Rd | K
     val Nf = (R bit 7)
     val Sf = Nf
@@ -845,7 +845,7 @@ class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rr = cpu.register (r)
+    val Rr = cpu.getMemory (r)
     List (IncrementIp (2), SetMemory (A + 0x20, Rr.value))
   }
   override def toString = s"OUT $$${toHex (A, 2)}, R${r}"
@@ -882,7 +882,7 @@ class PUSH (val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val R = cpu.register (r)
+    val R = cpu.getMemory (r)
     List (IncrementIp (2), Push (R))
   }
   override def toString = s"PUSH R${r}"
@@ -970,8 +970,8 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R: UnsignedByte = Rd - Rr - (if (cpu.flag (C)) 1 else 0)
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
@@ -999,7 +999,7 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val C = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - K - C
     val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
@@ -1029,7 +1029,7 @@ class SBIS (val A: Int, val b: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = _latencyOpt.get
   override def execute (cpu: AvrCpu): List[Event] = {
-    val ioValue = cpu.register (A + 0x20).value
+    val ioValue = cpu.getMemory (A + 0x20).value
     val bitIsSet = (ioValue & (1 << b)) != 0
     if (!bitIsSet) {
       _latencyOpt = Some (1)
@@ -1064,8 +1064,8 @@ class SBIW (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rdh = cpu.register (d + 1)
-    val Rdl = cpu.register (d)
+    val Rdh = cpu.getMemory (d + 1)
+    val Rdl = cpu.getMemory (d)
     val Rd = ((Rdh.value & 0xFF) << 8) | (Rdl.value & 0xFF)
     val R = Rd - K
     val Vf = (Rdh bit 7) && !((R & 0x1000) > 0)
@@ -1125,7 +1125,7 @@ class ST (val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rr = cpu.register (r)
+    val Rr = cpu.getMemory (r)
     val address = getExtended (cpu, Xfull)
     val preAddress = x.preOperate (address)
     val setMemory = SetMemory (preAddress, Rr)
@@ -1171,7 +1171,7 @@ class STD (val d: Char, val r: Int, val x: IndirectionType, val q: Int) extends 
       case IndirectionType.PostIncrement => initialValue
       case IndirectionType.PreDecrement => initialValue - 1
     }
-    val R = cpu.register (r)
+    val R = cpu.getMemory (r)
     val postValue = x match {
       case IndirectionType.Unchanged => initialValue
       case IndirectionType.PostIncrement => preValue + 1
@@ -1208,7 +1208,7 @@ class STS (val k: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 4
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rr = cpu.register (r)
+    val Rr = cpu.getMemory (r)
     List (IncrementIp (4), SetMemory (k, Rr))
   }
   override def toString = s"STS $$${toHex (k, 2)}, R${r}"
@@ -1228,8 +1228,8 @@ class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
-    val Rr = cpu.register (r)
+    val Rd = cpu.getMemory (d)
+    val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val Hf = (!(Rd bit 3) && (Rr bit 3)) || ((Rr bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
@@ -1257,7 +1257,7 @@ class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    val Rd = cpu.register (d)
+    val Rd = cpu.getMemory (d)
     val R = Rd - K
     val Hf = (!(Rd bit 3) && (K bit 3)) || ((K bit 3) && (R bit 3)) || ((R bit 3) && !(Rd bit 3))
     val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))

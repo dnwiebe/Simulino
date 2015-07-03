@@ -36,7 +36,7 @@ class AvrCpuTest extends path.FunSpec {
     }
 
     it ("initially has zeros in all registers") {
-      (0x00 until 0x200).foreach {i => assert (subject.register (i) === UnsignedByte (0), s"Register ${i}")}
+      (0x00 until 0x200).foreach {i => assert (subject.getMemory (i) === UnsignedByte (0), s"Register ${i}")}
     }
 
     it ("initially has zeros in all flags") {
@@ -71,7 +71,7 @@ class AvrCpuTest extends path.FunSpec {
 
       it ("does so") {
         (0 until 32).foreach {i =>
-          assert (subject.register (i) === (if (i == 28) UnsignedByte (47) else UnsignedByte (0)))
+          assert (subject.getMemory (i) === (if (i == 28) UnsignedByte (47) else UnsignedByte (0)))
         }
       }
 

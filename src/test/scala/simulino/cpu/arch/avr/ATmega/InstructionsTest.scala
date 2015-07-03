@@ -44,9 +44,9 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed") {
-          when (cpu.register (SREG)).thenReturn (0x01)
-          when (cpu.register (0x15)).thenReturn (0xA5)
-          when (cpu.register (0x0A)).thenReturn (0x5A)
+          when (cpu.getMemory (SREG)).thenReturn (0x01)
+          when (cpu.getMemory (0x15)).thenReturn (0xA5)
+          when (cpu.getMemory (0x0A)).thenReturn (0x5A)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -83,8 +83,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed to produce no carry") {
-          when (cpu.register (0x0A)).thenReturn (100)
-          when (cpu.register (0x15)).thenReturn (23)
+          when (cpu.getMemory (0x0A)).thenReturn (100)
+          when (cpu.getMemory (0x15)).thenReturn (23)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -95,8 +95,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed to produce a carry") {
-          when (cpu.register (0x0A)).thenReturn (200)
-          when (cpu.register (0x15)).thenReturn (56)
+          when (cpu.getMemory (0x0A)).thenReturn (200)
+          when (cpu.getMemory (0x15)).thenReturn (56)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -134,8 +134,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (29)).thenReturn (0x01)
-          when (cpu.register (28)).thenReturn (0xE0)
+          when (cpu.getMemory (29)).thenReturn (0x01)
+          when (cpu.getMemory (28)).thenReturn (0xE0)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -172,8 +172,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed resulting in a negative number") {
-          when (cpu.register (0x0A)).thenReturn (0x80)
-          when (cpu.register (0x15)).thenReturn (0x80)
+          when (cpu.getMemory (0x0A)).thenReturn (0x80)
+          when (cpu.getMemory (0x15)).thenReturn (0x80)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -183,8 +183,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed resulting in a zero") {
-          when (cpu.register (0x0A)).thenReturn (0x80)
-          when (cpu.register (0x15)).thenReturn (0x00)
+          when (cpu.getMemory (0x0A)).thenReturn (0x80)
+          when (cpu.getMemory (0x15)).thenReturn (0x00)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -221,7 +221,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed resulting in a negative number") {
-          when (cpu.register (0x1A)).thenReturn (0x80)
+          when (cpu.getMemory (0x1A)).thenReturn (0x80)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -231,7 +231,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed resulting in a zero") {
-          when (cpu.register (0x1A)).thenReturn (0x00)
+          when (cpu.getMemory (0x1A)).thenReturn (0x00)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -265,7 +265,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z clear") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -278,7 +278,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z set") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x02))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x02))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -301,7 +301,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V clear") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -314,7 +314,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V set") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x08))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x08))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -341,7 +341,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z clear") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -354,7 +354,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit Z set") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x02))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x02))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -377,7 +377,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V clear") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x00))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x00))
           val result = instruction.execute (cpu)
 
           it ("takes two cycles") {
@@ -390,7 +390,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit V set") {
-          when (cpu.register (SREG)).thenReturn (UnsignedByte (0x08))
+          when (cpu.getMemory (SREG)).thenReturn (UnsignedByte (0x08))
           val result = instruction.execute (cpu)
 
           it ("takes one cycle") {
@@ -497,7 +497,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x15)).thenReturn (0x5A)
+          when (cpu.getMemory (0x15)).thenReturn (0x5A)
           val result = instruction.execute (cpu)
 
           it ("creates the proper events") {
@@ -534,8 +534,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d greater than positive r") {
-          when (cpu.register (0x0A)).thenReturn (112)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (112)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -545,8 +545,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d less than positive r") {
-          when (cpu.register (0x0A)).thenReturn (12)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (12)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -556,8 +556,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d and positive r") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -567,8 +567,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d equal to r") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (250)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (250)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -605,8 +605,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d greater than positive r and no carry") {
-          when (cpu.register (0x0A)).thenReturn (112)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (112)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (false)
           val result = instruction.execute (cpu)
 
@@ -617,8 +617,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d less than positive r and no carry") {
-          when (cpu.register (0x0A)).thenReturn (12)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (12)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (false)
           val result = instruction.execute (cpu)
 
@@ -629,8 +629,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d and positive r and no carry") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (false)
           val result = instruction.execute (cpu)
 
@@ -641,8 +641,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d equal to r and no carry") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (250)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (250)
           when (cpu.flag (C)).thenReturn (false)
           val result = instruction.execute (cpu)
 
@@ -653,8 +653,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d greater than positive r and carry") {
-          when (cpu.register (0x0A)).thenReturn (112)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (112)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (true)
           val result = instruction.execute (cpu)
 
@@ -665,8 +665,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with positive d less than positive r and carry") {
-          when (cpu.register (0x0A)).thenReturn (12)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (12)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (true)
           val result = instruction.execute (cpu)
 
@@ -677,8 +677,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d and positive r and carry") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (34)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (34)
           when (cpu.flag (C)).thenReturn (true)
           val result = instruction.execute (cpu)
 
@@ -689,8 +689,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed with negative d equal to r and carry") {
-          when (cpu.register (0x0A)).thenReturn (250)
-          when (cpu.register (0x15)).thenReturn (250)
+          when (cpu.getMemory (0x0A)).thenReturn (250)
+          when (cpu.getMemory (0x15)).thenReturn (250)
           when (cpu.flag (C)).thenReturn (true)
           val result = instruction.execute (cpu)
 
@@ -708,7 +708,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when comparing equals") {
-        when (cpu.register (0x15)).thenReturn (0x93)
+        when (cpu.getMemory (0x15)).thenReturn (0x93)
         val instruction = CPI (unsignedBytes (0x53, 0x39)).get
 
         it ("has the right parameters") {
@@ -739,7 +739,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when comparing large to small") {
-        when (cpu.register (0x15)).thenReturn (0x73)
+        when (cpu.getMemory (0x15)).thenReturn (0x73)
         val instruction = CPI (unsignedBytes (0x53, 0x39)).get
 
         describe ("and executed") {
@@ -753,7 +753,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when comparing small to large") {
-        when (cpu.register (0x15)).thenReturn (0x93)
+        when (cpu.getMemory (0x15)).thenReturn (0x93)
         val instruction = CPI (unsignedBytes (0x53, 0x37)).get
 
         describe ("and executed") {
@@ -777,8 +777,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed when registers are unequal") {
-        when (cpu.register (0x0A)).thenReturn (64)
-        when (cpu.register (0x15)).thenReturn (63)
+        when (cpu.getMemory (0x0A)).thenReturn (64)
+        when (cpu.getMemory (0x15)).thenReturn (63)
         val instruction = CPSE (unsignedBytes (0xA5, 0x12)).get
 
         it ("has the proper parameters") {
@@ -808,8 +808,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed when registers are equal and followed by a two-byte instruction") {
-        when (cpu.register (0x0A)).thenReturn (64)
-        when (cpu.register (0x15)).thenReturn (64)
+        when (cpu.getMemory (0x0A)).thenReturn (64)
+        when (cpu.getMemory (0x15)).thenReturn (64)
         when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0xA5, 0x06))
         val instruction = CPSE (unsignedBytes (0xA5, 0x11)).get
 
@@ -827,8 +827,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed when registers are equal and followed by a four-byte instruction") {
-        when (cpu.register (0x0A)).thenReturn (64)
-        when (cpu.register (0x15)).thenReturn (64)
+        when (cpu.getMemory (0x0A)).thenReturn (64)
+        when (cpu.getMemory (0x15)).thenReturn (64)
         when (programMemory.getData (1002, 2)).thenReturn (unsignedBytes (0x0C, 0x94))
         val instruction = CPSE (unsignedBytes (0xA5, 0x11)).get
 
@@ -871,7 +871,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed to decrement from 1 to 0") {
-          when (cpu.register (0x15)).thenReturn (0x01)
+          when (cpu.getMemory (0x15)).thenReturn (0x01)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -881,7 +881,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed to decrement from 0 to -1") {
-          when (cpu.register (0x15)).thenReturn (0x00)
+          when (cpu.getMemory (0x15)).thenReturn (0x00)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -891,7 +891,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed to decrement from -128 to 127") {
-          when (cpu.register (0x15)).thenReturn (0x80)
+          when (cpu.getMemory (0x15)).thenReturn (0x80)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -926,8 +926,8 @@ class InstructionsTest extends path.FunSpec {
           val portMap = mock (classOf[PortMap])
           when (portMap.readFromPort ("EIND")).thenReturn (0x12)
           when (cpu.portMap).thenReturn (portMap)
-          when (cpu.register (ZH)).thenReturn (0x34)
-          when (cpu.register (ZL)).thenReturn (0x56)
+          when (cpu.getMemory (ZH)).thenReturn (0x34)
+          when (cpu.getMemory (ZL)).thenReturn (0x56)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -943,8 +943,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with different operands") {
-        when (cpu.register (0x0A)).thenReturn (0xAA)
-        when (cpu.register (0x15)).thenReturn (0x55)
+        when (cpu.getMemory (0x0A)).thenReturn (0xAA)
+        when (cpu.getMemory (0x15)).thenReturn (0x55)
         val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
 
         it ("has the right parameters") {
@@ -975,8 +975,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with equal operands") {
-        when (cpu.register (0x0A)).thenReturn (0xAA)
-        when (cpu.register (0x15)).thenReturn (0xAA)
+        when (cpu.getMemory (0x0A)).thenReturn (0xAA)
+        when (cpu.getMemory (0x15)).thenReturn (0xAA)
         val instruction = EOR (unsignedBytes (0xA5, 0x26)).get
 
         describe ("and executed") {
@@ -1011,8 +1011,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("and executed") {
-          when (cpu.register (ZH)).thenReturn (0x34)
-          when (cpu.register (ZL)).thenReturn (0x56)
+          when (cpu.getMemory (ZH)).thenReturn (0x34)
+          when (cpu.getMemory (ZL)).thenReturn (0x56)
           val result = instruction.execute (cpu)
 
           it ("produces the proper events") {
@@ -1028,7 +1028,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        when (cpu.register (0x3A)).thenReturn (0xA5)
+        when (cpu.getMemory (0x3A)).thenReturn (0xA5)
         val instruction = IN (unsignedBytes (0x5A, 0xB3)).get
 
         it ("has the right parameters") {
@@ -1089,20 +1089,20 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("LDD") {
-      when (cpu.register (XL)).thenReturn (0x21)
-      when (cpu.register (XH)).thenReturn (0x43)
-      when (cpu.register (RAMPX)).thenReturn (0x65)
-      when (cpu.register (YL)).thenReturn (0x56)
-      when (cpu.register (YH)).thenReturn (0x34)
-      when (cpu.register (RAMPY)).thenReturn (0x12)
-      when (cpu.register (ZL)).thenReturn (0x34)
-      when (cpu.register (ZH)).thenReturn (0x12)
-      when (cpu.register (RAMPZ)).thenReturn (0x00)
-      when (cpu.register (0x1234)).thenReturn (42)
-      when (cpu.register (0x1233)).thenReturn (41)
-      when (cpu.register (0x125E)).thenReturn (43)
-      when (cpu.register (0x123456)).thenReturn (24)
-      when (cpu.register (0x654321)).thenReturn (242)
+      when (cpu.getMemory (XL)).thenReturn (0x21)
+      when (cpu.getMemory (XH)).thenReturn (0x43)
+      when (cpu.getMemory (RAMPX)).thenReturn (0x65)
+      when (cpu.getMemory (YL)).thenReturn (0x56)
+      when (cpu.getMemory (YH)).thenReturn (0x34)
+      when (cpu.getMemory (RAMPY)).thenReturn (0x12)
+      when (cpu.getMemory (ZL)).thenReturn (0x34)
+      when (cpu.getMemory (ZH)).thenReturn (0x12)
+      when (cpu.getMemory (RAMPZ)).thenReturn (0x00)
+      when (cpu.getMemory (0x1234)).thenReturn (42)
+      when (cpu.getMemory (0x1233)).thenReturn (41)
+      when (cpu.getMemory (0x125E)).thenReturn (43)
+      when (cpu.getMemory (0x123456)).thenReturn (24)
+      when (cpu.getMemory (0x654321)).thenReturn (242)
 
       it ("is properly unrecognized") {
         // X
@@ -1356,7 +1356,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        when (cpu.register (0x3456)).thenReturn (0x42)
+        when (cpu.getMemory (0x3456)).thenReturn (0x42)
         val instruction = LDS (unsignedBytes (0x50, 0x91, 0x56, 0x34)).get
 
         it ("is four bytes long") {
@@ -1419,11 +1419,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x12)
-          when (cpu.register (ZH)).thenReturn (0x34)
-          when (cpu.register (ZL)).thenReturn (0x56)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x12)
+          when (cpu.getMemory (ZH)).thenReturn (0x34)
+          when (cpu.getMemory (ZL)).thenReturn (0x56)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x123456, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x123456)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1447,11 +1447,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x12)
-          when (cpu.register (ZH)).thenReturn (0x34)
-          when (cpu.register (ZL)).thenReturn (0x56)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x12)
+          when (cpu.getMemory (ZH)).thenReturn (0x34)
+          when (cpu.getMemory (ZL)).thenReturn (0x56)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x123456, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x123456)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1475,11 +1475,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x01)
-          when (cpu.register (ZH)).thenReturn (0xFF)
-          when (cpu.register (ZL)).thenReturn (0xFF)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x01)
+          when (cpu.getMemory (ZH)).thenReturn (0xFF)
+          when (cpu.getMemory (ZL)).thenReturn (0xFF)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x1FFFF)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1503,11 +1503,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x01)
-          when (cpu.register (ZH)).thenReturn (0xFF)
-          when (cpu.register (ZL)).thenReturn (0xFF)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x01)
+          when (cpu.getMemory (ZH)).thenReturn (0xFF)
+          when (cpu.getMemory (ZL)).thenReturn (0xFF)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x1FFFF)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1531,11 +1531,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x01)
-          when (cpu.register (ZH)).thenReturn (0xFF)
-          when (cpu.register (ZL)).thenReturn (0xFF)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x01)
+          when (cpu.getMemory (ZH)).thenReturn (0xFF)
+          when (cpu.getMemory (ZL)).thenReturn (0xFF)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x1FFFF)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1556,11 +1556,11 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (RAMPZ)).thenReturn (0x01)
-          when (cpu.register (ZH)).thenReturn (0xFF)
-          when (cpu.register (ZL)).thenReturn (0xFF)
+          when (cpu.getMemory (RAMPZ)).thenReturn (0x01)
+          when (cpu.getMemory (ZH)).thenReturn (0xFF)
+          when (cpu.getMemory (ZL)).thenReturn (0xFF)
           val programMemory = mock (classOf[Memory])
-          when (programMemory.getData (0x1FFFF, 1)).thenReturn (Array (UnsignedByte (42)))
+          when (programMemory (0x1FFFF)).thenReturn (UnsignedByte (42))
           when (cpu.programMemory).thenReturn (programMemory)
           val result = instruction.execute (cpu)
 
@@ -1598,8 +1598,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x0A)).thenReturn (0x34)
-          when (cpu.register (0x15)).thenReturn (0x12)
+          when (cpu.getMemory (0x0A)).thenReturn (0x34)
+          when (cpu.getMemory (0x15)).thenReturn (0x12)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -1635,8 +1635,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x0A)).thenReturn (0x34)
-          when (cpu.register (0x0B)).thenReturn (0x12)
+          when (cpu.getMemory (0x0A)).thenReturn (0x34)
+          when (cpu.getMemory (0x0B)).thenReturn (0x12)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -1652,8 +1652,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with two positives") {
-        when (cpu.register (2)).thenReturn (78)
-        when (cpu.register (3)).thenReturn (87)
+        when (cpu.getMemory (2)).thenReturn (78)
+        when (cpu.getMemory (3)).thenReturn (87)
         val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         it ("is two bytes long") {
@@ -1679,8 +1679,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with negative and positive") {
-        when (cpu.register (2)).thenReturn (-78)
-        when (cpu.register (3)).thenReturn (87)
+        when (cpu.getMemory (2)).thenReturn (-78)
+        when (cpu.getMemory (3)).thenReturn (87)
         val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         describe ("and executed") {
@@ -1694,8 +1694,8 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with a zero") {
-        when (cpu.register (2)).thenReturn (0)
-        when (cpu.register (3)).thenReturn (87)
+        when (cpu.getMemory (2)).thenReturn (0)
+        when (cpu.getMemory (3)).thenReturn (87)
         val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         describe ("and executed") {
@@ -1740,7 +1740,7 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("OR") {
-      when (cpu.register (0x15)).thenReturn (0x00)
+      when (cpu.getMemory (0x15)).thenReturn (0x00)
       it ("is properly unrecognized") {
         assert (OR (unsignedBytes (0x00, 0x38)) === None)
       }
@@ -1766,7 +1766,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with one zero value") {
-          when (cpu.register (0x0A)).thenReturn (0xB4)
+          when (cpu.getMemory (0x0A)).thenReturn (0xB4)
           val result = instruction.execute (cpu)
 
           it ("generates the correct events") {
@@ -1776,7 +1776,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with two zero values") {
-          when (cpu.register (0x0A)).thenReturn (0x00)
+          when (cpu.getMemory (0x0A)).thenReturn (0x00)
           val result = instruction.execute (cpu)
 
           it ("generates the correct events") {
@@ -1788,7 +1788,7 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("ORI") {
-      when (cpu.register (0x15)).thenReturn (0x00)
+      when (cpu.getMemory (0x15)).thenReturn (0x00)
       it ("is properly unrecognized") {
         assert (ORI (unsignedBytes (0x00, 0x07)) === None)
       }
@@ -1848,7 +1848,7 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed") {
-        when (cpu.register (0x15)).thenReturn (0xA5)
+        when (cpu.getMemory (0x15)).thenReturn (0xA5)
         val instruction = OUT (unsignedBytes (0x5A, 0xBB)).get
 
         it ("has the right parameters") {
@@ -1904,7 +1904,7 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed") {
           when (cpu.sp).thenReturn (1000)
-          when (cpu.register (1001)).thenReturn (0x42)
+          when (cpu.getMemory (1001)).thenReturn (0x42)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -1939,7 +1939,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x15)).thenReturn (0x42)
+          when (cpu.getMemory (0x15)).thenReturn (0x42)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2120,8 +2120,8 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed without a previous carry and producing no carry") {
           when (cpu.flag (C)).thenReturn (false)
-          when (cpu.register (0x0A)).thenReturn (123)
-          when (cpu.register (0x15)).thenReturn (23)
+          when (cpu.getMemory (0x0A)).thenReturn (123)
+          when (cpu.getMemory (0x15)).thenReturn (23)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2133,8 +2133,8 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed with a previous carry and producing no carry") {
           when (cpu.flag (C)).thenReturn (true)
-          when (cpu.register (0x0A)).thenReturn (123)
-          when (cpu.register (0x15)).thenReturn (23)
+          when (cpu.getMemory (0x0A)).thenReturn (123)
+          when (cpu.getMemory (0x15)).thenReturn (23)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2146,8 +2146,8 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed without a previous carry and producing a carry") {
           when (cpu.flag (C)).thenReturn (false)
-          when (cpu.register (0x0A)).thenReturn (23)
-          when (cpu.register (0x15)).thenReturn (123)
+          when (cpu.getMemory (0x0A)).thenReturn (23)
+          when (cpu.getMemory (0x15)).thenReturn (123)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2159,8 +2159,8 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed with a previous carry and producing a carry") {
           when (cpu.flag (C)).thenReturn (true)
-          when (cpu.register (0x0A)).thenReturn (23)
-          when (cpu.register (0x15)).thenReturn (123)
+          when (cpu.getMemory (0x0A)).thenReturn (23)
+          when (cpu.getMemory (0x15)).thenReturn (123)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2199,7 +2199,7 @@ class InstructionsTest extends path.FunSpec {
 
         describe ("when executed") {
           when (cpu.flag (Flag.C)).thenReturn (true)
-          when (cpu.register (0x1A)).thenReturn (0x5A)
+          when (cpu.getMemory (0x1A)).thenReturn (0x5A)
           val result = instruction.execute (cpu)
 
           it ("returns the proper results") {
@@ -2232,7 +2232,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit clear") {
-          when (cpu.register (0x35)).thenReturn (0x00)
+          when (cpu.getMemory (0x35)).thenReturn (0x00)
           val result = instruction.execute (cpu)
 
           it ("does not skip") {
@@ -2245,7 +2245,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit set before two-byte instruction") {
-          when (cpu.register (0x35)).thenReturn (0x20)
+          when (cpu.getMemory (0x35)).thenReturn (0x20)
           when (cpu.ip).thenReturn (1000)
           val programMemory = mock (classOf[Memory])
           when (programMemory.getData (1002, 4)).thenReturn (unsignedBytes (0x00, 0x00, 0x00, 0x00)) // NOP
@@ -2262,7 +2262,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed with bit set before four-byte instruction") {
-          when (cpu.register (0x35)).thenReturn (0x20)
+          when (cpu.getMemory (0x35)).thenReturn (0x20)
           when (cpu.ip).thenReturn (1000)
           val programMemory = mock (classOf[Memory])
           when (programMemory.getData (1002, 4)).thenReturn (unsignedBytes (0x0C, 0x94, 0x00, 0x00)) // JMP
@@ -2306,8 +2306,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (27)).thenReturn (0x02)
-          when (cpu.register (26)).thenReturn (0x29)
+          when (cpu.getMemory (27)).thenReturn (0x02)
+          when (cpu.getMemory (26)).thenReturn (0x29)
           val result = instruction.execute (cpu)
 
           it ("returns the proper results") {
@@ -2349,10 +2349,10 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("ST") {
-      when (cpu.register (0x0A)).thenReturn (UnsignedByte (0x5A))
-      when (cpu.register (XL)).thenReturn (0x56)
-      when (cpu.register (XH)).thenReturn (0x34)
-      when (cpu.register (RAMPX)).thenReturn (0x12)
+      when (cpu.getMemory (0x0A)).thenReturn (UnsignedByte (0x5A))
+      when (cpu.getMemory (XL)).thenReturn (0x56)
+      when (cpu.getMemory (XH)).thenReturn (0x34)
+      when (cpu.getMemory (RAMPX)).thenReturn (0x12)
 
       it ("is properly unrecognized") {
         assert (ST (unsignedBytes (0x0C, 0x96)) === None)
@@ -2438,14 +2438,14 @@ class InstructionsTest extends path.FunSpec {
     }
 
     describe ("STD") {
-      when (cpu.register (0x15)).thenReturn (42)
-      when (cpu.register (ZL)).thenReturn (0x34)
-      when (cpu.register (ZH)).thenReturn (0x12)
-      when (cpu.register (RAMPZ)).thenReturn (0x00)
-      when (cpu.register (0x10)).thenReturn (24)
-      when (cpu.register (YL)).thenReturn (0x56)
-      when (cpu.register (YH)).thenReturn (0x34)
-      when (cpu.register (RAMPY)).thenReturn (0x12)
+      when (cpu.getMemory (0x15)).thenReturn (42)
+      when (cpu.getMemory (ZL)).thenReturn (0x34)
+      when (cpu.getMemory (ZH)).thenReturn (0x12)
+      when (cpu.getMemory (RAMPZ)).thenReturn (0x00)
+      when (cpu.getMemory (0x10)).thenReturn (24)
+      when (cpu.getMemory (YL)).thenReturn (0x56)
+      when (cpu.getMemory (YH)).thenReturn (0x34)
+      when (cpu.getMemory (RAMPY)).thenReturn (0x12)
       it ("is properly unrecognized") {
         // Y
         assert (STD (unsignedBytes (0x08, 0xC2)) === None)
@@ -2616,7 +2616,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x15)).thenReturn (0x42)
+          when (cpu.getMemory (0x15)).thenReturn (0x42)
           val result = instruction.execute (cpu)
 
           it ("produces the correct events") {
@@ -2652,8 +2652,8 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x0A)).thenReturn (0x5A)
-          when (cpu.register (0x15)).thenReturn (0xA5)
+          when (cpu.getMemory (0x0A)).thenReturn (0x5A)
+          when (cpu.getMemory (0x15)).thenReturn (0xA5)
           val result = instruction.execute (cpu)
 
           it ("returns the proper results") {
@@ -2690,7 +2690,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         describe ("when executed") {
-          when (cpu.register (0x1A)).thenReturn (0x5A)
+          when (cpu.getMemory (0x1A)).thenReturn (0x5A)
           val result = instruction.execute (cpu)
 
           it ("returns the proper results") {

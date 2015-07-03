@@ -226,7 +226,7 @@ class SimulatorTest extends path.FunSpec {
           subject.runForTicks (12)
 
           it ("register 0 has been incremented to 5") {
-            assert (subject.cpu.asInstanceOf[AvrCpu].register (0) === UnsignedByte (5))
+            assert (subject.cpu.asInstanceOf[AvrCpu].getMemory (0) === UnsignedByte (5))
           }
         }
       }

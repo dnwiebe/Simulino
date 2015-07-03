@@ -1,5 +1,7 @@
 package simulino.memory
 
+import simulino.utils.Utils.TEST_DRIVE_ME
+
 /**
  * Created by dnwiebe on 5/8/15.
  */

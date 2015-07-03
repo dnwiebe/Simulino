@@ -168,14 +168,14 @@ class PortMap (cpu: AvrCpu, configs: List[PortConfiguration]) {
 
   def writeToPort (name: String, value: Int): Unit = {
     val port = portsByName (name)
-    val oldValue = cpu.dataMemory.getData (port.address, 1)(0)
+    val oldValue = cpu.dataMemory (port.address)
     val newValue = port.write (oldValue, value)
     cpu.dataMemory.update (port.address, newValue)
   }
 
   def readFromPort (name: String): Int = {
     val port = portsByName (name)
-    val byte = cpu.dataMemory.getData (port.address, 1)(0)
+    val byte = cpu.dataMemory (port.address)
     port.read (byte)
   }
 

@@ -49,13 +49,7 @@ Updated 6/14/2015
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
 
 ### Prioritized Backlog
-Updated 6/19/2015
-
-1. `AvrCpu` has a method called `.register` whose name is misleading. It ought to be called `.memory` or `.dataMemory` or
-something.
-
-1. `Memory` forces the use of `.getData` (which retrieves an array) for all retrievals, even single-byte ones.  This could
-be optimized a little.
+Updated 7/3/2015
 
 1. Currently, Vcc is hardcoded at 5.0V.  That's a problem; it should be part of the configuration.
 
