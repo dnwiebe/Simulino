@@ -25,10 +25,11 @@ case class MemoryConfiguration (
 case object CpuConfiguration {
   def apply (node: JsonNode): CpuConfiguration = {
     val clockSpeed = node.get ("clockSpeed").asInt
+    val vcc = node.get ("vcc").asDouble
     val className = node.get ("class").asText
     val cls = Class.forName (className).asInstanceOf[Class[Cpu]]
     val classSpecific = node.get ("classSpecific")
-    new CpuConfiguration (clockSpeed, cls, classSpecific)
+    new CpuConfiguration (clockSpeed, vcc, cls, classSpecific)
   }
 
   private def debugHere () {}
@@ -36,6 +37,7 @@ case object CpuConfiguration {
 
 case class CpuConfiguration (
   clockSpeed: Int,
+  vcc: Double,
   cls: Class[_ <: Cpu],
   classSpecific: JsonNode
 )

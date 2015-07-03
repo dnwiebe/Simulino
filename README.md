@@ -44,18 +44,17 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 6/14/2015
+Updated 7/3/2015
 
-* Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.
+* For instructions that set status flags, the flag-setting code is pretty much copied directly from the AVR datasheet,
+and there are significant opportunities for factoring out duplication, which would also make testing significantly
+easier.  Finding the duplication, though, and classifying it intelligently, won't be trivial.
+
+* Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.  That is
+to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.
 
 ### Prioritized Backlog
 Updated 7/3/2015
-
-1. Currently, Vcc is hardcoded at 5.0V.  That's a problem; it should be part of the configuration.
-
-1. For instructions that set status flags, the flag-setting code is pretty much copied directly from the AVR datasheet,
-and there are significant opportunities for factoring out duplication, which would also make testing significantly
-easier.  Finding the duplication, though, and classifying it intelligently, won't be trivial.
 
 1. I really don't like the way this project handles unsigned values.  We have `UnsignedByte` that's supposed to be
 taking care of that, but somehow there's still an awful lot of `& 0xFF` around...which means there may not be enough

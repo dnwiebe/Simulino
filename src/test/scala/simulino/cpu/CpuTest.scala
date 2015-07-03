@@ -16,7 +16,7 @@ class CpuTest extends path.FunSpec {
   describe ("A Cpu") {
     class TestCpu (val engine: Engine) extends Cpu {
       val programMemory = new Memory (2000)
-      val config = new CpuConfiguration(16000000, classOf[TestCpu], null)
+      val config = new CpuConfiguration(16000000, 6.3,classOf[TestCpu], null)
       val instruction = mock (classOf[Instruction[TestCpu]])
       when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
       val instructionSet = new InstructionSet[TestCpu] () {

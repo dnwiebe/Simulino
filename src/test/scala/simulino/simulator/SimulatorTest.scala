@@ -73,7 +73,7 @@ class SimulatorTest extends path.FunSpec {
   val configuration = new SimulatorConfiguration (
     memory = new MemoryConfiguration (1024),
     chipPinFor = Map ("Board Pin" -> "Chip Pin"),
-    cpu = new CpuConfiguration (clockSpeed = 1000, cls = classOf[TestCpu], classSpecific = cpuNode)
+    cpu = new CpuConfiguration (clockSpeed = 1000, vcc = 4.5, cls = classOf[TestCpu], classSpecific = cpuNode)
   )
 
   describe ("A Simulator") {
@@ -210,7 +210,7 @@ class SimulatorTest extends path.FunSpec {
 
   describe ("A Simulator with a real AvrCpu") {
     val memConfig = new MemoryConfiguration (10)
-    val cpuConfig = new CpuConfiguration (1000, classOf[AvrCpu], cpuNode)
+    val cpuConfig = new CpuConfiguration (1000, 3.3, classOf[AvrCpu], cpuNode)
     val config = new SimulatorConfiguration (memConfig, cpuConfig)
     val subject = new Simulator (config)
 

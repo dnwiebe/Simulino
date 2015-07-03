@@ -29,6 +29,7 @@ class SimulatorConfigurationTest extends path.FunSpec {
       | ],
       | "cpu": {
       |   "clockSpeed": 16000000,
+      |   "vcc": 7.5,
       |   "class": "${classOf[TestCpu].getName}",
       |   "classSpecific": {
       |     "cat": "Mr. Bigglesworth"
@@ -51,6 +52,7 @@ class SimulatorConfigurationTest extends path.FunSpec {
 
     it ("has the expected CPU attributes") {
       assert (subject.cpu.clockSpeed === 16000000)
+      assert (subject.cpu.vcc === 7.5)
       assert (subject.cpu.cls === classOf[TestCpu])
       assert (subject.cpu.classSpecific.get ("cat").asText () === "Mr. Bigglesworth")
     }

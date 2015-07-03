@@ -16,6 +16,7 @@
   ],
   "cpu": {
     "clockSpeed": 16000000,
+    "vcc": 5.0,
     "class": "simulino.cpu.arch.avr.AvrCpu",
     "classSpecific": {
       "memory": {

@@ -4,6 +4,7 @@ import org.mockito.Matchers
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.cpu.arch.avr.{PortMap, AvrCpu}
+import simulino.simulator.CpuConfiguration
 
 /**
  * Created by dnwiebe on 6/12/15.
@@ -22,6 +23,8 @@ class PinPortHandlerTest extends path.FunSpec {
 
     describe ("given a mock AvrCpu and PortMap") {
       val cpu = mock (classOf[AvrCpu])
+      val config = new CpuConfiguration (0, 7.3, null, null);
+      when (cpu.config).thenReturn (config)
       val portMap = mock (classOf[PortMap])
       when (cpu.portMap).thenReturn (portMap)
       subject.initialize (cpu)
@@ -33,7 +36,7 @@ class PinPortHandlerTest extends path.FunSpec {
           subject.acceptChange ("PORTX3", 0, 1)
 
           it ("the pin is set high") {
-            verify (cpu).showVoltageAtPin("PX3", Some (5.0))
+            verify (cpu).showVoltageAtPin("PX3", Some (7.3))
           }
         }
 
@@ -69,7 +72,7 @@ class PinPortHandlerTest extends path.FunSpec {
           subject.acceptChange ("PORTX3", 0, 1)
 
           it ("the pin is set high") {
-            verify (cpu).showVoltageAtPin("PX3", Some (5.0))
+            verify (cpu).showVoltageAtPin("PX3", Some (7.3))
           }
         }
 
