@@ -34,11 +34,11 @@ trait ADxCls[T] extends Instruction[AvrCpu] with AvrInstructionUtils {
     val Rr = cpu.getMemory (r)
     val R = op (cpu, Rd, Rr)
     val Hf = halfCarry (R, Rd, Rr)
-    val Vf = ((Rd bit 7) && (Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && !(Rr bit 7) && (R bit 7))
+    val Vf = overflow (R, Rd, Rr)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R == UnsignedByte (0)
-    val Cf = ((Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && !(R bit 7)) || (!(R bit 7) && (Rd bit 7))
+    val Cf = fullCarry (R, Rd, Rr)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Some(Zf), C = Some (Cf)))
   }
@@ -271,11 +271,11 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructio
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val Hf = halfCarry (Rd, Rr, R)
-    val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = (R == 0)
-    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, Rr, R)
     List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
       Z = Some (Zf), C = Some (Cf)))
   }
@@ -301,11 +301,11 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Cp = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - Rr - Cp
     val Hf = halfCarry (Rd, Rr, R)
-    val Vf = ((R bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Vf = overflow (Rd, Rr, R)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zfopt = if (R == 0) None else Some (false)
-    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, Rr, R)
     List (IncrementIp (2), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf), S = Some (Sf),
       Z = Zfopt, C = Some (Cf)))
   }
@@ -329,11 +329,11 @@ class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Avr
     val Rd = cpu.getMemory (d)
     val R = Rd - K
     val Hf = halfCarry (Rd, K, R)
-    val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
+    val Vf = overflow (Rd, K, R)
     val Nf = (R bit 7)
     val Sf = Nf ^^ Vf
     val Zf = R.value == 0
-    val Cf = (!(Rd bit 7) && (K bit 7)) || ((K bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, K, R)
     List (IncrementIp (2), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
   }
   override def toString = s"CPI R${d}, ${K.value}"
@@ -974,11 +974,11 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rr = cpu.getMemory (r)
     val R: UnsignedByte = Rd - Rr - (if (cpu.flag (C)) 1 else 0)
     val Hf = halfCarry (Rd, Rr, R)
-    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Vf = overflow (Rd, Rr, R)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zfopt = if (R == UnsignedByte (0)) None else Some (false)
-    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, Rr, R)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), V = Some (Vf), N = Some (Nf),
       S = Some (Sf), Z = Zfopt, C = Some (Cf)))
   }
@@ -1003,11 +1003,11 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
     val C = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - K - C
     val Hf = halfCarry (Rd, K, R)
-    val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
+    val Vf = overflow (Rd, K, R)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R.value == 0
-    val Cf = (!(Rd bit 7) && (K bit 7)) || ((K bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, K, R)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
       Z = Some (Zf), C = Some (Cf)))
   }
@@ -1232,11 +1232,11 @@ class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val Hf = halfCarry (Rd, Rr, R)
-    val Vf = ((Rd bit 7) && !(Rr bit 7) && !(R bit 7)) || (!(Rd bit 7) && (Rr bit 7) && (R bit 7))
+    val Vf = overflow (Rd, Rr, R)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R.value == 0
-    val Cf = (!(Rd bit 7) && (Rr bit 7)) || ((Rr bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, Rr, R)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
       Z = Some (Zf), C = Some (Cf)))
   }
@@ -1260,11 +1260,11 @@ class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
     val Rd = cpu.getMemory (d)
     val R = Rd - K
     val Hf = halfCarry (Rd, K, R)
-    val Vf = ((Rd bit 7) && !(K bit 7) && !(R bit 7)) || (!(Rd bit 7) && (K bit 7) && (R bit 7))
+    val Vf = overflow (Rd, K, R)
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R.value == 0
-    val Cf = (!(Rd bit 7) && (K bit 7)) || ((K bit 7) && (R bit 7)) || ((R bit 7) && !(Rd bit 7))
+    val Cf = fullCarry (Rd, K, R)
     List (IncrementIp (2), SetMemory (d, R), SetFlags (H = Some (Hf), S = Some (Sf), V = Some (Vf), N = Some (Nf),
       Z = Some (Zf), C = Some (Cf)))
   }
