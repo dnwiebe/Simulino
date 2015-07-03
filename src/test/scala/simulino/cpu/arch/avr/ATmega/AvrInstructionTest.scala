@@ -150,27 +150,6 @@ class AvrInstructionTest extends path.FunSpec {
       }
     }
 
-    describe ("when experimenting with sign") {
-      val b7T = UnsignedByte (0x80)
-      val b7F = UnsignedByte (0x00)
-
-      it ("negative false and overflow false produces sign false") {
-        assert (subject.sign (b7F, b7F, b7F) === false)
-      }
-
-      it ("negative false and overflow true produces sign true") {
-        assert (subject.sign (b7T, b7F, b7F) === true)
-      }
-
-      it ("negative true and overflow false produces sign true") {
-        assert (subject.sign (b7T, b7T, b7T) === true)
-      }
-
-      it ("negative true and overflow true produces sign false") {
-        assert (subject.sign (b7F, b7T, b7T) === false)
-      }
-    }
-
     describe ("when directed to do a default build where everything but S and Z is true") {
       val result = subject.builder (
         UnsignedByte (0x00),
@@ -238,6 +217,46 @@ class AvrInstructionTest extends path.FunSpec {
       it ("makes everything true") {
         assert (result === SetFlags (None, None, Some (true), Some (true), Some (true), Some (true),
           Some (true), Some (true)))
+      }
+    }
+
+    describe ("when used to modify the default N value") {
+      val result = subject.builder (UnsignedByte (0x00), UnsignedByte (0x00), UnsignedByte (0x00))
+        .negative (Some (true))
+        .make ()
+
+      it ("changes the default S value to match") {
+        assert (result.S === Some (true))
+      }
+    }
+
+    describe ("when used to modify the default V value") {
+      val result = subject.builder (UnsignedByte (0x00), UnsignedByte (0x00), UnsignedByte (0x00))
+        .overflow (Some (true))
+        .make ()
+
+      it ("changes the default S value to match") {
+        assert (result.S === Some (true))
+      }
+    }
+
+    describe ("when used to set N to None") {
+      val result = subject.builder (UnsignedByte (0x00), UnsignedByte (0x00), UnsignedByte (0x00))
+        .negative (None)
+        .make ()
+
+      it ("calculates S as None too") {
+        assert (result.S === None)
+      }
+    }
+
+    describe ("when used to set V to None") {
+      val result = subject.builder (UnsignedByte (0x00), UnsignedByte (0x00), UnsignedByte (0x00))
+        .overflow (None)
+        .make ()
+
+      it ("calculates S as None too") {
+        assert (result.S === None)
       }
     }
   }

@@ -58,13 +58,15 @@ trait AvrInstructionUtils {
     def carry (v: Option[Boolean]): SetFlagsBuilder = {this.C = v; this}
 
     def make (): SetFlags = {
+      val n = h(N, u.negative (result))
+      val v = h(V, u.overflow (dest, src, result))
       SetFlags (
         None,
         None,
         h(H, u.halfCarry (dest, src, result)),
-        h(S, u.sign (dest, src, result)),
-        h(V, u.overflow (dest, src, result)),
-        h(N, u.negative (result)),
+        if (S == null) calculateSign (n, v) else S,
+        if (V == null) v else V,
+        if (N == null) n else N,
         h(Z, u.zero (result)),
         h(C, u.fullCarry (dest, src, result))
       )
@@ -72,6 +74,14 @@ trait AvrInstructionUtils {
 
     private def h (prev: Option[Boolean], default: Boolean): Option[Boolean] = {
       if (prev == null) Some (default) else prev
+    }
+
+    private def calculateSign (N: Option[Boolean], V: Option[Boolean]): Option[Boolean] = {
+      (N, V) match {
+        case (None, _) => None
+        case (_, None) => None
+        case (Some (n), Some (v)) => Some (n ^ v)
+      }
     }
   }
 
@@ -100,10 +110,6 @@ trait AvrInstructionUtils {
     val s7 = src bit 7
     val r7 = result bit 7
     (d7 && !s7 && !r7) || (!d7 && s7 && r7)
-  }
-
-  def sign (dest: UnsignedByte, src: UnsignedByte, result: UnsignedByte): Boolean = {
-    negative (result) ^ overflow (dest, src, result)
   }
 
   private def carry (dest: Boolean, src: Boolean, result: Boolean): Boolean = {

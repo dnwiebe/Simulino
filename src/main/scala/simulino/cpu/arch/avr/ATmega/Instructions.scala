@@ -33,6 +33,10 @@ trait ADxCls[T] extends Instruction[AvrCpu] with AvrInstructionUtils {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     val R = op (cpu, Rd, Rr)
+    val setFlags = builder (R, Rd, Rr)
+      .negative (Some (R bit 7))
+      .zero (Some (R.value == 0))
+      .make ()
     val Hf = halfCarry (R, Rd, Rr)
     val Vf = overflow (R, Rd, Rr)
     val Nf = R bit 7
