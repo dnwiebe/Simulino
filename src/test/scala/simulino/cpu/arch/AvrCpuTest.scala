@@ -25,9 +25,9 @@ class AvrCpuTest extends path.FunSpec {
   describe ("An AvrCpu with a mock Engine and Memory") {
     val engine = mock (classOf[Engine])
     when (engine.currentTick).thenReturn (1000)
-    val memory = mock (classOf[Memory])
+    val programMemory = mock (classOf[Memory])
 
-    val subject = new AvrCpu (engine, memory, config)
+    val subject = new AvrCpu (engine, programMemory, config)
 
     it ("has 8704 bytes of memory (8192 SRAM + 512 internal)") {
       subject.dataMemory.getData (0x21FF, 1) // no exception
@@ -264,6 +264,42 @@ class AvrCpuTest extends path.FunSpec {
             order.verify (engine).schedule (ScheduleNextInstruction (), 4101L)
           }
         }
+      }
+    }
+
+    describe ("when directed to get an extended value of 0x000000") {
+      subject.setMemory (RAMPX, 0x00)
+      subject.setMemory (XH, 0x00)
+      subject.setMemory (XL, 0x00)
+
+      val result = getExtended (subject, Xfull)
+
+      it ("does so") {
+        assert (result === 0x000000)
+      }
+    }
+
+    describe ("when directed to get an extended value of 0x654321") {
+      subject.setMemory (RAMPX, 0x65)
+      subject.setMemory (XH, 0x43)
+      subject.setMemory (XL, 0x21)
+
+      val result = getExtended (subject, Xfull)
+
+      it ("does so") {
+        assert (result === 0x654321)
+      }
+    }
+
+    describe ("when directed to get an extended value of 0xFFFFFF") {
+      subject.setMemory (RAMPX, 0xFF)
+      subject.setMemory (XH, 0xFF)
+      subject.setMemory (XL, 0xFF)
+
+      val result = getExtended (subject, Xfull)
+
+      it ("does so") {
+        assert (result === 0xFFFFFF)
       }
     }
   }

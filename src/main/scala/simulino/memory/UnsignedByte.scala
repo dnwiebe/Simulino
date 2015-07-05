@@ -53,18 +53,15 @@ class UnsignedByte (proposedValue: Int) {
   }
 
   def << (that: Int): Int = {
-    (value & 0xFF) << that
+    value << that
   }
 
   def >> (that: Int): Int = {
-    (value & 0xFF) >> that
+    value >> that
   }
 
   def bit (idx: Integer): Boolean = {
-    (value >> idx) & 1 match {
-      case 0 => false
-      case _ => true
-    }
+    ((value >> idx) & 1) != 0
   }
   
   override def toString: String = {

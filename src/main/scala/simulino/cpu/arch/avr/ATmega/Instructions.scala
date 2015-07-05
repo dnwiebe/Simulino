@@ -76,8 +76,9 @@ class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    val Rd = ((cpu.getMemory (d + 1).value & 0xFF) << 8) + (cpu.getMemory (d).value & 0xFF)
-    val Rdh = UnsignedByte (Rd >> 8)
+    val Rdh = cpu.getMemory (d + 1)
+    val Rdl = cpu.getMemory (d)
+    val Rd = intFromBytes (Rdh, Rdl)
     val R = (Rd + K) & 0xFFFF
     val Rh = UnsignedByte (R >> 8)
     val Rl = UnsignedByte (R & 0xFF)
@@ -117,7 +118,7 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
-    val R = UnsignedByte ((Rd.value & Rr.value) & 0xFF)
+    val R = UnsignedByte (Rd.value & Rr.value)
     val Vf = false
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -142,7 +143,7 @@ class ANDI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
-    val R = UnsignedByte ((Rd.value & K.value) & 0xFF)
+    val R = UnsignedByte (Rd.value & K.value)
     val Vf = false
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
@@ -240,7 +241,7 @@ class COM (var d: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
-    val R = 0xFF - (Rd.value & 0xFF)
+    val R = 0xFF - Rd.value
     val Nf = (R & 0x80) != 0
     val Sf = Nf
     val Zf = R == 0

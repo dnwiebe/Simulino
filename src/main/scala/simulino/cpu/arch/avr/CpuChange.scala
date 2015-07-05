@@ -15,9 +15,9 @@ case class PushIp () extends CpuChange[AvrCpu] {
     val afterMiddle = (beforeIp >> 8) & 0xFF
     val afterLow = (beforeIp >> 0) & 0xFF
     val beforeSp = cpu.sp
-    val beforeHigh = cpu.getMemory (beforeSp - 0).value & 0xFF
-    val beforeMiddle = cpu.getMemory (beforeSp - 1).value & 0xFF
-    val beforeLow = cpu.getMemory (beforeSp - 2).value & 0xFF
+    val beforeHigh = cpu.getMemory (beforeSp - 0).value
+    val beforeMiddle = cpu.getMemory (beforeSp - 1).value
+    val beforeLow = cpu.getMemory (beforeSp - 2).value
     val afterSp = beforeSp - 3
     val firstXfer = s"($$${toHex (beforeSp - 0, 4)}): $$${toHex (beforeLow, 2)} -> $$${toHex (afterLow, 2)}"
     val secondXfer = s"($$${toHex (beforeSp - 1, 4)}): $$${toHex (beforeMiddle, 2)} -> $$${toHex (afterMiddle, 2)}"
@@ -121,7 +121,7 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
   var C = flag (mask, pattern, 0)
 
   override def mods (cpu: AvrCpu): String = {
-    val beforeFlags = cpu.getMemory (RegisterNames.SREG).value & 0xFF
+    val beforeFlags = cpu.getMemory (RegisterNames.SREG).value
     val afterFlags = (beforeFlags & ~mask) | pattern
     s"SREG: ${flagString (0xFF, beforeFlags)} -> ${flagString (0xFF, afterFlags)}"
   }

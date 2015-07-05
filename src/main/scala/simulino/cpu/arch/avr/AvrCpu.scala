@@ -35,9 +35,9 @@ object RegisterNames {
   val Zfull = (RAMPZ, ZH, ZL)
 
   def getExtended (cpu: AvrCpu, registers: (Int, Int, Int)): Int = {
-    ((cpu.getMemory (registers._1).value & 0xFF) << 16) |
-      ((cpu.getMemory (registers._2).value & 0xFF) << 8) |
-      (cpu.getMemory (registers._3).value & 0xFF)
+    (cpu.getMemory (registers._1) << 16) |
+    (cpu.getMemory (registers._2) << 8) |
+    cpu.getMemory (registers._3).value
   }
   def setExtended (registers: (Int, Int, Int), value: Int): List[CpuChange[AvrCpu]] = {
     List (
