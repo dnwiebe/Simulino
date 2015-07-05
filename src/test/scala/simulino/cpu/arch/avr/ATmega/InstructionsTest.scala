@@ -1679,16 +1679,16 @@ class InstructionsTest extends path.FunSpec {
       }
 
       describe ("when properly parsed with negative and positive") {
-        when (cpu.getMemory (2)).thenReturn (-78)
-        when (cpu.getMemory (3)).thenReturn (87)
+        when (cpu.getMemory (2)).thenReturn (-78) // 0xB2
+        when (cpu.getMemory (3)).thenReturn (87) // 0x57
         val instruction = MULS (unsignedBytes (0x23, 0x02)).get
 
         describe ("and executed") {
           val result = instruction.execute (cpu)
 
           it ("generates the proper events") {
-            assert (result === List (IncrementIp (2), SetMemory (1, 0xE5), SetMemory (0, 0x7E),
-              SetFlags (C = Some (true), Z = Some (false))))
+            assert (result === List (IncrementIp (2), SetMemory (1, 0x3C), SetMemory (0, 0x7E),
+              SetFlags (C = Some (false), Z = Some (false))))
           }
         }
       }

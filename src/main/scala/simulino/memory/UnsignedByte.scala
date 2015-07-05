@@ -1,6 +1,7 @@
 package simulino.memory
 
 import simulino.utils.Utils
+import simulino.utils.Utils._
 
 //noinspection LanguageFeature
 object UnsignedByte {
@@ -11,12 +12,7 @@ object UnsignedByte {
 	}
 	
 	implicit def UnsignedByteToInt (input: UnsignedByte): Int = {
-	  if ((input.value & 0x80) > 0) {
-	    input.value | 0xFFFFFF00
-	  }
-	  else {
-	    input.value
-	  }
+    input.value
 	}
 	
 	implicit def UnsignedByteToByte (input: UnsignedByte): Byte = {
@@ -24,16 +20,11 @@ object UnsignedByte {
 	}
 }
 
-class UnsignedByte (proposedValue: Int, val halfCarry: Boolean, 
-    val overflow: Boolean, val carry: Boolean) {
+class UnsignedByte (proposedValue: Int) {
   
   val value = validateProposedValue (proposedValue)
-  val negative = isNegative (value)
-  //noinspection ScalaUnnecessaryParentheses
-  val zero = (value == 0)
-  
-  def this (proposedValue: Int) = this (proposedValue, false, false, false)
-  
+  val signedValue = if ((value & 0x80) > 0) 0xFFFFFF00 | value else value
+
   def == (that: Int): Boolean = {
     value == that
   }
@@ -49,25 +40,16 @@ class UnsignedByte (proposedValue: Int, val halfCarry: Boolean,
   }
   
   def + (that: UnsignedByte): UnsignedByte = {
-    val halfCarry = computeAdditionHalfCarry (this.value, that.value)
-    val sum = this.value + that.value
-    makeFlaggedResult (that, sum, halfCarry)
+    UnsignedByte ((this.value + that.value) & 0xFF)
   }
   
   def - (that: UnsignedByte): UnsignedByte = {
-    val halfCarry = computeSubtractionHalfCarry (this.value, that.value)
-    val diff = this.value - that.value
-    makeFlaggedResult (that, diff, halfCarry)
+    UnsignedByte ((this.value - that.value) & 0xFF)
   }
-  
-  def | (that: UnsignedByte): UnsignedByte = {
-    val result = this.value | that.value
-    new UnsignedByte (result & 0xFF, false, false, false)
-  }
-  
+
   def ^ (that: UnsignedByte): UnsignedByte = {
     val result = this.value ^ that.value
-    new UnsignedByte (result & 0xFF, false, false, false)
+    new UnsignedByte (result & 0xFF)
   }
 
   def << (that: Int): Int = {
@@ -96,27 +78,4 @@ class UnsignedByte (proposedValue: Int, val halfCarry: Boolean,
     }
     proposedValue & 0xFF
   }
-  
-  private def computeAdditionHalfCarry (a: Int, b: Int): Boolean = {
-    val lowNybbleSum = lowNybble (a) + lowNybble (b)
-    (lowNybbleSum & 0x10) > 0
-  }
-  
-  private def computeSubtractionHalfCarry (a: Int, b: Int): Boolean = {
-    val lowNybbleDiff = lowNybble (a) - lowNybble (b)
-    (lowNybbleDiff & 0x10) > 0
-  }
-  
-  private def makeFlaggedResult (that: UnsignedByte, result: Int, halfCarry: Boolean): UnsignedByte = {
-    val carry = (result & 0x100) > 0
-    val thisNeg = isNegative (this)
-    val thatNeg = isNegative (that)
-    val resultNeg = isNegative (result)
-    val overflow = if (thisNeg == thatNeg) {resultNeg != thisNeg} else {false}
-    new UnsignedByte (result & 0xFF, halfCarry, overflow, carry)
-  }
-  
-  private def lowNybble (value: Int) = value & 0xF
-  
-  private def isNegative (value: Int) = (value & 0x80) > 0
 }

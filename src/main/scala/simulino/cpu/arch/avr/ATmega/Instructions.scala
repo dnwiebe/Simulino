@@ -781,7 +781,7 @@ class OR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
-    val R = Rd | Rr
+    val R = UnsignedByte (Rd.value | Rr.value)
     val Nf = (R bit 7)
     val Sf = Nf
     val Zf = (R == 0)
@@ -805,7 +805,7 @@ class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rd = cpu.getMemory (d)
-    val R = Rd | K
+    val R = UnsignedByte (Rd.value | K)
     val Nf = (R bit 7)
     val Sf = Nf
     val Zf = (R == 0)
