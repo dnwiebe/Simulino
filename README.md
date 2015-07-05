@@ -46,21 +46,14 @@ Simulino a web service, with clients in many languages.  But that's in the futur
 ### In Progress
 Updated 7/3/2015
 
-* I really don't like the way this project handles unsigned values.  We have `UnsignedByte` that's supposed to be
-taking care of that, but somehow there's still an awful lot of `& 0xFF` around...which means there may not be enough
-of it, and we may be cruising for a bruising; that is, maybe we're incorrectly treating an unsigned value like a
-signed value somewhere, but nothing has failed so far because all the values that have gone through it have so far
-been small.  We ought to figure out what's insufficient about `UnsignedByte`, fix it, and go through and get rid of 
-all that masking.
+* On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
+This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.  That is
 to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.
 
 ### Prioritized Backlog
 Updated 7/3/2015
-
-1. On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
-This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
 
 1. Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
 duplication of effort.  I don't want to get rid of `.length`, because executing branching instructions doesn't produce
