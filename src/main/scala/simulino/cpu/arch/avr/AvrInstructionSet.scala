@@ -38,7 +38,7 @@ object AvrInstructionSet {
   }
 }
 
-class AvrInstructionSet extends InstructionSet[AvrCpu] {
+class AvrInstructionSet extends InstructionSet {
   import AvrInstructionSet._
   
   override def apply (buffer: Array[UnsignedByte]): Option[Instruction[AvrCpu]] = {

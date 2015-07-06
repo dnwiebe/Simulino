@@ -14,13 +14,13 @@ trait Cpu extends Subscriber {
   val engine: Engine
   val config: CpuConfiguration
   val programMemory: Memory
-  val instructionSet: InstructionSet[_]
+  val instructionSet: InstructionSet
   var pinSamplers = Map[String, PinSampler] ()
 
   private var _ip = 0
 
   def ip: Int = _ip
-  protected def ip_= (newIp: Int): Unit = {
+  protected[cpu] def ip_= (newIp: Int): Unit = {
     _ip = newIp
   }
 

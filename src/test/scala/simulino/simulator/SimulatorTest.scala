@@ -20,7 +20,7 @@ import scala.collection.mutable.ListBuffer
  * Created by dnwiebe on 5/10/15.
  */
 class TestCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
-  val instructionSet = mock (classOf[InstructionSet[TestCpu]])
+  val instructionSet = mock (classOf[InstructionSet])
   val instruction = mock (classOf[Instruction[TestCpu]])
   when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
   when (instructionSet.apply (any (classOf[Array[UnsignedByte]]))).thenReturn (Some (instruction))

@@ -7,10 +7,16 @@ import simulino.utils.Utils._
  * Created by dnwiebe on 5/11/15.
  */
 trait CpuChange[C <: Cpu] extends Event {
+  def execute (cpu: C): Unit = {} // TODO: Remove implementation once refactoring is complete
   def mods (cpu: C): String
 }
 
 case class IncrementIp (increment: Int) extends CpuChange[Cpu] {
+
+  override def execute (cpu: Cpu): Unit = {
+    cpu.ip = cpu.ip + increment
+  }
+
   override def mods (cpu: Cpu): String = {
     val before = cpu.ip
     val after = before + increment
@@ -19,6 +25,11 @@ case class IncrementIp (increment: Int) extends CpuChange[Cpu] {
 }
 
 case class SetIp (newIp: Int) extends CpuChange[Cpu] {
+
+  override def execute (cpu: Cpu): Unit = {
+    cpu.ip = newIp
+  }
+
   override def mods (cpu: Cpu): String = {
     val before = cpu.ip
     s"IP: $$${toHex (before, 2)} -> $$${toHex (newIp, 2)}"
@@ -26,5 +37,11 @@ case class SetIp (newIp: Int) extends CpuChange[Cpu] {
 }
 
 case class ScheduleNextInstruction () extends CpuChange[Cpu] {
+
+  override def execute (cpu: Cpu): Unit = {
+    val instruction = cpu.instructionAt (cpu.ip)
+    cpu.engine.schedule (instruction, cpu.engine.currentTick)
+  }
+
   override def mods (cpu: Cpu): String = "" //  TODO: Maybe this shouldn't be a CpuChange.
 }

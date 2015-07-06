@@ -19,7 +19,7 @@ class CpuTest extends path.FunSpec {
       val config = new CpuConfiguration(16000000, 6.3,classOf[TestCpu], null)
       val instruction = mock (classOf[Instruction[TestCpu]])
       when (instruction.execute (any (classOf[TestCpu]))).thenReturn (Nil)
-      val instructionSet = new InstructionSet[TestCpu] () {
+      val instructionSet = new InstructionSet () {
         override def apply (data: Array[UnsignedByte]) = Some (instruction)
       }
     }

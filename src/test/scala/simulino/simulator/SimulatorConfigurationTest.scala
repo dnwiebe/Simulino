@@ -14,7 +14,7 @@ class SimulatorConfigurationTest extends path.FunSpec {
 
   class TestCpu (val clockSpeed: Int, val config: CpuConfiguration, val engine: Engine) extends Cpu {
     override val programMemory: Memory = null
-    override val instructionSet: InstructionSet[TestCpu] = null
+    override val instructionSet: InstructionSet = null
   }
 
   describe ("A SimulatorConfiguration produced from JSON") {
