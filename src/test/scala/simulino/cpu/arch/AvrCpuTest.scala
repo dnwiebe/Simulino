@@ -1,7 +1,7 @@
 package simulino.cpu.arch
 
-import org.mockito.Matchers
-import simulino.cpu.arch.avr.ATmega.{ADD, Flag}
+import org.mockito.{ArgumentCaptor, Matchers}
+import simulino.cpu.arch.avr.ATmega.{DEC, ADD, Flag}
 import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
@@ -14,7 +14,9 @@ import simulino.memory.{Span, UnsignedByte, Memory}
 import simulino.simulator.SimulatorConfiguration
 import simulino.utils.TestUtils._
 
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 /**
  * Created by dnwiebe on 5/14/15.
@@ -262,6 +264,34 @@ class AvrCpuTest extends path.FunSpec {
             order.verify (engine).schedule (SetIp (0x5C), 4101L)
             order.verify (engine).schedule (SetFlags (I = Some (false)), 4101L)
             order.verify (engine).schedule (ScheduleNextInstruction (), 4101L)
+          }
+        }
+      }
+
+      describe ("and a DEC instruction is set up") {
+        subject.setIpForTest (0x500)
+        when (programMemory.getData (0x500, 4)).thenReturn (Array (
+          UnsignedByte (0x0A), UnsignedByte (0x94), // DEC R0
+          UnsignedByte (0x00), UnsignedByte (0x00)
+        ))
+
+        describe ("and a MaskInterruptsForNextInstruction is received") {
+          subject.receive (MaskInterruptsForNextInstruction ())
+
+          describe ("and before the DEC can be executed, an interrupt appears") {
+            subject.raiseInterrupt ("SPM_RDY") // 0xA0
+
+            describe ("and now we try to execute the DEC") {
+              subject.receive (ScheduleNextInstruction ())
+
+              it ("the DEC is scheduled in spite of the waiting interrupt") {
+                val captor = ArgumentCaptor.forClass (classOf [DEC])
+                verify (engine, atLeastOnce()).schedule (captor.capture, Matchers.anyLong)
+                val events = captor.getAllValues.asScala
+                assert (events.head.d === 0)
+                assert (events.size === 1)
+              }
+            }
           }
         }
       }

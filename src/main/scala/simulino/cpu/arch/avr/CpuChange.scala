@@ -149,3 +149,10 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
     }
   }
 }
+
+case class MaskInterruptsForNextInstruction () extends CpuChange[AvrCpu] {
+  override def mods (cpu: AvrCpu): String = {
+    TEST_DRIVE_ME
+    ""
+  }
+}

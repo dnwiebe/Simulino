@@ -35,8 +35,9 @@ AVR parts.
 Interesting note: the AVR ATtiny4 is a six-pin microcontroller, less than 2mm on a side, that has over fifty of the
 instructions in this simulator, sixteen 8-bit registers (numbered 0x10 to 0x1F), 512 bytes (bytes, not kilo or mega)
 of flash memory for a program, and 32 bytes (bytes, not kilo or mega) for runtime variables.  Oh--and the last six
-CPU registers can be combined in pairs into 16-bit address registers, the better to index into that 32-byte address
-space.  What does software craftsmanship look like on an architecture like that?  Comment to @dnwiebe on Twitter.
+CPU registers can be combined in pairs into 16-bit address registers, the better to index into that 32-byte (not 32-bit)
+address space.  What does software craftsmanship look like on an architecture like that?  Comment to @dnwiebe on
+Twitter.
 
 ### Exterior Architecture
 Currently, the "handle" class is `Simulator`.  You create a `Simulator` from a configuration stream, then load a `.hex`
@@ -46,8 +47,8 @@ Simulino a web service, with clients in many languages.  But that's in the futur
 ### In Progress
 Updated 7/3/2015
 
-* On the hardware part, the instruction after a `RETI` is always executed, even if there are active interrupts pending.
-This way a hung interrupt pin can't wedge the microcontroller.  However, this isn't implemented in Simulino.
+* `CpuChange` subclasses don't know how to perform the actions they represent; instead, they serve as selectors in
+case statements in `Cpu` and `AvrCpu`.  This probably isn't a good design choice and should be reversed.
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.  That is
 to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.

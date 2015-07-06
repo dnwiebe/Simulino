@@ -57,6 +57,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   val interruptVectors: Map[String, Int] = extractInterruptVectors (config.classSpecific)
   var activeInterrupts = Set[Int] ()
   var prescaler = portMap.handler ("Prescaler").orNull.asInstanceOf[Prescaler]
+  var maskInterruptsForNextInstruction = false
 
   def getMemory (address: Int): UnsignedByte = dataMemory (address)
 
@@ -81,6 +82,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       case c: Push => handlePush (c)
       case c: Pop => handlePop (c)
       case c: ScheduleNextInstruction => handleScheduleNextInstruction (c)
+      case c: MaskInterruptsForNextInstruction => handleMaskInterruptsForNextInstruction ()
       case x => super.handleCpuChange (x)
     }
   }
@@ -153,7 +155,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   private def handleScheduleNextInstruction (c: ScheduleNextInstruction): Unit = {
-    if (activeInterrupts.isEmpty) {
+    if (activeInterrupts.isEmpty || maskInterruptsForNextInstruction) {
       super.handleCpuChange (c)
     }
     else {
@@ -165,6 +167,11 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       this.scheduleInstructionResults(instruction, tick, events)
       engine.schedule (ScheduleNextInstruction (), tick)
     }
+    maskInterruptsForNextInstruction = false
+  }
+
+  private def handleMaskInterruptsForNextInstruction (): Unit = {
+    this.maskInterruptsForNextInstruction = true;
   }
 
   private def portMapConfigurations (classSpecific: JsonNode): List[PortConfiguration] = {
