@@ -54,10 +54,21 @@ class CpuChangeTest extends path.FunSpec {
 
     describe ("a Push") {
       val subject = Push (0x42)
+      val dataMemory = mock (classOf[Memory])
+      when (cpu.dataMemory).thenReturn (dataMemory)
+      when (cpu.sp).thenReturn (0x21FF)
+      when (cpu.getMemory (0x21FF)).thenReturn (0x12)
+
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (dataMemory).update (0x21FF, UnsignedByte (0x42))
+          verify (cpu).sp_= (0x21FE)
+        }
+      }
 
       describe ("directed to show mods") {
-        when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.getMemory (0x21FF)).thenReturn (0x12)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {

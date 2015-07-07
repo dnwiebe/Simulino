@@ -55,7 +55,8 @@ case class PopIp () extends CpuChange[AvrCpu] {
 case class Push (value: UnsignedByte) extends CpuChange[AvrCpu] {
 
   override def execute (cpu: AvrCpu): Unit = {
-    TEST_DRIVE_ME
+    cpu.dataMemory.update (cpu.sp, value)
+    cpu.sp = cpu.sp - 1
   }
 
   override def mods (cpu: AvrCpu): String = {
