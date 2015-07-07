@@ -79,13 +79,29 @@ class CpuChangeTest extends path.FunSpec {
 
     describe ("a PopIp") {
       val subject = PopIp ()
+      val dataMemory = mock (classOf[Memory])
+      when (dataMemory.getData (0x21FD, 3)).thenReturn (Array (
+        UnsignedByte (0x12),
+        UnsignedByte (0x34),
+        UnsignedByte (0x56)
+      ))
+      when (cpu.dataMemory).thenReturn (dataMemory)
+      when (cpu.ip).thenReturn (0x1000)
+      when (cpu.sp).thenReturn (0x21FC)
+      when (cpu.getMemory (0x21FD)).thenReturn (0x12)
+      when (cpu.getMemory (0x21FE)).thenReturn (0x34)
+      when (cpu.getMemory (0x21FF)).thenReturn (0x56)
+
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).sp_= (0x21FF)
+          verify (cpu).ip_= (0x123456)
+        }
+      }
 
       describe ("directed to show mods") {
-        when (cpu.ip).thenReturn (0x1000)
-        when (cpu.sp).thenReturn (0x21FC)
-        when (cpu.getMemory (0x21FD)).thenReturn (0x12)
-        when (cpu.getMemory (0x21FE)).thenReturn (0x34)
-        when (cpu.getMemory (0x21FF)).thenReturn (0x56)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {
@@ -96,11 +112,20 @@ class CpuChangeTest extends path.FunSpec {
 
     describe ("a Pop") {
       val subject = Pop (0x42)
+      when (cpu.sp).thenReturn (0x21FF)
+      when (cpu.getMemory (0x42)).thenReturn (0x12)
+      when (cpu.getMemory (0x2200)).thenReturn (0x24)
+
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).sp_= (0x2200)
+          verify (cpu).setMemory (0x42, UnsignedByte (0x24))
+        }
+      }
 
       describe ("directed to show mods") {
-        when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.getMemory (0x42)).thenReturn (0x12)
-        when (cpu.getMemory (0x2200)).thenReturn (0x24)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {

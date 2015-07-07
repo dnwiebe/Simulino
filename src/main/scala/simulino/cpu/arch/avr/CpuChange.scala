@@ -40,7 +40,12 @@ case class PushIp () extends CpuChange[AvrCpu] {
 case class PopIp () extends CpuChange[AvrCpu] {
 
   override def execute (cpu: AvrCpu): Unit = {
-    TEST_DRIVE_ME
+    val data = cpu.dataMemory.getData (cpu.sp + 1, 3)
+    cpu.sp = cpu.sp + 3
+    val firstByte = data(0) << 16
+    val secondByte = data(1) << 8
+    val thirdByte = data(2) << 0
+    cpu.ip = firstByte | secondByte | thirdByte
   }
 
   override def mods (cpu: AvrCpu): String = {
@@ -70,7 +75,9 @@ case class Push (value: UnsignedByte) extends CpuChange[AvrCpu] {
 case class Pop (address: Int) extends CpuChange[AvrCpu] {
 
   override def execute (cpu: AvrCpu): Unit = {
-    TEST_DRIVE_ME
+    val spAfter = cpu.sp + 1
+    cpu.sp = spAfter
+    cpu.setMemory (address, cpu.getMemory (spAfter))
   }
 
   override def mods (cpu: AvrCpu): String = {
