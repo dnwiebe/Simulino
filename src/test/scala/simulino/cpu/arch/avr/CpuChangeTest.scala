@@ -1,8 +1,10 @@
 package simulino.cpu.arch.avr
 
+import org.mockito.ArgumentCaptor
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.cpu.arch.avr.RegisterNames._
+import simulino.memory.{Memory, Span, UnsignedByte}
 
 /**
  * Created by dnwiebe on 6/7/15.
@@ -13,14 +15,35 @@ class CpuChangeTest extends path.FunSpec {
 
     describe ("a PushIp") {
       val subject = PushIp ()
+      val dataMemory = mock (classOf[Memory])
+      when (cpu.dataMemory).thenReturn (dataMemory)
+      when (cpu.ip).thenReturn (0x123456)
+      when (cpu.sp).thenReturn (0x21FF)
+      when (cpu.getMemory (0x21FF)).thenReturn (0x65)
+      when (cpu.getMemory (0x21FE)).thenReturn (0x43)
+      when (cpu.getMemory (0x21FD)).thenReturn (0x21)
+
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          val captor = ArgumentCaptor.forClass (classOf[Span])
+          verify (dataMemory).addSpan (captor.capture ())
+          val span = captor.getValue ()
+          assert (span.offset === 0x21FD)
+          val expected = Array (
+            UnsignedByte (0x12),
+            UnsignedByte (0x34),
+            UnsignedByte (0x58)
+          )
+          (0 until 3).foreach {idx =>
+            assert (span.data(idx) === expected(idx))
+          }
+          verify (cpu).sp_= (0x21FC)
+        }
+      }
 
       describe ("directed to show mods") {
-
-        when (cpu.ip).thenReturn (0x123456)
-        when (cpu.sp).thenReturn (0x21FF)
-        when (cpu.getMemory (0x21FF)).thenReturn (0x65)
-        when (cpu.getMemory (0x21FE)).thenReturn (0x43)
-        when (cpu.getMemory (0x21FD)).thenReturn (0x21)
         val result = subject.mods (cpu)
 
         it ("does so appropriately") {

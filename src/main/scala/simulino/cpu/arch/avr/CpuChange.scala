@@ -2,7 +2,7 @@ package simulino.cpu.arch.avr
 
 import simulino.cpu.arch.avr.ATmega.Flag
 import simulino.cpu.CpuChange
-import simulino.memory.UnsignedByte
+import simulino.memory.{Span, UnsignedByte}
 import simulino.utils.Utils._
 
 /**
@@ -11,7 +11,13 @@ import simulino.utils.Utils._
 case class PushIp () extends CpuChange[AvrCpu] {
 
   override def execute (cpu: AvrCpu): Unit = {
-    TEST_DRIVE_ME
+    val nextIp = cpu.ip + 2
+    val firstByte = (nextIp >> 16) & 0xFF
+    val secondByte = (nextIp >> 8) & 0xFF
+    val thirdByte = nextIp & 0xFF
+    val data = Array(UnsignedByte (firstByte), UnsignedByte (secondByte), UnsignedByte (thirdByte))
+    cpu.dataMemory.addSpan (Span (cpu.sp - 2, data))
+    cpu.sp = cpu.sp - 3
   }
 
   override def mods (cpu: AvrCpu): String = {
