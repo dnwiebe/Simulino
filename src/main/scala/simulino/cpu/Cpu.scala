@@ -75,11 +75,7 @@ trait Cpu extends Subscriber {
   var logInstruction: Option[ExecutionLog => Unit] = None
 
   protected def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
-    change match {
-      case c: IncrementIp => ip += c.increment
-      case c: SetIp => ip = c.newIp
-      case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
-    }
+    change.execute (this.asInstanceOf[C])
   }
 
   protected def scheduleInstructionResults (instruction: Instruction[_], tick: Long, events: Seq[Event]): Unit = {

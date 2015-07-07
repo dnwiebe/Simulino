@@ -77,20 +77,6 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     case e => super.receive (e)
   }
 
-  override def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
-    change match {
-      case c: SetMemory => handleSetMemory (c.address, c.value)
-      case c: SetFlags => handleSetFlags (c)
-      case c: SetSp => handleSetSp (c)
-      case c: PushIp => handlePushIp ()
-      case c: PopIp => handlePopIp ()
-      case c: Push => handlePush (c)
-      case c: Pop => handlePop (c)
-      case c: MaskInterruptsForNextInstruction => handleMaskInterruptsForNextInstruction ()
-      case x => super.handleCpuChange (x)
-    }
-  }
-
   def flag (name: Flag): Boolean = {
     val octet = getMemory (SREG).value
     val idx = 7 - name.ordinal ()

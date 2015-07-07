@@ -45,22 +45,19 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 7/3/2015
+Updated 7/7/2015
 
-* `CpuChange` subclasses don't know how to perform the actions they represent; instead, they serve as selectors in
-case statements in `Cpu` and `AvrCpu`.  This probably isn't a good design choice and should be reversed.
+* Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
+duplication of effort.  I don't want to get rid of `.length`, because executing branching instructions doesn't produce
+an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
+instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
+that change the IP by some amount other than the length of the instruction.
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.  That is
 to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.
 
 ### Prioritized Backlog
-Updated 7/3/2015
-
-1. Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
-duplication of effort.  I don't want to get rid of `.length`, because executing branching instructions doesn't produce
-an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
-instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
-that change the IP by some amount other than the length of the instruction.
+Updated 7/7/2015
 
 1. Some instructions have different latencies depending on which MCU they execute on.  Currently there's no way to
 represent this in configuration.  There should be.
