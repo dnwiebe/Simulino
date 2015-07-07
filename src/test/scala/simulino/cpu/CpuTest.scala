@@ -1,10 +1,8 @@
 package simulino.cpu
 
-import org.mockito.Matchers
 import org.scalatest.path
 import org.mockito.Mockito._
 import org.mockito.Matchers._
-import simulino.cpu.arch.avr.ATmega.NOP
 import simulino.engine.{Event, Engine}
 import simulino.memory.{UnsignedByte, Memory}
 import simulino.simulator.CpuConfiguration

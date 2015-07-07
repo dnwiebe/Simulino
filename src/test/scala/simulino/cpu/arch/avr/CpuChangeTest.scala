@@ -2,6 +2,7 @@ package simulino.cpu.arch.avr
 
 import org.scalatest.path
 import org.mockito.Mockito._
+import simulino.cpu.arch.avr.RegisterNames._
 
 /**
  * Created by dnwiebe on 6/7/15.
@@ -77,6 +78,14 @@ class CpuChangeTest extends path.FunSpec {
     describe ("a SetSp") {
       val subject = SetSp (0x4224)
 
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).sp_= (0x4224)
+        }
+      }
+
       describe ("directed to show mods") {
         when (cpu.sp).thenReturn (0x21FF)
         val result = subject.mods (cpu)
@@ -90,6 +99,14 @@ class CpuChangeTest extends path.FunSpec {
     describe ("a SetMemory") {
       val subject = SetMemory (0x1234, 0x42)
 
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).setMemory (0x1234, 0x42)
+        }
+      }
+
       describe ("directed to show mods") {
         when (cpu.getMemory (0x1234)).thenReturn (0x24)
         val result = subject.mods (cpu)
@@ -101,9 +118,20 @@ class CpuChangeTest extends path.FunSpec {
     }
 
     describe ("a SetFlags") {
-      val subject = SetFlags (0xFF, 0xAA)
+
+      describe ("when executed") {
+        when (cpu.getMemory (SREG)).thenReturn (0xF0) // 1111 0000 - original
+        val subject = SetFlags (0x66,                 // 0110 0110 - mask
+                                0x0F)                 // 0000 1111 - new value
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).setMemory (SREG, 0x96)         // 1001 0110 - result
+        }
+      }
 
       describe ("directed to show mods") {
+        val subject = SetFlags (0xFF, 0xAA)
         when (cpu.getMemory (RegisterNames.SREG)).thenReturn (0x55)
         val result = subject.mods (cpu)
 

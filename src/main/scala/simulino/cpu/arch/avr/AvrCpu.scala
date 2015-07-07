@@ -67,7 +67,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   }
 
   def sp: Int = ((getMemory (SPH).value << 8) | getMemory (SPL).value) & 0xFFFF
-  protected def sp_= (value: Int): Unit = {
+  protected[avr] def sp_= (value: Int): Unit = {
     setMemory (SPH, (value >> 8) & 0xFF)
     setMemory (SPL, value & 0xFF)
   }

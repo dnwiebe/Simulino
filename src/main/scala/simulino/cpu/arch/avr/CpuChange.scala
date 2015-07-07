@@ -9,6 +9,11 @@ import simulino.utils.Utils._
  * Created by dnwiebe on 6/7/15.
  */
 case class PushIp () extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    TEST_DRIVE_ME
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeIp = cpu.ip
     val afterHigh = (beforeIp >> 16) & 0xFF
@@ -27,6 +32,11 @@ case class PushIp () extends CpuChange[AvrCpu] {
 }
 
 case class PopIp () extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    TEST_DRIVE_ME
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeIp = cpu.ip
     val beforeSp = cpu.sp
@@ -37,6 +47,11 @@ case class PopIp () extends CpuChange[AvrCpu] {
 }
 
 case class Push (value: UnsignedByte) extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    TEST_DRIVE_ME
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeSp = cpu.sp
     val beforeValue = cpu.getMemory (beforeSp)
@@ -46,6 +61,11 @@ case class Push (value: UnsignedByte) extends CpuChange[AvrCpu] {
 }
 
 case class Pop (address: Int) extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    TEST_DRIVE_ME
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeSp = cpu.sp
     val afterSp = beforeSp + 1
@@ -56,6 +76,11 @@ case class Pop (address: Int) extends CpuChange[AvrCpu] {
 }
 
 case class SetSp (newSp: Int) extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    cpu.sp = newSp
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeSp = cpu.sp
     s"SP: $$${toHex (beforeSp, 4)} -> $$${toHex (newSp, 4)}"
@@ -63,6 +88,11 @@ case class SetSp (newSp: Int) extends CpuChange[AvrCpu] {
 }
 
 case class SetMemory (address: Int, value: UnsignedByte) extends CpuChange[AvrCpu] {
+
+  override def execute (cpu: AvrCpu): Unit = {
+    cpu.setMemory (address, value)
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val oldValue = cpu.getMemory (address)
     s"($$${toHex (address, 2)}): $$${oldValue} -> $$${value}"
@@ -120,14 +150,24 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
   var Z = flag (mask, pattern, 1)
   var C = flag (mask, pattern, 0)
 
+  override def execute (cpu: AvrCpu): Unit = {
+    cpu.setMemory (RegisterNames.SREG, newValue (mask, pattern, cpu.getMemory (RegisterNames.SREG)))
+  }
+
   override def mods (cpu: AvrCpu): String = {
     val beforeFlags = cpu.getMemory (RegisterNames.SREG).value
-    val afterFlags = (beforeFlags & ~mask) | pattern
+    val afterFlags = newValue (mask, pattern, beforeFlags)
     s"SREG: ${flagString (0xFF, beforeFlags)} -> ${flagString (0xFF, afterFlags)}"
   }
 
   override def toString: String = {
     "SetFlags(" + flagString (mask, pattern) + ")"
+  }
+
+  private def newValue (mask: Int, pattern: Int, oldValue: Int): Int = {
+    val withSets = oldValue | (mask & pattern)
+    val withSetsAndClears = withSets & (~mask | pattern)
+    withSetsAndClears
   }
 
   private def flagString (mask: Int, pattern: Int): String = {
@@ -151,8 +191,12 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
 }
 
 case class MaskInterruptsForNextInstruction () extends CpuChange[AvrCpu] {
-  override def mods (cpu: AvrCpu): String = {
+
+  override def execute (cpu: AvrCpu): Unit = {
     TEST_DRIVE_ME
+  }
+
+  override def mods (cpu: AvrCpu): String = {
     ""
   }
 }
