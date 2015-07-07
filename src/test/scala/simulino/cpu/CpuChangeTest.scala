@@ -56,33 +56,5 @@ class CpuChangeTest extends path.FunSpec {
         }
       }
     }
-
-    describe ("a ScheduleNextInstruction") {
-      val subject = ScheduleNextInstruction ()
-
-      describe ("executed") {
-        val engine = mock (classOf[Engine])
-        when (engine.currentTick).thenReturn (47L)
-        when (cpu.engine).thenReturn (engine)
-        when (cpu.ip).thenReturn (0x1000)
-        val instruction = mock (classOf [Instruction[Cpu]])
-        doReturn (instruction).when (cpu).instructionAt (0x1000)
-        subject.execute (cpu)
-
-        it ("performs appropriately") {
-          val captor = ArgumentCaptor.forClass (classOf[DEC])
-          verify (engine, times (1)).schedule (captor.capture (), Matchers.eq (47L))
-          assert (captor.getValue === instruction)
-        }
-      }
-
-      describe ("asked for mods") {
-        val result = subject.mods (null)
-
-        it ("returns blank") {
-          assert (result === "")
-        }
-      }
-    }
   }
 }

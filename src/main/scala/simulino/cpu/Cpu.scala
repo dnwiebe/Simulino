@@ -10,6 +10,9 @@ import simulino.utils.Utils._
 /**
  * Created by dnwiebe on 5/11/15.
  */
+
+case class ScheduleNextInstruction () extends Event
+
 trait Cpu extends Subscriber {
   val engine: Engine
   val config: CpuConfiguration
@@ -27,12 +30,15 @@ trait Cpu extends Subscriber {
   override def receive: PartialFunction[Event, Unit] = {
     class PFC[C <: Cpu] extends PartialFunction[Event, Unit] {
       override def isDefinedAt (event: Event): Boolean = {
-        (event.getClass == classOf[CpuChange[_]]) || (event.getClass == classOf[Instruction[_]])
+        (event.getClass == classOf[CpuChange[_]]) ||
+        (event.getClass == classOf[Instruction[_]]) ||
+        (event.getClass == classOf[ScheduleNextInstruction])
       }
       override def apply (event: Event): Unit = {
         event match {
           case c: CpuChange[C] => handleCpuChange (c)
           case i: Instruction[C] => handleInstruction (i.asInstanceOf[Instruction[Cpu]])
+          case s: ScheduleNextInstruction => handleScheduleNextInstruction ()
           case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
         }
       }
@@ -72,16 +78,8 @@ trait Cpu extends Subscriber {
     change match {
       case c: IncrementIp => ip += c.increment
       case c: SetIp => ip = c.newIp
-      case c: ScheduleNextInstruction => handleScheduleNextInstruction ()
       case x => throw new UnsupportedOperationException (s"${getClass.getSimpleName} can't handle ${x}")
     }
-  }
-
-  private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
-    val events = instruction.execute (this.asInstanceOf[C])
-    val tick = engine.currentTick + instruction.latency
-    scheduleInstructionResults (instruction, tick, events)
-    engine.schedule (ScheduleNextInstruction (), tick)
   }
 
   protected def scheduleInstructionResults (instruction: Instruction[_], tick: Long, events: Seq[Event]): Unit = {
@@ -99,6 +97,13 @@ trait Cpu extends Subscriber {
   private def handleScheduleNextInstruction (): Unit = {
     val instruction = instructionAt (_ip)
     engine.schedule (instruction, engine.currentTick)
+  }
+
+  private def handleInstruction [C <: Cpu] (instruction: Instruction[C]): Unit = {
+    val events = instruction.execute (this.asInstanceOf[C])
+    val tick = engine.currentTick + instruction.latency
+    scheduleInstructionResults (instruction, tick, events)
+    engine.schedule (ScheduleNextInstruction (), tick)
   }
 
   // for testing only

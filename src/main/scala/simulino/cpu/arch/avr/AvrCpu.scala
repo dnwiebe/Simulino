@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import simulino.cpu.arch.avr.ATmega.Flag
 import simulino.cpu._
 import simulino.cpu.arch.avr.peripheral.Prescaler
-import simulino.engine.Engine
+import simulino.engine.{Event, Engine}
 import simulino.memory.{Span, Memory, UnsignedByte}
 import simulino.simulator.CpuConfiguration
 import simulino.utils.Utils._
@@ -57,7 +57,7 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
   val interruptVectors: Map[String, Int] = extractInterruptVectors (config.classSpecific)
   var activeInterrupts = Set[Int] ()
   var prescaler = portMap.handler ("Prescaler").orNull.asInstanceOf[Prescaler]
-  var maskInterruptsForNextInstruction = false
+  private var _maskInterruptsForNextInstruction = false
 
   def getMemory (address: Int): UnsignedByte = dataMemory (address)
 
@@ -72,6 +72,11 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     setMemory (SPL, value & 0xFF)
   }
 
+  override def receive: PartialFunction[Event, Unit] = {
+    case e: ScheduleNextInstruction => handleScheduleNextInstruction (e)
+    case e => super.receive (e)
+  }
+
   override def handleCpuChange [C <: Cpu] (change: CpuChange[C]): Unit = {
     change match {
       case c: SetMemory => handleSetMemory (c.address, c.value)
@@ -81,7 +86,6 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
       case c: PopIp => handlePopIp ()
       case c: Push => handlePush (c)
       case c: Pop => handlePop (c)
-      case c: ScheduleNextInstruction => handleScheduleNextInstruction (c)
       case c: MaskInterruptsForNextInstruction => handleMaskInterruptsForNextInstruction ()
       case x => super.handleCpuChange (x)
     }
@@ -93,6 +97,9 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     val shifted = octet >> idx
     (shifted & 0x01) == 1
   }
+
+  def maskInterruptsForNextInstruction = _maskInterruptsForNextInstruction
+  def maskInterruptsForNextInstruction_= (f: Boolean) {_maskInterruptsForNextInstruction = f}
 
   def raiseInterrupt (name: String): Unit = {
     val sreg = getMemory (SREG).value
@@ -154,9 +161,9 @@ class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConf
     override def toString = s"* Interrupt $$${toHex (vector, 2)} *"
   }
 
-  private def handleScheduleNextInstruction (c: ScheduleNextInstruction): Unit = {
+  private def handleScheduleNextInstruction (e: ScheduleNextInstruction): Unit = {
     if (activeInterrupts.isEmpty || maskInterruptsForNextInstruction) {
-      super.handleCpuChange (c)
+      super.receive (e)
     }
     else {
       val vector: Int = activeInterrupts.min

@@ -3,8 +3,10 @@ package simulino.cpu.arch.avr
 import org.mockito.ArgumentCaptor
 import org.scalatest.path
 import org.mockito.Mockito._
+import simulino.cpu.ScheduleNextInstruction
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.memory.{Memory, Span, UnsignedByte}
+import simulino.utils.Utils._
 
 /**
  * Created by dnwiebe on 6/7/15.
@@ -196,6 +198,26 @@ class CpuChangeTest extends path.FunSpec {
 
         it ("does so appropriately") {
           assert (result === "SREG: iThSvNzC -> ItHsVnZc")
+        }
+      }
+    }
+
+    describe ("a MaskInterruptsForNextInstruction") {
+      val subject = MaskInterruptsForNextInstruction ()
+
+      describe ("when executed") {
+        subject.execute (cpu)
+
+        it ("performs appropriately") {
+          verify (cpu).maskInterruptsForNextInstruction_= (true)
+        }
+      }
+
+      describe ("directed to show mods") {
+        val result = subject.mods (cpu)
+
+        it ("does so appropriately") {
+          assert (result === "[DeferInts]")
         }
       }
     }

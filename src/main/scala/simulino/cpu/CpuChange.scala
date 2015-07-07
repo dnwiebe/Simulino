@@ -35,13 +35,3 @@ case class SetIp (newIp: Int) extends CpuChange[Cpu] {
     s"IP: $$${toHex (before, 2)} -> $$${toHex (newIp, 2)}"
   }
 }
-
-case class ScheduleNextInstruction () extends CpuChange[Cpu] {
-
-  override def execute (cpu: Cpu): Unit = {
-    val instruction = cpu.instructionAt (cpu.ip)
-    cpu.engine.schedule (instruction, cpu.engine.currentTick)
-  }
-
-  override def mods (cpu: Cpu): String = "" //  TODO: Maybe this shouldn't be a CpuChange.
-}

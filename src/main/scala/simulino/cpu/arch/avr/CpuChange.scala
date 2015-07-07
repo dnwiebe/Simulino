@@ -207,10 +207,10 @@ case class SetFlags (mask: Int, pattern: Int) extends CpuChange[AvrCpu] {
 case class MaskInterruptsForNextInstruction () extends CpuChange[AvrCpu] {
 
   override def execute (cpu: AvrCpu): Unit = {
-    TEST_DRIVE_ME
+    cpu.maskInterruptsForNextInstruction = true
   }
 
   override def mods (cpu: AvrCpu): String = {
-    ""
+    "[DeferInts]"
   }
 }
