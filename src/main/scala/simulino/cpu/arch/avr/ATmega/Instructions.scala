@@ -37,7 +37,7 @@ trait ADxCls[T] extends Instruction[AvrCpu] with AvrInstructionUtils {
       .negative (Some (R bit 7))
       .zero (Some (R.value == 0))
       .make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"${getClass.getSimpleName} R${d}, R${r}"
   protected def op (cpu: AvrCpu, Rd: UnsignedByte, Rr: UnsignedByte): UnsignedByte
@@ -87,7 +87,7 @@ class ADIW (val d: Int, val K: Int) extends Instruction[AvrCpu] {
     val Sf = Vf ^^ Nf
     val Zf = (R == 0)
     val Cf = !(Rh bit 7) && (Rdh bit 7)
-    List (IncrementIp (2), SetMemory (d + 1, Rh), SetMemory (d, Rl), SetFlags (S = Some (Sf), V = Some (Vf),
+    List (SetMemory (d + 1, Rh), SetMemory (d, Rl), SetFlags (S = Some (Sf), V = Some (Vf),
       N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
   }
   override def toString = {
@@ -123,7 +123,7 @@ class AND (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R == 0
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+    List (SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"AND R${d}, R${r}"
 }
@@ -148,7 +148,7 @@ class ANDI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
     val Nf = R bit 7
     val Sf = Nf ^^ Vf
     val Zf = R == 0
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
+    List (SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"ANDI R${d}, $$${toHex (K, 2)}"
 }
@@ -174,11 +174,11 @@ class BRBx (val s: Int, val set: Boolean, val k: Int) extends Instruction[AvrCpu
     val shouldBranchOn = if (set) {f: Int => (f != 0)} else {f: Int => (f == 0)}
     if (shouldBranchOn (sreg & (1 << s))) {
       latencyOpt = Some (2)
-      List (IncrementIp ((k + 1) * 2))
+      List (IncrementIp (k * 2))
     }
     else {
       latencyOpt = Some (1)
-      List (IncrementIp (2))
+      Nil
     }
   }
   override def toString = {
@@ -219,7 +219,7 @@ class CLx (var f: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    List (IncrementIp (2), SetFlags (1 << f, 0x00))
+    List (SetFlags (1 << f, 0x00))
   }
   override def toString = {
     val flag = Flag.values()(7 - f)
@@ -245,7 +245,7 @@ class COM (var d: Int) extends Instruction[AvrCpu] {
     val Nf = (R & 0x80) != 0
     val Sf = Nf
     val Zf = R == 0
-    List (IncrementIp (2), SetMemory (d, R),
+    List (SetMemory (d, R),
       SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf), C = Some (true)))
   }
   override def toString = s"COM R${d}"
@@ -269,7 +269,7 @@ class CP (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructio
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val setFlags = builder (Rd, Rr, R).make ()
-    List (IncrementIp (2), setFlags)
+    List (setFlags)
   }
   override def toString = s"CP R${d}, R${r}"
 }
@@ -295,7 +295,7 @@ class CPC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val setFlags = builder (Rd, Rr, R)
       .zero (if (R == 0) None else Some (false))
       .make ()
-    List (IncrementIp (2), setFlags)
+    List (setFlags)
   }
   override def toString = s"CPC R${d}, R${r}"
 }
@@ -317,7 +317,7 @@ class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Avr
     val Rd = cpu.getMemory (d)
     val R = Rd - K
     val setFlags = builder (Rd, K, R).make ()
-    List (IncrementIp (2), setFlags)
+    List (setFlags)
   }
   override def toString = s"CPI R${d}, ${K.value}"
 }
@@ -340,7 +340,8 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Rd = cpu.getMemory (d)
     val Rr = cpu.getMemory (r)
     if (Rd != Rr) {
-      List (IncrementIp (handleEquality ()))
+      latencyOpt = Some (1)
+      Nil
     }
     else {
       List (IncrementIp (handleInequality (cpu)))
@@ -360,19 +361,20 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
 
   private def handleEquality (): Int = {
     latencyOpt = Some (1)
-    2
+    0
   }
 
   private def handleTwoByteNextInstruction (): Int = {
     latencyOpt = Some (2)
-    4
+    2
   }
 
   private def handleFourByteNextInstruction (): Int = {
     latencyOpt = Some (3)
-    6
+    4
   }
 
+  // TODO: There has to be a more elegant way of doing this.
   private def getNextInstructionLength (cpu: AvrCpu): Int = {
     val buffer = cpu.programMemory.getData (cpu.ip + length, 2)
     val flags = List (
@@ -407,7 +409,7 @@ class DEC (val d: Int) extends Instruction[AvrCpu] with AvrInstructionUtils {
       .carry (None)
       .overflow (Some (Rd.value == 0x80))
       .make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"DEC R${d}"
 }
@@ -450,7 +452,7 @@ class EOR (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
       .overflow (Some (false))
       .carry (None)
       .make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"EOR R${d}, R${r}"
 }
@@ -488,7 +490,7 @@ class IN (val d: Int, val A: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val R = cpu.getMemory (A + 0x20)
-    List (IncrementIp (2), SetMemory (d, R))
+    List (SetMemory (d, R))
   }
   override def toString = s"IN R${d}, $$${toHex (A, 2)}"
 }
@@ -574,7 +576,7 @@ class LDD (val d: Int, val r: Char, val x: IndirectionType, val q: Int) extends 
       case IndirectionType.PreDecrement => preValue
     }
     val regMod = if (postValue != initialValue) setExtended (regTuple, postValue) else Nil
-    List (IncrementIp (2), SetMemory (d, R)) ++ regMod
+    List (SetMemory (d, R)) ++ regMod
   }
   override def toString = {
     x match {
@@ -611,7 +613,7 @@ object LDI extends AvrInstructionObject[LDI] {
 class LDI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
-  override def execute (cpu: AvrCpu) = List (IncrementIp (2), SetMemory (d, K))
+  override def execute (cpu: AvrCpu) = List (SetMemory (d, K))
   override def toString = s"LDI R${d}, $$${toHex (K, 2)}"
 }
 
@@ -630,7 +632,7 @@ class LDS (val d: Int, val k: Int) extends Instruction[AvrCpu] {
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
     val K = cpu.getMemory (k)
-    List (IncrementIp (4), SetMemory (d, K))
+    List (SetMemory (d, K))
   }
   override def toString = s"LDS R${d}, $$${toHex (k, 4)}"
 }
@@ -676,7 +678,7 @@ class LPM (val d: Int, val extended: Boolean, val increment: Boolean) extends In
         setExtended (Zfull, newAddress)
       }
     }
-    List (IncrementIp (2), SetMemory (d, R)) ++ handleZ
+    List (SetMemory (d, R)) ++ handleZ
   }
   override def toString = {
     val opcode = if (extended) "ELPM" else "LPM"
@@ -700,7 +702,7 @@ class MOV (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rr = cpu.getMemory (r)
-    List (IncrementIp (2), SetMemory (d, Rr))
+    List (SetMemory (d, Rr))
   }
   override def toString = s"MOV R${d}, R${r}"
 }
@@ -721,7 +723,7 @@ class MOVW (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     val RrL = cpu.getMemory (r)
     val RrH = cpu.getMemory (r + 1)
-    List (IncrementIp (2), SetMemory (d, RrL), SetMemory (d + 1, RrH))
+    List (SetMemory (d, RrL), SetMemory (d + 1, RrH))
   }
   override def toString = s"MOVW R${d + 1}:${d}, R${r + 1}:${r}"
 }
@@ -745,7 +747,7 @@ class MULS (d: Int, r: Int) extends Instruction[AvrCpu] {
     val R = Rd * Rr
     val Cf = ((R & 0x8000) != 0)
     val Zf = (R == 0)
-    List (IncrementIp (2), SetMemory (1, ((R >> 8) & 0xFF)), SetMemory (0, (R & 0xFF)),
+    List (SetMemory (1, ((R >> 8) & 0xFF)), SetMemory (0, (R & 0xFF)),
       SetFlags (C = Some (Cf), Z = Some (Zf)))
   }
   override def toString = s"MULS R${d}, R${r}"
@@ -762,7 +764,7 @@ object NOP extends AvrInstructionObject[NOP] {
 class NOP () extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
-  override def execute (cpu: AvrCpu) = List (IncrementIp (2))
+  override def execute (cpu: AvrCpu) = Nil
   override def toString = s"NOP"
 }
 
@@ -786,7 +788,7 @@ class OR (val d: Int, val r: Int) extends Instruction[AvrCpu] {
     val Nf = (R bit 7)
     val Sf = Nf
     val Zf = (R == 0)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
+    List (SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"OR R${d}, R${r}"
 }
@@ -810,7 +812,7 @@ class ORI (val d: Int, val K: Int) extends Instruction[AvrCpu] {
     val Nf = (R bit 7)
     val Sf = Nf
     val Zf = (R == 0)
-    List (IncrementIp (2), SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
+    List (SetMemory (d, R), SetFlags (S = Some (Sf), V = Some (false), N = Some (Nf), Z = Some (Zf)))
   }
   override def toString = s"ORI R${d}, $$${toHex (K, 2)}"
 }
@@ -830,7 +832,7 @@ class OUT (val A: Int, val r: Int) extends Instruction[AvrCpu] {
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
     val Rr = cpu.getMemory (r)
-    List (IncrementIp (2), SetMemory (A + 0x20, Rr.value))
+    List (SetMemory (A + 0x20, Rr.value))
   }
   override def toString = s"OUT $$${toHex (A, 2)}, R${r}"
 }
@@ -848,7 +850,7 @@ class POP (val d: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
-    List (IncrementIp (2), Pop (d))
+    List (Pop (d))
   }
   override def toString = s"POP R${d}"
 }
@@ -867,7 +869,7 @@ class PUSH (val r: Int) extends Instruction[AvrCpu] {
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
     val R = cpu.getMemory (r)
-    List (IncrementIp (2), Push (R))
+    List (Push (R))
   }
   override def toString = s"PUSH R${r}"
 }
@@ -886,7 +888,7 @@ class RCALL (val k: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 4
   override def execute (cpu: AvrCpu) = {
-    List (PushIp (), IncrementIp ((k + 1) * 2))
+    List (PushIp (), IncrementIp (k * 2))
   }
   override def toString = s"RCALL ${k}"
 }
@@ -938,7 +940,7 @@ object RJMP extends AvrInstructionObject[RJMP] {
 class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
-  override def execute (cpu: AvrCpu) = List (IncrementIp ((k + 1) * 2))
+  override def execute (cpu: AvrCpu) = List (IncrementIp (k * 2))
   override def toString = s"RJMP ${k}"
 }
 
@@ -960,7 +962,7 @@ class SBC (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val setFlags = builder (Rd, Rr, R)
       .zero (if (R.value == 0) None else Some (false))
       .make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"SBC R${d}, R${r}"
 }
@@ -983,7 +985,7 @@ class SBCI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
     val C = if (cpu.flag (Flag.C)) 1 else 0
     val R = Rd - K - C
     val setFlags = builder (Rd, K, R).make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"SBCI R${d}, $$${toHex (K, 2)}"
 }
@@ -1007,13 +1009,13 @@ class SBIS (val A: Int, val b: Int) extends Instruction[AvrCpu] {
     val bitIsSet = (ioValue & (1 << b)) != 0
     if (!bitIsSet) {
       _latencyOpt = Some (1)
-      List (IncrementIp (2))
+      Nil
     }
     else {
       val nextInstruction = findNextInstruction (cpu)
       val length = nextInstruction.length
       _latencyOpt = Some ((nextInstruction.length / 2) + 1)
-      List (IncrementIp (2 + length))
+      List (IncrementIp (length))
     }
   }
   override def toString = s"SBIS $$${toHex (A, 2)}, ${b}"
@@ -1047,7 +1049,7 @@ class SBIW (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] {
     val Sf = Nf ^^ Vf
     val Zf = R == 0
     val Cf = ((R & 0x1000) > 0) && !(Rdh bit 7)
-    List (IncrementIp (2), SetMemory (d + 1, (R >> 8) & 0xFF), SetMemory (d, R & 0xFF),
+    List (SetMemory (d + 1, (R >> 8) & 0xFF), SetMemory (d, R & 0xFF),
       SetFlags (S = Some (Sf), V = Some (Vf), N = Some (Nf), Z = Some (Zf), C = Some (Cf)))
   }
   override def toString = s"SBIW R${d + 1}:R${d}, $$${toHex (K, 2)}"
@@ -1068,7 +1070,7 @@ abstract class SEx (flagMask: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 1
   override def execute (cpu: AvrCpu) = {
-    List (IncrementIp (2), SetFlags (1 << flagMask, 0xFF))
+    List (SetFlags (1 << flagMask, 0xFF))
   }
   override def toString = s"SE${flagName}"
   private def flagName = getClass.getSimpleName.last
@@ -1104,7 +1106,7 @@ class ST (val x: IndirectionType, val r: Int) extends Instruction[AvrCpu] {
     val preAddress = x.preOperate (address)
     val setMemory = SetMemory (preAddress, Rr)
     val postAddress = x.postOperate (preAddress)
-    List (IncrementIp (2), setMemory) ++ setExtended (Xfull, postAddress)
+    setMemory :: setExtended (Xfull, postAddress)
   }
   override def toString = s"ST ${x.toString ("X")}, R${r}"
 }
@@ -1152,7 +1154,7 @@ class STD (val d: Char, val r: Int, val x: IndirectionType, val q: Int) extends 
       case IndirectionType.PreDecrement => preValue
     }
     val regMod = if (postValue != initialValue) setExtended (regTuple, postValue) else Nil
-    List (IncrementIp (2), SetMemory (preValue, R)) ++ regMod
+    List (SetMemory (preValue, R)) ++ regMod
   }
   override def toString = {
     x match {
@@ -1183,7 +1185,7 @@ class STS (val k: Int, val r: Int) extends Instruction[AvrCpu] {
   override def latency = 2
   override def execute (cpu: AvrCpu) = {
     val Rr = cpu.getMemory (r)
-    List (IncrementIp (4), SetMemory (k, Rr))
+    List (SetMemory (k, Rr))
   }
   override def toString = s"STS $$${toHex (k, 2)}, R${r}"
 }
@@ -1206,7 +1208,7 @@ class SUB (val d: Int, val r: Int) extends Instruction[AvrCpu] with AvrInstructi
     val Rr = cpu.getMemory (r)
     val R = Rd - Rr
     val setFlags = builder (Rd, Rr, R).make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"SUB R${d}, R${r}"
 }
@@ -1228,7 +1230,7 @@ class SUBI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Av
     val Rd = cpu.getMemory (d)
     val R = Rd - K
     val setFlags = builder (Rd, K, R).make ()
-    List (IncrementIp (2), SetMemory (d, R), setFlags)
+    List (SetMemory (d, R), setFlags)
   }
   override def toString = s"SUBI R${d}, $$${toHex (K, 2)}"
 }

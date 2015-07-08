@@ -87,6 +87,7 @@ trait Cpu extends Subscriber {
       }.mkString ("; ")
       logInstruction.get (ExecutionLog (engine.currentTick, ip, instruction.toString, comment))
     }
+    engine.schedule (IncrementIp (instruction.length), tick)
     events.foreach {engine.schedule (_, tick)}
   }
 

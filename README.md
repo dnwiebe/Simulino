@@ -57,7 +57,9 @@ that change the IP by some amount other than the length of the instruction.
 to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.
 
 ### Prioritized Backlog
-Updated 7/7/2015
+Updated 7/8/2015
+
+1. The way CPSE is implemented leaves much to be desired. See if there's a better way to detect four-byte instructions.
 
 1. Some instructions have different latencies depending on which MCU they execute on.  Currently there's no way to
 represent this in configuration.  There should be.
