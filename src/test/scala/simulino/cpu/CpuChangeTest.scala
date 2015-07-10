@@ -52,7 +52,7 @@ class CpuChangeTest extends path.FunSpec {
         val result = subject.mods (cpu)
 
         it ("responds appropriately") {
-          assert (result === "IP: $1000 -> $180")
+          assert (result === "IP: $1000 -> $182")
         }
       }
     }

@@ -2064,7 +2064,7 @@ class InstructionsTest extends path.FunSpec {
         }
 
         it ("converts to a String properly") {
-          assert (instruction.toString === "RJMP 291")
+          assert (instruction.toString === "RJMP +291")
         }
 
         describe ("when executed") {
@@ -2081,6 +2081,10 @@ class InstructionsTest extends path.FunSpec {
 
         it ("has the right parameters" ) {
           assert (instruction.k === -291)
+        }
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RJMP -291")
         }
 
         describe ("when executed") {

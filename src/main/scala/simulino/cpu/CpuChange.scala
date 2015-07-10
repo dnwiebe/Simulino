@@ -32,6 +32,6 @@ case class SetIp (newIp: Int) extends CpuChange[Cpu] {
 
   override def mods (cpu: Cpu): String = {
     val before = cpu.ip
-    s"IP: $$${toHex (before, 2)} -> $$${toHex (newIp, 2)}"
+    s"IP: $$${toHex (before, 2)} -> $$${toHex (newIp + 2, 2)}"
   }
 }

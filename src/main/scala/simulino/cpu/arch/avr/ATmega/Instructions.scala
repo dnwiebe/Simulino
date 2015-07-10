@@ -1,5 +1,7 @@
 package simulino.cpu.arch.avr.ATmega
 
+import java.text.DecimalFormat
+
 import simulino.cpu.arch.avr._
 import simulino.cpu._
 import simulino.engine.Event
@@ -941,7 +943,13 @@ class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def length = 2
   override def latency = 2
   override def execute (cpu: AvrCpu) = List (IncrementIp (k * 2))
-  override def toString = s"RJMP ${k}"
+  override def toString = {
+    k match {
+      case x if x < 0 => s"RJMP ${x}"
+      case x if x == 0 => "RJMP 0"
+      case x if x > 0 => s"RJMP +${x}"
+    }
+  }
 }
 
 object SBC extends AvrInstructionObject[SBC] {
