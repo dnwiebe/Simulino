@@ -325,6 +325,7 @@ class CPI (val d: Int, val K: UnsignedByte) extends Instruction[AvrCpu] with Avr
 }
 
 object CPSE extends AvrInstructionObject[CPSE] {
+  val set = new AvrInstructionSet ()
   override val mask = 0xFC000000
   override val pattern = 0x10000000
   override protected def parse (buffer: Array[UnsignedByte]): CPSE = {
@@ -335,6 +336,8 @@ object CPSE extends AvrInstructionObject[CPSE] {
 }
 
 class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
+  import CPSE._
+
   private var latencyOpt: Option[Int] = None
   override def length = 2
   override def latency = latencyOpt.get
@@ -352,41 +355,20 @@ class CPSE (val d: Int, val r: Int) extends Instruction[AvrCpu] {
   override def toString = s"CPSE R${d}, R${r}"
 
   private def handleInequality (cpu: AvrCpu): Int = {
-    val nextLength = getNextInstructionLength (cpu)
-    if (nextLength == 2) {
-      handleTwoByteNextInstruction()
+    val (latency, length) = getNextInstructionLength (cpu) match {
+      case 2 => (2, 2)
+      case 4 => (3, 4)
+      case _ => TEST_DRIVE_ME
     }
-    else {
-      handleFourByteNextInstruction()
-    }
+    latencyOpt = Some (latency)
+    length
   }
 
-  private def handleEquality (): Int = {
-    latencyOpt = Some (1)
-    0
-  }
-
-  private def handleTwoByteNextInstruction (): Int = {
-    latencyOpt = Some (2)
-    2
-  }
-
-  private def handleFourByteNextInstruction (): Int = {
-    latencyOpt = Some (3)
-    4
-  }
-
-  // TODO: There has to be a more elegant way of doing this.
   private def getNextInstructionLength (cpu: AvrCpu): Int = {
     val buffer = cpu.programMemory.getData (cpu.ip + length, 2)
-    val flags = List (
-      ((buffer (0).value & 0x0E) == 0x0C) && ((buffer (1).value & 0xFE) == 0x94), // JMP
-      ((buffer (0).value & 0x0F) == 0x00) && ((buffer (1).value & 0xFE) == 0x90), // LDS
-      ((buffer (0).value & 0x0F) == 0x00) && ((buffer (1).value & 0xFE) == 0x92)  // STS
-    )
-    flags.find (f => f) match {
-      case Some (_) => 4
-      case None => 2
+    set (buffer) match {
+      case None => TEST_DRIVE_ME
+      case Some (instruction) => instruction.length
     }
   }
 }
@@ -892,7 +874,12 @@ class RCALL (val k: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = {
     List (PushIp (), IncrementIp (k * 2))
   }
-  override def toString = s"RCALL ${k}"
+  override def toString = {
+    k match {
+      case x if x <= 0 => s"RCALL ${k}"
+      case x => s"RCALL +${k}"
+    }
+  }
 }
 
 object RET extends AvrInstructionObject[RET] {
@@ -945,9 +932,8 @@ class RJMP (val k: Int) extends Instruction[AvrCpu] {
   override def execute (cpu: AvrCpu) = List (IncrementIp (k * 2))
   override def toString = {
     k match {
-      case x if x < 0 => s"RJMP ${x}"
-      case x if x == 0 => "RJMP 0"
-      case x if x > 0 => s"RJMP +${x}"
+      case x if x <= 0 => s"RJMP ${x}"
+      case x => s"RJMP +${x}"
     }
   }
 }

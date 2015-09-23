@@ -45,27 +45,19 @@ file into it, set up and schedule its inputs and outputs, and let it run for awh
 Simulino a web service, with clients in many languages.  But that's in the future.
 
 ### In Progress
-Updated 7/7/2015
-
-* Executing an `Instruction` produces an `IncrementIp` event, but `Instruction`s also carry a `.length` field.  This is
-duplication of effort.  I don't want to get rid of `.length`, because executing branching instructions doesn't produce
-an `IncrementIp` with the instruction length in it; so probably we ought to have `IncrementIp` implied for all
-instructions that don't branch, calculate it based on `.length`, and then use `IncrementIp` events only for instructions
-that change the IP by some amount other than the length of the instruction.
+Updated 9/22/2015
 
 * Get `BlinkTest` (which runs the Blink demo program that comes with the Arduino IDE) passing without pending.  That is
 to say, figure out why it's strobing too fast by a factor of approximately (but not exactly) 10.
 
 ### Prioritized Backlog
-Updated 7/8/2015
-
-1. The way CPSE is implemented leaves much to be desired. See if there's a better way to detect four-byte instructions.
+Updated 9/22/2015
 
 1. Some instructions have different latencies depending on which MCU they execute on.  Currently there's no way to
 represent this in configuration.  There should be.
 
 1. Code for the instructions needs to be a permanent part of Simulino, of course, or at the very least in a linked-in
-`.jar` file, but the question of which instructions are active members of the instruction set should be answered by 
+`.jar` file, but the questin of which instructions are active members of the instruction set should be answered by 
 configuration information in the JSON file loaded when the `Simulator` object is constructed.
 
 1. There are some serious performance issues here.  A simulated second requires two or three real minutes.  Profile

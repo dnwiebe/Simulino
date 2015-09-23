@@ -1981,6 +1981,22 @@ class InstructionsTest extends path.FunSpec {
           }
         }
       }
+
+      describe ("when it has a positive parameter") {
+        val instruction = new RCALL (19)
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RCALL +19")
+        }
+      }
+
+      describe ("when it has a zero parameter") {
+        val instruction = new RCALL (0)
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RCALL 0")
+        }
+      }
     }
 
     describe ("RET") {
@@ -2093,6 +2109,14 @@ class InstructionsTest extends path.FunSpec {
           it ("produces an IP increment") {
             assert (result === List(IncrementIp (-582)))
           }
+        }
+      }
+
+      describe ("when it has a zero parameter") {
+        val instruction = new RJMP (0)
+
+        it ("converts to a String properly") {
+          assert (instruction.toString === "RJMP 0")
         }
       }
     }
