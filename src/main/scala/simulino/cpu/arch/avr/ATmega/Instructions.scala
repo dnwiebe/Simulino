@@ -882,7 +882,9 @@ class RCALL (val k: Int) extends Instruction[AvrCpu] {
   }
 }
 
-object RET extends AvrInstructionObject[RET] {
+object RET extends AvrInstructionObject[RET] with ConfigurableAvrInstructionObject {
+//  latencyOpt = Some (4)
+
   override val mask = 0xFFFF0000
   override val pattern = 0x95080000
   override protected def parse (buffer: Array[UnsignedByte]): RET = {
@@ -892,7 +894,7 @@ object RET extends AvrInstructionObject[RET] {
 
 class RET extends Instruction[AvrCpu] {
   override def length = 2
-  override def latency = 5
+  override def latency = RET.latencyOpt.get
   override def execute (cpu: AvrCpu) = {
     List (PopIp ())
   }

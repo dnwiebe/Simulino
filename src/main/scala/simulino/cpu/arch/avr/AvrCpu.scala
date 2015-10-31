@@ -2,14 +2,15 @@ package simulino.cpu.arch.avr
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
-import simulino.cpu.arch.avr.ATmega.Flag
+import simulino.cpu.arch.avr.ATmega.{AvrInstructionObject, Flag}
 import simulino.cpu._
 import simulino.cpu.arch.avr.peripheral.Prescaler
 import simulino.engine.{Event, Engine}
 import simulino.memory.{Span, Memory, UnsignedByte}
-import simulino.simulator.CpuConfiguration
+import simulino.simulator.{JsonConfigurationException, CpuConfiguration}
 import simulino.utils.Utils._
 import scala.collection.JavaConverters._
+import scala.reflect.api.Mirror
 
 /**
  * Created by dnwiebe on 5/13/15.
@@ -48,11 +49,75 @@ object RegisterNames {
   }
 }
 
+object AvrCpu {
+
+  case object InstructionConfig {
+    def apply (fieldName: String, configNode: JsonNode): InstructionConfig = {
+      if (!configNode.isObject) {throw new JsonConfigurationException(s"'instructionConfigs' for '${fieldName}' must be an object")}
+      val latencyOpt = configNode.get ("latency") match {
+        case null => None
+        case n if n.isNumber => Some (n.asInt ())
+        case _ => throw new JsonConfigurationException (s"'instructionConfigs' specified latency for '${fieldName}' must be numeric")
+      }
+      val disabled = configNode.get ("disabled") match {
+        case null => false
+        case n if n.isBoolean => n.asBoolean ()
+        case _ => true
+      }
+      InstructionConfig (disabled, latencyOpt)
+    }
+  }
+
+  case class InstructionConfig (
+    disabled: Boolean,
+    latencyOpt: Option[Int]
+  )
+
+  class InstructionConfigsExtractor (classSpecific: JsonNode) {
+    def extract (): Map[AvrInstructionObject[_], InstructionConfig] = {
+      if (classSpecific == null) {return Map ()}
+      val configNode = classSpecific.get ("instructionConfigs")
+      if (configNode == null) {return Map ()}
+      configNodeToMap (configNode)
+    }
+
+    private def configNodeToMap (configNode: JsonNode): Map[AvrInstructionObject[_], InstructionConfig] = {
+      if (!configNode.isObject) {throw new JsonConfigurationException("'instructionConfigs' node must be an object")}
+      val map = configNode.fieldNames ().asScala.map {fieldName =>
+        val keyOpt = objectNameToObject (fieldName)
+        val value = InstructionConfig (fieldName, configNode.get (fieldName))
+        keyOpt match {
+          case Some (key) => Some (key -> value)
+          case None => None
+        }
+      }.flatten.toMap
+      map.asInstanceOf[Map[AvrInstructionObject[_], InstructionConfig]]
+    }
+
+    private def objectNameToObject (objectName: String): Option[Any] = {
+      val className = s"simulino.cpu.arch.avr.ATmega.${objectName}"
+      try {
+        val cls = Class.forName (className)
+        val mirror = scala.reflect.runtime.universe.runtimeMirror (getClass.getClassLoader)
+        val symbol = mirror.classSymbol(cls).companion.asModule
+        val moduleMirror = mirror.reflectModule(symbol)
+        Some (moduleMirror.instance)
+      }
+      catch {
+        case e: ClassNotFoundException => throw new JsonConfigurationException (s"Unrecognized instruction '${objectName}' in 'instructionConfigs'")
+      }
+    }
+  }
+}
+
 class AvrCpu (val engine: Engine, val programMemory: Memory, val config: CpuConfiguration) extends Cpu {
+  import AvrCpu._
   import RegisterNames._
 
   val dataMemory: Memory = createMemory (config.classSpecific)
   val instructionSet = new AvrInstructionSet ()
+  val instructionConfigs = new InstructionConfigsExtractor (config.classSpecific).extract ()
+  AvrInstructionSet.configureInstructions(instructionConfigs)
   var portMap = new PortMap (this, portMapConfigurations (config.classSpecific))
   val interruptVectors: Map[String, Int] = extractInterruptVectors (config.classSpecific)
   var activeInterrupts = Set[Int] ()

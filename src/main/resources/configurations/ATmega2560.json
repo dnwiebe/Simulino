@@ -23,6 +23,9 @@
         "internal": 512,
         "sram": 8192
       },
+      "instructionConfigs": {
+        "RET": {"latency": 5}
+      },
       "portMap": {
         "ports": [
           {"name": "OCIE0B", "address": "0x6E", "lowBit": 2, "bitLength": 1, "direction": "O"},

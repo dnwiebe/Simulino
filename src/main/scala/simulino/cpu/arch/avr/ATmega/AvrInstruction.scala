@@ -7,6 +7,7 @@ import simulino.memory.UnsignedByte
 /**
  * Created by dnwiebe on 5/19/15.
  */
+
 trait AvrInstructionObject[T <: Instruction[AvrCpu]] extends InstructionObject[T] {
 
   override protected def bufferToInt (buffer: Array[UnsignedByte]): Int = {
@@ -15,6 +16,10 @@ trait AvrInstructionObject[T <: Instruction[AvrCpu]] extends InstructionObject[T
       case false => soFar << 8
     }}
   }
+}
+
+trait ConfigurableAvrInstructionObject {
+  var latencyOpt: Option[Int] = None
 }
 
 trait ComplexAvrInstructionObject[T <: Instruction[AvrCpu]] extends AvrInstructionObject[T]{

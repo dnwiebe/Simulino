@@ -11,6 +11,8 @@ import scala.collection.JavaConverters._
  * Created by dnwiebe on 5/10/15.
  */
 
+class JsonConfigurationException (msg: String) extends RuntimeException (msg)
+
 case object MemoryConfiguration {
   def apply (node: JsonNode): MemoryConfiguration = {
     val programSize = hexOrDec (node.get ("program"))

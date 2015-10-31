@@ -1,17 +1,19 @@
 package simulino.cpu.arch
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.mockito.{ArgumentCaptor, Matchers}
-import simulino.cpu.arch.avr.ATmega.{DEC, ADD, Flag}
+import simulino.cpu.arch.avr.ATmega.{RET, DEC, ADD, Flag}
 import simulino.cpu.arch.avr.ATmega.Flag._
 
 import org.scalatest.path
 import org.mockito.Mockito._
 import simulino.cpu._
+import simulino.cpu.arch.avr.AvrCpu.{InstructionConfig, InstructionConfigsExtractor}
 import simulino.cpu.arch.avr._
 import simulino.cpu.arch.avr.RegisterNames._
 import simulino.engine.{Event, Engine}
 import simulino.memory.{Span, UnsignedByte, Memory}
-import simulino.simulator.SimulatorConfiguration
+import simulino.simulator.{JsonConfigurationException, SimulatorConfiguration}
 import simulino.utils.TestUtils._
 
 import scala.collection.mutable.ListBuffer
@@ -35,6 +37,10 @@ class AvrCpuTest extends path.FunSpec {
       subject.dataMemory.getData (0x21FF, 1) // no exception
       val result = Try {subject.dataMemory.getData (0x2200, 1)}
       fails (result, new IllegalArgumentException ("Data buffer must end at or before 8703, not 8704"))
+    }
+
+    it ("specifies a latency of 5 clock cycles for the RET instruction") {
+      assert (subject.instructionConfigs(RET).latencyOpt === Some (5))
     }
 
     it ("initially has zeros in all registers") {
@@ -330,6 +336,144 @@ class AvrCpuTest extends path.FunSpec {
 
       it ("does so") {
         assert (result === 0xFFFFFF)
+      }
+    }
+  }
+
+  describe ("Concerning InstructionConfigsExtractor") {
+    val mapper = new ObjectMapper ()
+
+    describe ("when it is given no classSpecific node") {
+      val subject = new InstructionConfigsExtractor (null)
+
+      describe ("and instructed to extract") {
+        val result = subject.extract ()
+
+        it ("the result is empty") {
+          assert (result.isEmpty === true)
+        }
+      }
+    }
+
+    describe ("when it is given no instructionConfigs node") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = subject.extract ()
+
+        it ("the result is empty") {
+          assert (result.isEmpty === true)
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that is not an object") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": "goobly"
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = {try {subject.extract (); fail ()} catch {case e: JsonConfigurationException => e.getMessage}}
+
+        it ("an exception is thrown") {
+          assert (result === "'instructionConfigs' node must be an object")
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that has an unknown instruction opcode") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": {
+        |    "ABC": null
+        |  }
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = {try {subject.extract (); fail ()} catch {case e: JsonConfigurationException => e.getMessage}}
+
+        it ("an exception is thrown") {
+          assert (result === "Unrecognized instruction 'ABC' in 'instructionConfigs'")
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that has an instruction whose value is not an object") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": {
+        |    "RET": "goobly"
+        |  }
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = {try {subject.extract (); fail ()} catch {case e: JsonConfigurationException => e.getMessage}}
+
+        it ("an exception is thrown") {
+          assert (result === "'instructionConfigs' for 'RET' must be an object")
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that has an instruction whose value is empty") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": {
+        |    "RET": {}
+        |  }
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = subject.extract ()
+
+        it ("a map with one empty element is created") {
+          assert (result === Map(RET -> InstructionConfig (false, None)))
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that has an instruction whose value contains a latency that is not numeric") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": {
+        |    "RET": {"latency": "goobly"}
+        |  }
+        |}
+      """.stripMargin))
+
+
+      describe ("and instructed to extract") {
+        val result = {try {subject.extract (); fail ()} catch {case e: JsonConfigurationException => e.getMessage}}
+
+        it ("an exception is thrown") {
+          assert (result === "'instructionConfigs' specified latency for 'RET' must be numeric")
+        }
+      }
+    }
+
+    describe ("when it is given an instructionConfigs node that has an instruction whose value contains a latency and is disabled") {
+      val subject = new AvrCpu.InstructionConfigsExtractor (mapper.readTree("""
+        |{
+        |  "instructionConfigs": {
+        |    "RET": {"disabled": true, "latency": 47}
+        |  }
+        |}
+      """.stripMargin))
+
+      describe ("and instructed to extract") {
+        val result = subject.extract ()
+
+        it ("a map with one populated element is created") {
+          assert (result === Map(RET -> InstructionConfig (true, Some (47))))
+        }
       }
     }
   }

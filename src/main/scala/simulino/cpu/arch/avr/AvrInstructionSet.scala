@@ -1,6 +1,7 @@
 package simulino.cpu.arch.avr
 
 import simulino.cpu.arch.avr.ATmega._
+import simulino.cpu.arch.avr.AvrCpu.InstructionConfig
 import simulino.cpu.{InstructionObject, Instruction, InstructionSet}
 import simulino.memory.UnsignedByte
 
@@ -11,6 +12,16 @@ import simulino.memory.UnsignedByte
 object AvrInstructionSet {
   private val sesquideciles: Array[List[InstructionObject[_]]] = new Array[List[InstructionObject[_]]] (16)
   initializeSesquideciles ()
+
+  def configureInstructions (instructionConfigs: Map[AvrInstructionObject[_], InstructionConfig]): Unit = {
+    instructionConfigs.keys.foreach {key =>
+      val value = instructionConfigs(key)
+      val instruction = key.asInstanceOf[ConfigurableAvrInstructionObject]
+      if (value.latencyOpt.isDefined) {
+        instruction.latencyOpt = value.latencyOpt
+      }
+    }
+  }
   
   private def initializeSesquideciles (): Unit = {
     (0 until 16).foreach {i => sesquideciles(i) = Nil}
@@ -38,7 +49,7 @@ object AvrInstructionSet {
   }
 }
 
-class AvrInstructionSet extends InstructionSet {
+class AvrInstructionSet () extends InstructionSet {
   import AvrInstructionSet._
   
   override def apply (buffer: Array[UnsignedByte]): Option[Instruction[AvrCpu]] = {
